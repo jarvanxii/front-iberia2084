@@ -1,12 +1,12 @@
-# España 2084 Frontend
+# Iberia 2084 Frontend
 
-Frontend de España 2084, juego de estrategia política y territorial construido con Vue 3, Vite, TypeScript, Pinia y Vue Router.
+Frontend de Iberia 2084, juego de estrategia política, territorial y satírica construido con Vue 3, Vite, TypeScript, Pinia y Vue Router.
 
 ## Requisitos
 
 - Node.js 22 LTS o superior compatible con Vite.
 - npm.
-- Backend de España 2084 disponible en local o remoto.
+- Backend de Iberia 2084 disponible en local o remoto.
 
 ## Instalación
 
@@ -73,7 +73,7 @@ Build remoto:
 npm run build:remoto
 ```
 
-También se puede pasar el modo al script general:
+También se puede pasar un modo al script general cuando sea necesario:
 
 ```powershell
 npm run build -- --mode remoto
@@ -99,6 +99,40 @@ src
 |-- services    Clientes de API e integración HTTP
 |-- types       Tipos de dominio compartidos
 ```
+
+## Beta Jugable
+
+La primera beta incluye registro, login, selección de partido, mapa territorial,
+recursos con producción por minuto, acciones con temporizador, corrupción con
+riesgo porcentual, catástrofes gestionables, investigaciones y coalición con
+foro interno. La segunda vertical añade ciudad visual, edificios con niveles y
+colas de generación de tropas políticas. La tercera vertical añade divisas,
+intercambio, ministerios, iberopedia y mapa político responsive.
+
+### Partidos Canónicos
+
+- **Pantomima Popular (PP):** "Gestión, populismo y demagogia." Secundario: "Orden, puro y palco."
+- **Unión Progresista Nacional (PISOE):** "Todo para el pueblo, pero sin el pueblo." Secundario: "Libertad, mafia e igualdad."
+- **Grupo Independiente Liberal (GIL):** "Obras, orden y espectáculo." Secundario: "Menos papeles y más grúas."
+- **Partido Unido Feminista Federal (PUFF...):** "Igualdad, sindicatos y mucho mucho enfado." Secundario: "¡Levantemos el puñito!"
+- **Votantes obreros con Xilófono (VOX):** "Patria, bombo y xilófono." Alternativa: "Mucho himno, poco bemol."
+- **Junts Units Nacionalment per la Terra Sobirana (JUNTS):** "Una provincia, una ilusión." Alternativa: "Lo nuestro primero, el resto va después."
+
+### Experiencia De Juego
+
+- La primera pantalla real es el juego, no una landing: el jugador debe entrar, elegir partido y empezar a operar.
+- Ciudad muestra un mapa urbano con edificios políticos clicables, niveles, costes y temporizadores de mejora.
+- Tropas muestra generación por cola con retratos, costes, cantidades, tiempo, requisitos de edificio y fuerza disponible.
+- Intercambio permite transformar los tres recursos nucleares, pesetas, votos y favores, con pérdida política asumida.
+- Eventos nacionales reutiliza el sistema de catástrofes: DANA, apagón, terremoto, pandemia y otros marrones gestionables.
+- Ministerios muestra partidos gobernantes y mejoras activas por apoyo institucional.
+- Iberopedia documenta recursos, tropas, investigaciones y edificios dentro del propio juego.
+- Mapa global usa SVG responsive por comunidades/provincias para colorear cada territorio según quién gobierna.
+- El mapa muestra territorios conquistables, dueño actual, edificio clave, defensa y recurso principal.
+- Corrupción muestra riesgo base, coste, recompensa y consecuencia de pillada antes de lanzar la operación.
+- Crisis muestra catástrofes activas con territorio, gravedad, temporizador y planes de gestión. Cada plan enseña porcentaje de éxito, coste, beneficio y posible ridículo.
+- Políticas permite investigar mejoras con temporizador para producción, defensa, conquista y reducción de riesgo.
+- Coalición permite crear, unirse y escribir en el foro interno de la alianza.
 
 ## Normas
 

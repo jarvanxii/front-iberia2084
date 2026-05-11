@@ -41,3 +41,16 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Local scratch data
+.tmp-map-data/
+src/assets/city-map-variants/
+src/assets/troops/generated-archive/
+src/assets/iberia-border-lines.png
+src/assets/iberia-city-map.png
+src/assets/iberia-key-art-borders-refined.png
+src/assets/iberia-key-art-cinematic-reference.png
+src/assets/iberia-troops-sheet.png
+src/assets/parties/logos/*-logo.png
+src/assets/parties/logos/party-logos-sheet.*
+src/assets/troops/troops-reference-sheet.png

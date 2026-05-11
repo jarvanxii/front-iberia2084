@@ -1,14 +1,14 @@
 {
-  "name": "espana2084",
+  "name": "iberia2084",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --mode local",
-    "dev:local": "vite --mode local",
+    "dev": "vite",
+    "dev:local": "vite",
     "dev:remoto": "vite --mode remoto",
     "build": "run-p type-check \"build-only {@}\" --",
-    "build:local": "run-p type-check \"build-only -- --mode local\"",
+    "build:local": "run-p type-check build-only",
     "build:remoto": "run-p type-check \"build-only -- --mode remoto\"",
     "preview": "vite preview",
     "test:unit": "vitest",

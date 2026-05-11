@@ -1,0 +1,427 @@
+:root {
+  --color-bg: #0c1110;
+  --color-surface: #151b19;
+  --color-surface-soft: #1b231f;
+  --color-surface-raised: #222b26;
+  --color-border: #39453f;
+  --color-border-strong: #667366;
+  --color-text: #f4f1e8;
+  --color-muted: #afb8af;
+  --color-subtle: #7f887e;
+  --color-accent: #d2ad54;
+  --color-accent-strong: #e5c66d;
+  --color-on-accent: #101411;
+  --color-success: #69b69f;
+  --color-info: #8fa7e8;
+  --color-danger: #c96f5f;
+  --radius: 4px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --strategy-shadow: 0 16px 28px rgba(0, 0, 0, 0.24);
+  --strategy-shadow-soft: 0 10px 18px rgba(0, 0, 0, 0.18);
+  --strategy-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --strategy-line: rgba(210, 173, 84, 0.28);
+  --space-page: 0.7rem;
+  --space-1: 0.18rem;
+  --space-2: 0.32rem;
+  --space-3: 0.46rem;
+  --space-4: 0.62rem;
+  --space-5: 0.78rem;
+  --compact-panel-padding: var(--space-4);
+  --compact-card-padding: var(--space-3);
+  --compact-gap: var(--space-4);
+  --compact-gap-sm: var(--space-2);
+}
+
+html,
+body {
+  color: var(--color-text);
+  background:
+    linear-gradient(180deg, rgba(210, 173, 84, 0.05) 0, transparent 220px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    var(--color-bg);
+  background-size: auto, 48px 48px, auto;
+}
+
+::selection {
+  color: var(--color-on-accent);
+  background: var(--color-accent-strong);
+}
+
+:where(button, a, input, select, textarea, [role='button']):focus-visible {
+  outline: 2px solid var(--color-accent-strong);
+  outline-offset: 2px;
+}
+
+:where(input, select, textarea) {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+:where(input, select, textarea)::placeholder {
+  color: var(--color-subtle);
+}
+
+:where(input, select, textarea):focus {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(210, 173, 84, 0.16);
+}
+
+.app-button,
+.strategy-button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  padding: 0.46rem 0.68rem;
+  color: var(--color-on-accent);
+  background: linear-gradient(180deg, var(--color-accent-strong), var(--color-accent));
+  box-shadow: var(--strategy-inset);
+  font-weight: 850;
+  text-align: center;
+}
+
+.app-button:hover:not(:disabled),
+.strategy-button:hover:not(:disabled) {
+  border-color: var(--color-accent-strong);
+  background: linear-gradient(180deg, var(--color-accent-strong), var(--color-accent));
+}
+
+.app-button.secondary,
+.strategy-button.secondary {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+  background: linear-gradient(180deg, var(--color-surface-raised), var(--color-surface-soft));
+}
+
+.app-button.secondary:hover:not(:disabled),
+.strategy-button.secondary:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.app-button.danger,
+.strategy-button.danger {
+  border-color: var(--color-danger);
+  color: var(--color-text);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-danger) 78%, var(--color-text)),
+    color-mix(in srgb, var(--color-danger) 76%, var(--color-bg))
+  );
+}
+
+.panel,
+.strategy-panel,
+.strategy-section {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 52px),
+    var(--color-surface);
+  box-shadow: var(--strategy-inset);
+}
+
+.strategy-section {
+  padding: clamp(0.62rem, 1.2vw, 0.88rem);
+}
+
+.strategy-section + .strategy-section {
+  margin-top: var(--compact-gap);
+}
+
+.strategy-kicker {
+  margin: 0 0 var(--space-1);
+  color: var(--color-accent-strong);
+  font-size: 0.75rem;
+  font-weight: 850;
+}
+
+.strategy-section-heading {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--compact-gap);
+}
+
+.strategy-section-heading h1,
+.strategy-section-heading h2,
+.strategy-section-heading h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.strategy-section-heading p {
+  max-width: 74ch;
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.strategy-grid {
+  display: grid;
+  gap: var(--compact-gap);
+}
+
+.strategy-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+}
+
+.strategy-metric {
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  padding: var(--compact-card-padding);
+  background: rgba(10, 15, 13, 0.6);
+}
+
+.strategy-metric span {
+  display: block;
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.strategy-metric strong {
+  display: block;
+  margin-top: 0.18rem;
+  color: var(--color-text);
+  font-size: 1.2rem;
+  line-height: 1.05;
+}
+
+.strategy-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.strategy-tab,
+:where(.category-tab, .tab-button, .party-tab, .troop-tab) {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  background: var(--color-surface-soft);
+}
+
+.strategy-tab:hover,
+:where(.category-tab, .tab-button, .party-tab, .troop-tab):hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.strategy-tab.is-active,
+:where(.category-tab.active, .tab-button.active, .party-tab.active, .troop-tab.active) {
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+.strategy-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.strategy-row {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: rgba(14, 20, 17, 0.72);
+}
+
+.strategy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.16rem 0.34rem;
+  color: var(--color-muted);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.strategy-chip strong {
+  color: var(--color-text);
+}
+
+.strategy-media {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.strategy-meter {
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+}
+
+.strategy-meter > span,
+.strategy-meter > i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-strong));
+}
+
+.muted,
+.strategy-muted {
+  color: var(--color-muted);
+}
+
+:where(
+  .resource-pill,
+  .home-nav a,
+  .home-nav button,
+  .screen-nav-link,
+  .game-exit-button,
+  .city-resource,
+  .city-switcher,
+  .app-dropdown,
+  .app-dropdown__button,
+  .app-dropdown__menu,
+  .app-dropdown__option,
+  .province-card,
+  .building-card,
+  .queue-card,
+  .unit-row,
+  .troop-row,
+  .party-row,
+  .party-card,
+  .data-card,
+  .risk-card,
+  .ministry-card,
+  .resource-card,
+  .feature-card,
+  .controlled-city-card,
+  .city-select-button,
+  .stat-card,
+  .action-card
+) {
+  border-radius: var(--radius-md);
+}
+
+:where(
+  .badge,
+  .tag,
+  .status,
+  .pill,
+  .stat-pill,
+  .party-bonuses span,
+  .party-kicker span,
+  .party-kicker em,
+  .party-kicker strong,
+  .troop-main span,
+  .troop-meta small,
+  .unit-tags span,
+  .province-grid i,
+  .risk-card > span,
+  .party-heading > span,
+  .resource-pill__rate,
+  .screen-nav-link small
+) {
+  border-radius: var(--radius-sm);
+}
+
+:where(.panel, .strategy-panel, .strategy-section, .unit-row, .troop-row, .party-row, .city-resource, .resource-pill) {
+  border-color: var(--color-border);
+}
+
+:where(.unit-row:hover, .troop-row:hover, .party-row:hover, .city-resource:hover, .screen-nav-link:hover) {
+  border-color: var(--color-border-strong);
+}
+
+:where(.resource-pill, .screen-nav-link, .city-resource) {
+  box-shadow: var(--strategy-inset);
+}
+
+:where(
+  .home-view,
+  .alliance-view,
+  .city-view,
+  .troops-view,
+  .map-view,
+  .iberopedia-view,
+  .troop-guide,
+  .parties-guide,
+  .unit-sections,
+  .unit-list,
+  .party-list,
+  .troop-list,
+  .special-section,
+  .side-stack,
+  .card-grid,
+  .summary-grid,
+  .building-stack,
+  .territory-list,
+  .risk-layout,
+  .province-grid
+) {
+  gap: var(--compact-gap);
+}
+
+:where(
+  .loading-panel,
+  .open-games-panel,
+  .alliance-hero,
+  .chat-panel,
+  .forms-panel,
+  .score-panel,
+  .city-local-topbar,
+  .city-panel,
+  .detail-panel,
+  .city-selector,
+  .roster-panel,
+  .intro-panel,
+  .map-panel,
+  .iberopedia-hero,
+  .iberopedia-subheader,
+  .topic-sidebar,
+  .feature-card,
+  .data-card,
+  .unit-card,
+  .party-card,
+  .ministry-card,
+  .risk-card,
+  .category-preview,
+  .province-grid
+) {
+  padding: var(--compact-panel-padding);
+}
+
+:where(
+  .unit-row,
+  .troop-row,
+  .party-row,
+  .territory-row,
+  .city-resource,
+  .garrison-row,
+  .insight-card,
+  .catalog-metrics div,
+  .parties-metrics div,
+  .archive-stats div
+) {
+  padding: var(--compact-card-padding);
+}
+
+@media (max-width: 760px) {
+  .strategy-section {
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+
+  .strategy-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+}

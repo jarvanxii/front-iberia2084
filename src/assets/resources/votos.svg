@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Votos">
+  <defs>
+    <linearGradient id="box" x1="18" y1="14" x2="78" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff4c2"/>
+      <stop offset=".55" stop-color="#f0cf78"/>
+      <stop offset="1" stop-color="#b9822e"/>
+    </linearGradient>
+  </defs>
+  <path fill="#26312e" d="M18 38h60l8 13v29H10V51l8-13Z"/>
+  <path fill="url(#box)" d="M18 38h60l8 13H10l8-13Z"/>
+  <path fill="#f9e2a1" d="M29 16h38a6 6 0 0 1 6 6v26H23V22a6 6 0 0 1 6-6Z"/>
+  <path fill="#74d6c2" d="m39 29 7 7 14-15 6 6-20 22-13-14 6-6Z"/>
+  <path fill="#131817" d="M27 57h42v8H27z" opacity=".75"/>
+  <path fill="#fff8da" d="M23 22a6 6 0 0 1 6-6h35c-18 3-31 13-38 29h-3V22Z" opacity=".45"/>
+</svg>

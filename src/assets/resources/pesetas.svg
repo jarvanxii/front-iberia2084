@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Pesetas">
+  <defs>
+    <linearGradient id="coin" x1="12" y1="10" x2="86" y2="88" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffe38a"/>
+      <stop offset=".55" stop-color="#f0b84f"/>
+      <stop offset="1" stop-color="#b77422"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="24" y1="16" x2="70" y2="82" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff6bf" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#fff6bf" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <circle cx="48" cy="48" r="42" fill="url(#coin)"/>
+  <circle cx="48" cy="48" r="34" fill="none" stroke="#7a4a17" stroke-width="4" opacity=".45"/>
+  <path fill="#3b2510" d="M37 20h15c11 0 18 6 18 16 0 9-7 15-18 15h-7v8h16v8H45v10h-8V67H26v-8h11v-8H26v-8h11V20Zm8 23h7c6 0 10-3 10-7s-4-8-10-8h-7v15Z"/>
+  <path fill="url(#shine)" d="M28 18c16-9 37-6 50 9-15-8-38-5-52 14-5 7-8 16-8 24-8-18-3-37 10-47Z"/>
+</svg>

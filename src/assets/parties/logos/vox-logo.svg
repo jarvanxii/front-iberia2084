@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Logo de Votantes obreros con Xilofono</title>
+  <desc id="desc">Marca verde angular con wordmark VOX y xilofono satirico.</desc>
+  <defs>
+    <linearGradient id="voxBg" x1="82" y1="62" x2="430" y2="450" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#86e24e"/>
+      <stop offset="0.5" stop-color="#42a72a"/>
+      <stop offset="1" stop-color="#12632e"/>
+    </linearGradient>
+    <filter id="drop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#001e0d" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="86" fill="#06150b"/>
+  <path d="M256 70 414 160 377 394H135L98 160 256 70Z" fill="url(#voxBg)" filter="url(#drop)"/>
+  <path d="M256 97 386 171 354 367H158l-32-196 130-74Z" fill="none" stroke="#d9ff9e" stroke-width="13"/>
+  <text x="256" y="269" text-anchor="middle" fill="#fffef1" font-family="Arial Black, Arial, sans-serif" font-size="127" font-weight="900" letter-spacing="-10">VOX</text>
+  <path d="M154 314h46M212 314h46M270 314h46M328 314h46" stroke="#fff3a6" stroke-width="23" stroke-linecap="round"/>
+  <path d="M149 345h232" stroke="#fffef1" stroke-width="12" stroke-linecap="round"/>
+  <path d="M187 124 325 342M329 124 187 342" stroke="#fffef1" stroke-width="13" stroke-linecap="round" opacity="0.28"/>
+</svg>
