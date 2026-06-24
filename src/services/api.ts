@@ -11,12 +11,12 @@ import type {
   WorldDto,
 } from '@/types/game'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:18081'
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
 type JsonBody = Record<string, unknown>
 
 async function request<T>(path: string, options: RequestInit = {}, token?: string, worldCode?: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(apiUrl(path), {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -32,6 +32,14 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
   }
 
   return response.json() as Promise<T>
+}
+
+function apiUrl(path: string): string {
+  if (!API_BASE_URL) return path
+  if (API_BASE_URL.endsWith('/api') && path.startsWith('/api/')) {
+    return `${API_BASE_URL}${path.slice(4)}`
+  }
+  return `${API_BASE_URL}${path}`
 }
 
 function post<T>(path: string, body: JsonBody, token?: string, worldCode?: string): Promise<T> {
