@@ -479,7 +479,7 @@ function invitationQuery() {
   display: grid;
   width: 100%;
   max-width: 450px;
-  gap: 1rem;
+  gap: 0.75rem;
   margin: 0 auto;
   padding: clamp(1rem, 3vw, 2rem);
 }
@@ -525,7 +525,7 @@ function invitationQuery() {
 
 .auth-card {
   display: grid;
-  gap: 1rem;
+  gap: 0.78rem;
   min-width: 0;
   border: 1px solid color-mix(in srgb, var(--color-accent) 20%, var(--color-border));
   border-radius: 6px;
@@ -615,18 +615,17 @@ h1 {
 
 .oauth-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
   min-width: 0;
 }
 
 .oauth-button {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  align-items: center;
+  justify-items: center;
   min-width: 0;
-  min-height: 52px;
-  gap: 0.52rem;
+  min-height: 54px;
+  gap: 0.24rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 0.5rem;
@@ -639,16 +638,15 @@ h1 {
 .oauth-button span:not(.oauth-initial) {
   min-width: 0;
   color: var(--color-text);
-  font-size: 0.86rem;
+  font-size: 0.74rem;
   font-weight: 900;
+  line-height: 1.05;
   overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .oauth-button small {
-  grid-column: 2;
-  color: var(--color-subtle);
-  font-size: 0.7rem;
-  font-weight: 800;
+  display: none;
 }
 
 .oauth-initial {
@@ -963,6 +961,24 @@ h1 {
   .oauth-grid,
   .status-grid {
     grid-template-columns: 1fr;
+  }
+
+  .oauth-button {
+    grid-template-columns: 28px minmax(0, 1fr);
+    justify-items: stretch;
+    min-height: 50px;
+  }
+
+  .oauth-button span:not(.oauth-initial) {
+    text-align: left;
+  }
+
+  .oauth-button small {
+    display: block;
+    grid-column: 2;
+    color: var(--color-subtle);
+    font-size: 0.7rem;
+    font-weight: 800;
   }
 
   .mode-switch button {
