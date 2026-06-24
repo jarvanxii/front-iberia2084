@@ -2,6 +2,8 @@ import type {
   ActionDto,
   AllianceDto,
   AllianceMessageDto,
+  AuthMessageResponse,
+  AuthProviderDto,
   AuthResponse,
   FactionDto,
   GameStateDto,
@@ -46,8 +48,12 @@ function post<T>(path: string, body: JsonBody, token?: string, worldCode?: strin
 
 export const api = {
   bootstrap: () => request<{ worlds: WorldDto[]; factions: FactionDto[] }>('/api/bootstrap'),
-  signup: (body: JsonBody) => post<AuthResponse>('/api/auth/signup', body),
+  authProviders: () => request<AuthProviderDto[]>('/api/auth/providers'),
+  signupStart: (body: JsonBody) => post<AuthMessageResponse>('/api/auth/signup/start', body),
+  signupConfirm: (body: JsonBody) => post<AuthResponse>('/api/auth/signup/confirm', body),
   login: (body: JsonBody) => post<AuthResponse>('/api/auth/login', body),
+  recoveryStart: (body: JsonBody) => post<AuthMessageResponse>('/api/auth/recovery/start', body),
+  recoveryConfirm: (body: JsonBody) => post<AuthResponse>('/api/auth/recovery/confirm', body),
   state: (token: string, worldCode?: string) => request<GameStateDto>('/api/game/state', {}, token, worldCode),
   joinWorld: (token: string, body: JsonBody) => post<GameStateDto>('/api/worlds/join', body, token),
   collect: (token: string, worldCode?: string) => post<GameStateDto>('/api/game/collect', {}, token, worldCode),

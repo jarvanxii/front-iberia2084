@@ -404,3 +404,17 @@ export interface AuthResponse {
   user: UserDto
   player: PlayerDto | null
 }
+
+export interface AuthMessageResponse {
+  ok: boolean
+  message: string
+  email: string
+  expiresAt: string | null
+}
+
+export interface AuthProviderDto {
+  id: 'google' | 'microsoft' | 'github' | 'apple' | string
+  label: string
+  description: string
+  configured: boolean
+}
