@@ -405,43 +405,6 @@ function invitationQuery() {
 
     <aside class="auth-visual" aria-label="Panel estratégico de Iberia 2084">
       <img :src="authArt" alt="Mapa estratégico de Iberia 2084" />
-      <div class="visual-overlay">
-        <section class="strategic-board" aria-label="Estado del teatro ibérico">
-          <span class="kicker">Centro de mando</span>
-          <h2>Iberia 2084 espera órdenes.</h2>
-          <p>El acceso queda protegido por correo verificado antes de abrir partidas, alianzas y provincias.</p>
-
-          <dl class="status-grid">
-            <div>
-              <dt>Correo</dt>
-              <dd>Verificado</dd>
-            </div>
-            <div>
-              <dt>OAuth</dt>
-              <dd>Stand-by</dd>
-            </div>
-            <div>
-              <dt>Dominio</dt>
-              <dd>iberia2084.com</dd>
-            </div>
-          </dl>
-
-          <ul class="dispatch-list" aria-label="Actividad del sistema">
-            <li>
-              <span></span>
-              <p>Códigos temporales para altas nuevas.</p>
-            </li>
-            <li>
-              <span></span>
-              <p>Recuperación con enlace firmado por email.</p>
-            </li>
-            <li>
-              <span></span>
-              <p>Proveedores externos visibles y apagados hasta configurar OAuth.</p>
-            </li>
-          </ul>
-        </section>
-      </div>
     </aside>
   </main>
 </template>
@@ -455,11 +418,12 @@ function invitationQuery() {
 
 .auth-page {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(440px, 31vw, 512px);
+  grid-template-columns: minmax(0, 1fr) clamp(430px, 32vw, 520px);
   min-height: 100svh;
   background:
-    linear-gradient(135deg, rgba(105, 182, 159, 0.08), transparent 28%),
-    linear-gradient(210deg, rgba(143, 167, 232, 0.1), transparent 36%),
+    radial-gradient(circle at 18% 14%, rgba(229, 198, 109, 0.12), transparent 28rem),
+    linear-gradient(135deg, rgba(105, 182, 159, 0.07), transparent 30%),
+    linear-gradient(210deg, rgba(143, 167, 232, 0.08), transparent 38%),
     var(--color-bg);
 }
 
@@ -471,56 +435,58 @@ function invitationQuery() {
   min-width: 0;
   min-height: 100svh;
   align-items: center;
-  border-left: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
+  border-left: 1px solid color-mix(in srgb, var(--color-accent) 18%, var(--color-border));
   background:
-    linear-gradient(90deg, rgba(210, 173, 84, 0.08) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 7rem),
-    color-mix(in srgb, var(--color-surface) 90%, black);
-  background-size: 48px 48px, auto, auto;
+    radial-gradient(circle at 90% 14%, rgba(229, 198, 109, 0.12), transparent 13rem),
+    linear-gradient(90deg, rgba(210, 173, 84, 0.055) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), transparent 8rem),
+    color-mix(in srgb, var(--color-surface) 92%, black);
+  background-size: auto, 44px 44px, auto, auto;
   box-shadow:
-    -20px 0 58px rgba(0, 0, 0, 0.38),
+    -28px 0 72px rgba(0, 0, 0, 0.44),
     inset 1px 0 0 rgba(255, 255, 255, 0.04);
 }
 
 .auth-panel::before {
   position: absolute;
   inset: 0 auto 0 0;
-  width: 2px;
-  background: linear-gradient(180deg, transparent, var(--color-accent) 28%, var(--color-accent-strong) 50%, var(--color-accent) 72%, transparent);
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(229, 198, 109, 0.84) 22%, rgba(105, 182, 159, 0.7) 50%, rgba(229, 198, 109, 0.74) 78%, transparent);
   content: '';
 }
 
 .auth-shell {
   display: grid;
   width: 100%;
-  max-width: 424px;
-  gap: 0.85rem;
+  max-width: 432px;
+  gap: 1.05rem;
   margin: 0 auto;
-  padding: clamp(1rem, 2.15vw, 1.7rem);
+  padding: clamp(1rem, 2.5vw, 2rem);
 }
 
 .brand-lockup {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.75rem;
   min-width: 0;
 }
 
 .brand-mark {
   display: grid;
-  width: 56px;
-  min-height: 50px;
+  width: 58px;
+  min-height: 52px;
   align-content: center;
   justify-items: center;
-  border-left: 2px solid var(--color-accent);
-  border-right: 1px solid color-mix(in srgb, var(--color-accent) 38%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 42%, var(--color-border));
+  border-left: 3px solid var(--color-accent-strong);
+  border-radius: 4px;
   color: var(--color-accent-strong);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
-    rgba(8, 12, 10, 0.72);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent),
+    rgba(8, 12, 10, 0.78);
   line-height: 1;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
 }
 
 .brand-mark span {
@@ -537,34 +503,45 @@ function invitationQuery() {
 .brand-name {
   min-width: 0;
   color: var(--color-text);
-  font-size: 1rem;
+  font-size: 1.04rem;
   font-weight: 950;
   overflow-wrap: anywhere;
 }
 
 .auth-card {
+  position: relative;
   display: grid;
-  gap: 0.68rem;
+  gap: 0.88rem;
   min-width: 0;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 20%, var(--color-border));
-  border-radius: 6px;
-  padding: clamp(1rem, 1.9vw, 1.32rem);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+  border-radius: 8px;
+  padding: clamp(1.05rem, 2vw, 1.5rem);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.055), transparent 7rem),
-    linear-gradient(145deg, rgba(105, 182, 159, 0.05), transparent 46%),
-    rgba(10, 15, 13, 0.86);
+    radial-gradient(circle at 100% 0%, rgba(229, 198, 109, 0.12), transparent 12rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.065), transparent 7.5rem),
+    linear-gradient(145deg, rgba(105, 182, 159, 0.055), transparent 48%),
+    rgba(10, 15, 13, 0.91);
   box-shadow:
-    0 22px 42px rgba(0, 0, 0, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.055);
+    0 24px 54px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.auth-card::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-accent-strong), rgba(105, 182, 159, 0.88), transparent);
+  content: '';
 }
 
 .access-heading {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.42rem;
   min-width: 0;
-  padding-bottom: 0.75rem;
+  padding-bottom: 0.86rem;
   border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-border));
-  text-align: center;
+  text-align: left;
 }
 
 .kicker {
@@ -584,17 +561,16 @@ p {
 
 h1 {
   color: var(--color-text);
-  font-size: clamp(1.7rem, 2.35vw, 2.18rem);
+  font-size: clamp(1.85rem, 2.45vw, 2.34rem);
   font-weight: 950;
   line-height: 1.05;
 }
 
-.access-heading p,
-.strategic-board p {
+.access-heading p {
   color: var(--color-muted);
   font-size: 0.9rem;
   font-weight: 720;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .mode-switch {
@@ -602,10 +578,10 @@ h1 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 4px;
-  background: rgba(8, 12, 10, 0.5);
+  border: 1px solid color-mix(in srgb, var(--color-border) 82%, var(--color-accent));
+  border-radius: 6px;
+  padding: 5px;
+  background: rgba(8, 12, 10, 0.64);
 }
 
 .mode-switch button,
@@ -617,9 +593,9 @@ h1 {
 
 .mode-switch button {
   min-width: 0;
-  min-height: 36px;
+  min-height: 38px;
   border: 0;
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 0.48rem 0.42rem;
   color: var(--color-muted);
   background: transparent;
@@ -636,7 +612,7 @@ h1 {
 .oauth-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: 0.56rem;
   min-width: 0;
 }
 
@@ -645,15 +621,15 @@ h1 {
   align-items: center;
   justify-content: center;
   min-width: 0;
-  min-height: 42px;
+  min-height: 46px;
   gap: 0.58rem;
   border: 1px solid color-mix(in srgb, var(--color-border) 82%, var(--color-accent));
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 0.45rem 0.58rem;
   color: var(--color-text);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.01)),
-    rgba(23, 30, 27, 0.86);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.012)),
+    rgba(23, 30, 27, 0.9);
   opacity: 1;
   cursor: not-allowed;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -663,8 +639,8 @@ h1 {
   border-color: rgba(176, 184, 194, 0.16);
   color: color-mix(in srgb, var(--color-muted) 88%, white);
   background:
-    linear-gradient(180deg, rgba(248, 250, 252, 0.08), rgba(248, 250, 252, 0.015)),
-    rgba(148, 163, 184, 0.12);
+    linear-gradient(180deg, rgba(248, 250, 252, 0.075), rgba(248, 250, 252, 0.012)),
+    rgba(148, 163, 184, 0.1);
 }
 
 .oauth-button span:not(.oauth-initial) {
@@ -690,8 +666,8 @@ h1 {
 .oauth-initial {
   display: grid;
   flex: 0 0 auto;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
   border-radius: 50%;
@@ -739,12 +715,14 @@ h1 {
 .field input {
   width: 100%;
   min-width: 0;
-  min-height: 42px;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.62rem 0.72rem;
+  min-height: 46px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, var(--color-accent));
+  border-radius: 6px;
+  padding: 0.68rem 0.78rem;
   color: var(--color-text);
-  background: rgba(8, 12, 10, 0.72);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent),
+    rgba(8, 12, 10, 0.78);
   outline: none;
 }
 
@@ -769,24 +747,27 @@ h1 {
 }
 
 .password-control input {
-  border-radius: 4px 0 0 4px;
+  border-radius: 6px 0 0 6px;
 }
 
 .password-control button {
   min-width: 70px;
-  border: 1px solid var(--color-border);
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, var(--color-accent));
   border-left: 0;
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 6px 6px 0;
   padding-inline: 0.65rem;
   color: var(--color-accent-strong);
-  background: var(--color-surface-soft);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
+    var(--color-surface-soft);
   font-size: 0.76rem;
   font-weight: 900;
 }
 
 .submit-button {
   width: 100%;
-  min-height: 44px;
+  min-height: 48px;
+  border-radius: 6px;
   justify-content: center;
   font-size: 0.96rem;
 }
@@ -794,7 +775,7 @@ h1 {
 .text-button {
   justify-self: center;
   border: 0;
-  padding: 0.25rem 0.1rem;
+  padding: 0.28rem 0.1rem;
   color: var(--color-accent-strong);
   background: transparent;
   font-size: 0.82rem;
@@ -838,17 +819,18 @@ h1 {
 .auth-visual::before {
   z-index: 1;
   background:
-    linear-gradient(90deg, rgba(7, 9, 7, 0.62), rgba(7, 9, 7, 0.08) 36%, rgba(7, 9, 7, 0.42) 78%, rgba(7, 9, 7, 0.84)),
-    linear-gradient(180deg, rgba(7, 9, 7, 0.56), rgba(7, 9, 7, 0.08) 42%, rgba(7, 9, 7, 0.86));
+    radial-gradient(circle at 54% 36%, rgba(255, 255, 255, 0.02), transparent 18rem),
+    linear-gradient(90deg, rgba(7, 9, 7, 0.34), rgba(7, 9, 7, 0.02) 38%, rgba(7, 9, 7, 0.36) 78%, rgba(7, 9, 7, 0.76)),
+    linear-gradient(180deg, rgba(7, 9, 7, 0.28), rgba(7, 9, 7, 0.04) 44%, rgba(7, 9, 7, 0.82));
 }
 
 .auth-visual::after {
   z-index: 2;
   background:
-    linear-gradient(90deg, rgba(210, 173, 84, 0.12) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(105, 182, 159, 0.1) 1px, transparent 1px);
-  background-size: 86px 86px;
-  opacity: 0.16;
+    linear-gradient(90deg, rgba(229, 198, 109, 0.12) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(105, 182, 159, 0.09) 1px, transparent 1px);
+  background-size: 92px 92px;
+  opacity: 0.13;
 }
 
 .auth-visual img {
@@ -858,102 +840,7 @@ h1 {
   height: 100%;
   object-fit: cover;
   object-position: 50% 50%;
-  filter: saturate(0.98) contrast(1.08) brightness(0.92);
-}
-
-.visual-overlay {
-  position: relative;
-  z-index: 3;
-  display: grid;
-  min-height: 100%;
-  align-content: end;
-  align-items: end;
-  gap: clamp(1rem, 3vw, 2rem);
-  padding: clamp(1.1rem, 3.8vw, 3.2rem);
-}
-
-.strategic-board {
-  display: grid;
-  align-self: end;
-  width: min(100%, 560px);
-  gap: 0.78rem;
-  border-left: 3px solid var(--color-accent);
-  border-radius: 0 6px 6px 0;
-  padding: clamp(1rem, 2.4vw, 1.45rem);
-  background: linear-gradient(90deg, rgba(8, 12, 10, 0.9), rgba(8, 12, 10, 0.58) 72%, rgba(8, 12, 10, 0.18));
-  backdrop-filter: blur(3px);
-  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.34);
-}
-
-.strategic-board h2 {
-  max-width: 15ch;
-  color: var(--color-text);
-  font-size: clamp(1.95rem, 3.65vw, 3.75rem);
-  font-weight: 950;
-  line-height: 1;
-}
-
-.strategic-board p {
-  max-width: 58ch;
-}
-
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.6rem;
-  margin: 0;
-  max-width: 590px;
-}
-
-.status-grid div {
-  min-width: 0;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-border));
-  border-radius: 6px;
-  padding: 0.65rem;
-  background: rgba(8, 12, 10, 0.66);
-}
-
-.status-grid dt {
-  margin: 0 0 0.22rem;
-  color: var(--color-subtle);
-  font-size: 0.72rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.status-grid dd {
-  margin: 0;
-  color: var(--color-text);
-  font-size: 0.92rem;
-  font-weight: 950;
-  overflow-wrap: anywhere;
-}
-
-.dispatch-list {
-  display: grid;
-  gap: 0.55rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.dispatch-list li {
-  display: grid;
-  grid-template-columns: 10px minmax(0, 1fr);
-  align-items: start;
-  gap: 0.55rem;
-  color: var(--color-muted);
-  font-size: 0.86rem;
-  font-weight: 720;
-}
-
-.dispatch-list span {
-  width: 10px;
-  height: 10px;
-  margin-top: 0.32rem;
-  border-radius: 50%;
-  background: var(--color-success);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--color-success) 48%, transparent);
+  filter: saturate(1.05) contrast(1.1) brightness(0.92);
 }
 
 @media (min-width: 981px) and (max-height: 720px) {
@@ -1035,27 +922,7 @@ h1 {
   }
 
   .auth-visual {
-    grid-column: 1;
-    grid-row: 2;
-    min-height: auto;
-  }
-
-  .visual-overlay {
-    min-height: auto;
-    padding: 1rem;
-  }
-
-  .auth-visual img {
-    opacity: 0.46;
-  }
-
-  .strategic-board {
-    width: 100%;
-  }
-
-  .strategic-board h2 {
-    max-width: 16ch;
-    font-size: clamp(1.8rem, 8vw, 3rem);
+    display: none;
   }
 }
 
@@ -1068,8 +935,7 @@ h1 {
     padding: 0.85rem;
   }
 
-  .oauth-grid,
-  .status-grid {
+  .oauth-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1096,8 +962,5 @@ h1 {
     min-height: 48px;
   }
 
-  .strategic-board {
-    padding: 0.9rem;
-  }
 }
 </style>
