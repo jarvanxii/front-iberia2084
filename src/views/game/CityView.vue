@@ -18,7 +18,9 @@ const state = computed(() => session.state)
 const cities = computed(() => state.value?.cities ?? [])
 const resources = computed(() => state.value?.resources ?? [])
 const buildings = computed(() => state.value?.cityBuildings ?? [])
+const garrisons = computed(() => state.value?.garrisons ?? [])
 const resourceMap = computed(() => new Map(resources.value.map((resource) => [resource.code, resource.amount])))
+const resourceByCode = computed(() => new Map(resources.value.map((resource) => [resource.code, resource])))
 const selectedCity = computed(() => {
   if (!cities.value.length) return null
   return cities.value.find((city) => city.id === selectedCityId.value) ?? cities.value[0]
@@ -36,60 +38,79 @@ const cityOptions = computed(() =>
   cities.value.map((city) => ({
     value: city.id,
     label: city.name,
-    meta: `${city.region} · defensa ${city.defense} · ${city.resourceName}`,
+    meta: `${city.region} · defensa ${defenseSpecialization().toLocaleLowerCase('es-ES')} · ${city.resourceName}`,
     badge: city.capital ? 'Capital' : undefined,
   })),
 )
-const selectedTerritory = computed(() => {
-  if (!state.value || !selectedCity.value) return null
-  return state.value.territories.find((territory) => territory.id === selectedCity.value?.id) ?? null
-})
-const selectedResourceCode = computed(() => {
-  const territoryCode = selectedTerritory.value?.resourceFocus
-  if (territoryCode) return territoryCode
-  return resources.value.find((resource) => resource.name === selectedCity.value?.resourceName)?.code ?? 'pesetas'
-})
 const selectedBuilding = computed(() => {
   if (!buildings.value.length) return null
   return buildings.value.find((building) => building.code === selectedBuildingCode.value) ?? buildings.value[0]
+})
+const selectedCityGarrison = computed(() =>
+  garrisons.value.filter((garrison) => garrison.territoryId === selectedCity.value?.id),
+)
+const occupiedSlots = computed(() =>
+  selectedCityGarrison.value.reduce((total, unit) => total + unit.amount * Math.max(1, unit.slots), 0),
+)
+const maxSlots = computed(() => {
+  if (!selectedCity.value) return 0
+  return Math.max(24, Math.round(selectedCity.value.population / 10))
+})
+const happinessPercent = computed(() => {
+  if (!selectedCity.value) return 0
+  return clamp(Math.round(selectedCity.value.baseVotes), 0, 100)
 })
 const cityResourceMetrics = computed(() => {
   if (!selectedCity.value) return []
   return [
     {
       key: 'population',
-      label: 'Población',
+      label: 'Habitantes',
       value: formatNumber(selectedCity.value.population),
-      note: 'Base social',
+      note: 'Población censada',
       icon: resourceIcon('votos'),
+    },
+    {
+      key: 'pesetasHour',
+      label: 'Pesetas/h',
+      value: productionPerHourLabel('pesetas'),
+      note: 'Caja provincial',
+      icon: resourceIcon('pesetas'),
+    },
+    {
+      key: 'votosHour',
+      label: 'Votos/h',
+      value: productionPerHourLabel('votos'),
+      note: 'Ritmo electoral',
+      icon: resourceIcon('votos'),
+    },
+    {
+      key: 'favoresHour',
+      label: 'Favores/h',
+      value: productionPerHourLabel('favores'),
+      note: 'Red clientelar',
+      icon: resourceIcon('favores'),
+    },
+    {
+      key: 'happiness',
+      label: 'Felicidad',
+      value: `${happinessPercent.value}%`,
+      note: 'Ánimo civil',
+      icon: resourceIcon('votos'),
+    },
+    {
+      key: 'slots',
+      label: 'Plazas',
+      value: `${formatNumber(occupiedSlots.value)} / ${formatNumber(maxSlots.value)}`,
+      note: 'Guarnición',
+      icon: resourceIcon('pesetas'),
     },
     {
       key: 'defense',
       label: 'Defensa',
-      value: formatNumber(selectedCity.value.defense),
-      note: 'Resiste invasiones',
+      value: defenseSpecialization(),
+      note: 'Especialización',
       icon: resourceIcon('favores'),
-    },
-    {
-      key: 'baseVotes',
-      label: 'Votos base',
-      value: formatNumber(selectedCity.value.baseVotes),
-      note: 'Apoyo público',
-      icon: resourceIcon('votos'),
-    },
-    {
-      key: 'focus',
-      label: 'Producción local',
-      value: selectedCity.value.resourceName,
-      note: 'Recurso provincial',
-      icon: resourceIcon(selectedResourceCode.value),
-    },
-    {
-      key: 'building',
-      label: 'Edificio provincial',
-      value: selectedCity.value.buildingName,
-      note: selectedCity.value.capital ? 'Capital' : selectedCity.value.region,
-      icon: resourceIcon('pesetas'),
     },
   ]
 })
@@ -100,6 +121,20 @@ function enough(costs: ResourceCostDto[]) {
 
 function formatNumber(value: number) {
   return value.toLocaleString('es-ES')
+}
+
+function productionPerHourLabel(code: string) {
+  const resource = resourceByCode.value.get(code)
+  const hourly = (resource?.productionPerMinute ?? 0) * 60
+  return `+${formatNumber(hourly)}`
+}
+
+function defenseSpecialization() {
+  return 'Aérea'
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
 }
 
 function resourceName(code: string) {
@@ -185,12 +220,15 @@ onUnmounted(() => {
 
         <div v-if="selectedCity" class="selected-city-summary">
           <strong>{{ selectedCity.name }}</strong>
-          <small>{{ selectedCity.region }} · defensa {{ selectedCity.defense }} · {{ selectedCity.resourceName }}</small>
+          <small>
+            {{ selectedCity.region }} · defensa {{ defenseSpecialization().toLocaleLowerCase('es-ES') }} ·
+            {{ selectedCity.resourceName }}
+          </small>
           <em>{{ selectedCity.capital ? 'Capital provincial' : 'Provincia controlada' }}</em>
         </div>
 
         <div v-else class="city-picker-empty">
-          <RouterLink v-if="!cities.length" class="empty-city" :to="{ name: 'home' }">
+          <RouterLink v-if="!cities.length" class="empty-city" :to="{ name: 'homeGames' }">
             Entra en una partida para recibir una provincia
           </RouterLink>
         </div>
@@ -202,7 +240,7 @@ onUnmounted(() => {
             <span>Recursos de provincia</span>
             <strong>{{ selectedCity.name }}</strong>
           </div>
-          <button class="app-button secondary city-refresh" @click="session.refresh">Actualizar</button>
+          <button class="app-button secondary city-refresh" @click="() => session.refresh()">Actualizar</button>
         </div>
 
         <div class="city-resource-bar">
@@ -445,13 +483,13 @@ dt {
 
 .city-resource-bar {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: var(--compact-gap-sm);
 }
 
 .city-resource {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-columns: 22px minmax(0, 1fr);
   gap: 0 0.32rem;
   align-items: center;
   min-width: 0;
@@ -462,14 +500,14 @@ dt {
 
 .city-resource img {
   grid-row: span 3;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   object-fit: contain;
 }
 
 .city-resource strong {
   color: var(--color-text);
-  font-size: 0.86rem;
+  font-size: 0.82rem;
 }
 
 .city-resource em {
@@ -828,7 +866,7 @@ dd {
   }
 
   .city-resource-bar {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 

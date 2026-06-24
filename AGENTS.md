@@ -24,7 +24,7 @@ Only `VITE_` variables are available in browser code. The current contract is:
 
 ```properties
 VITE_APP_ENV=local
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASE_URL=http://localhost:18081
 ```
 
 Keep real `.env*` files out of git. Commit only `.env.example`, `.env.local.example`, and `.env.remoto.example`.
@@ -39,7 +39,7 @@ This repository belongs only to Iberia 2084. Do not bring back code, routes, ass
 - Keep every user-facing Spanish string in UTF-8 with correct accents and `ñ`. Search for mojibake before finishing.
 - Use fictional parties and institutions. Do not use real party names, logos, slogans, or identifiable current politicians.
 - The satire can hit every political family, but it must stay fictional, systemic, and playable.
-- Canonical parties are: Pantomima Popular (PP), Unión Progresista Nacional (PISOE), Grupo Independiente Liberal (GIL), Partido Unido Feminista Federal (PUFF...), Votantes obreros con Xilófono (VOX) and Junts Units Nacionalment per la Terra Sobirana (JUNTS). Use "partido" in user-facing Spanish, never "facción".
+- Canonical parties are: Pantomima Popular (PP), Unión Progresista Nacional (PISOE), Grupo Independiente Liberal (GIL), Partido Unido Feminista Federal (PUFF...), Votantes obreros con Xilófono (VOX) and Junts Usuaris de Noves Tarifes Sobiranes (JUNTS). Use "partido" in user-facing Spanish, never "facción".
 - The separated Gandalfpolis extraction may be used as UX/gameplay reference when the user asks for it. Rebuild the experience with Iberia 2084 names, assets, resources and contracts; do not reintroduce the old movie platform domain.
 
 ## Game UX Rules

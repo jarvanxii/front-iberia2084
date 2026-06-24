@@ -5,8 +5,12 @@ import router from '@/router'
 describe('router', () => {
   it('resolves lobby screens as standalone urls', () => {
     expect(router.resolve({ name: 'home' }).href).toBe('/home')
+    expect(router.resolve({ name: 'homeGames' }).href).toBe('/partidas')
     expect(router.resolve({ name: 'homeParties' }).href).toBe('/partidos')
     expect(router.resolve({ name: 'homeTroops' }).href).toBe('/unidades')
+    expect(router.resolve({ name: 'homeBuildings' }).href).toBe('/edificios')
+    expect(router.resolve({ name: 'homeEvents' }).href).toBe('/eventos')
+    expect(router.resolve({ name: 'homeResearch' }).href).toBe('/investigaciones')
   })
 
   it('resolves game screens below the selected world', () => {

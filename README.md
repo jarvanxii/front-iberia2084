@@ -22,7 +22,7 @@ Variables usadas por el front:
 
 ```properties
 VITE_APP_ENV=local
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASE_URL=http://localhost:18081
 ```
 
 Archivos de ejemplo:
@@ -116,7 +116,7 @@ intercambio, ministerios, iberopedia y mapa político responsive.
 - **Grupo Independiente Liberal (GIL):** "Obras, orden y espectáculo." Secundario: "Menos papeles y más grúas."
 - **Partido Unido Feminista Federal (PUFF...):** "Igualdad, sindicatos y mucho mucho enfado." Secundario: "¡Levantemos el puñito!"
 - **Votantes obreros con Xilófono (VOX):** "Patria, bombo y xilófono." Alternativa: "Mucho himno, poco bemol."
-- **Junts Units Nacionalment per la Terra Sobirana (JUNTS):** "Una provincia, una ilusión." Alternativa: "Lo nuestro primero, el resto va después."
+- **Junts Usuaris de Noves Tarifes Sobiranes (JUNTS):** "Una provincia, una ilusión." Alternativa: "Lo nuestro primero, el resto va después."
 
 ### Experiencia De Juego
 

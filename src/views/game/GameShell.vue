@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { RouterView } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 
 const session = useSessionStore()
+const route = useRoute()
 const state = computed(() => session.state)
 const player = computed(() => state.value?.player ?? null)
 
 onMounted(async () => {
   if (!state.value) {
-    await session.refresh()
+    const worldCode = typeof route.params.worldCode === 'string' ? route.params.worldCode : undefined
+    await session.refresh(worldCode)
   }
 })
 </script>

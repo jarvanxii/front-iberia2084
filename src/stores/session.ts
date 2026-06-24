@@ -10,6 +10,7 @@ export const useSessionStore = defineStore('session', () => {
   const state = ref<GameStateDto | null>(null)
   const worlds = ref<WorldDto[]>([])
   const factions = ref<FactionDto[]>([])
+  const activeWorldCode = ref('')
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -60,23 +61,26 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  async function refresh() {
+  async function refresh(worldCode?: string) {
     if (!token.value) return
-    state.value = await api.state(token.value)
+    if (worldCode) activeWorldCode.value = worldCode
+    state.value = await api.state(token.value, activeWorldCode.value || undefined)
   }
 
-  async function collect() {
+  async function collect(worldCode?: string) {
     if (!token.value) return
-    state.value = await api.collect(token.value)
+    if (worldCode) activeWorldCode.value = worldCode
+    state.value = await api.collect(token.value, activeWorldCode.value || undefined)
   }
 
-  async function runAction(action: () => Promise<unknown>) {
+  async function runAction(action: (worldCode?: string) => Promise<unknown>, worldCode?: string) {
     if (!token.value) return
+    if (worldCode) activeWorldCode.value = worldCode
     loading.value = true
     error.value = null
     try {
-      await action()
-      await refresh()
+      await action(activeWorldCode.value || undefined)
+      await refresh(activeWorldCode.value || undefined)
     } catch (unknownError) {
       error.value = unknownError instanceof Error ? unknownError.message : 'La operación se ha atragantado.'
       throw unknownError
@@ -88,6 +92,7 @@ export const useSessionStore = defineStore('session', () => {
   const actions = {
     joinWorld: (body: { worldCode: string; factionCode: string; leaderName: string; provinceCode?: string }) =>
       runAction(async () => {
+        activeWorldCode.value = body.worldCode
         state.value = await api.joinWorld(token.value!, body)
       }),
     onboarding: (body: {
@@ -96,40 +101,41 @@ export const useSessionStore = defineStore('session', () => {
       allianceDescription?: string
       joinAllianceCode?: string
     }) =>
-      runAction(async () => {
-        state.value = await api.onboarding(token.value!, body)
+      runAction(async (worldCode) => {
+        state.value = await api.onboarding(token.value!, body, worldCode)
       }),
-    conquer: (territoryId: number) => runAction(() => api.conquer(token.value!, territoryId)),
-    influence: (territoryId: number) => runAction(() => api.influence(token.value!, territoryId)),
-    corruption: (schemeCode: string) => runAction(() => api.corruption(token.value!, schemeCode)),
+    conquer: (territoryId: number) => runAction((worldCode) => api.conquer(token.value!, territoryId, worldCode)),
+    influence: (territoryId: number) => runAction((worldCode) => api.influence(token.value!, territoryId, worldCode)),
+    corruption: (schemeCode: string) => runAction((worldCode) => api.corruption(token.value!, schemeCode, worldCode)),
     disaster: (eventId: number, planCode: string) =>
-      runAction(() => api.disaster(token.value!, eventId, planCode)),
-    research: (researchCode: string) => runAction(() => api.research(token.value!, researchCode)),
+      runAction((worldCode) => api.disaster(token.value!, eventId, planCode, worldCode)),
+    research: (researchCode: string) => runAction((worldCode) => api.research(token.value!, researchCode, worldCode)),
     trainTroops: (unitCode: string, amount: number) =>
-      runAction(async () => {
-        state.value = await api.trainTroops(token.value!, unitCode, amount)
+      runAction(async (worldCode) => {
+        state.value = await api.trainTroops(token.value!, unitCode, amount, worldCode)
       }),
     deployTroops: (territoryId: number, unitCode: string, amount: number) =>
-      runAction(async () => {
-        state.value = await api.deployTroops(token.value!, territoryId, unitCode, amount)
+      runAction(async (worldCode) => {
+        state.value = await api.deployTroops(token.value!, territoryId, unitCode, amount, worldCode)
       }),
     upgradeBuilding: (buildingCode: string) =>
-      runAction(async () => {
-        state.value = await api.upgradeBuilding(token.value!, buildingCode)
+      runAction(async (worldCode) => {
+        state.value = await api.upgradeBuilding(token.value!, buildingCode, worldCode)
       }),
     exchange: (fromCode: string, toCode: string, amount: number) =>
-      runAction(async () => {
-        state.value = await api.exchange(token.value!, fromCode, toCode, amount)
+      runAction(async (worldCode) => {
+        state.value = await api.exchange(token.value!, fromCode, toCode, amount, worldCode)
       }),
     createAlliance: (name: string, code: string, description: string) =>
-      runAction(() => api.createAlliance(token.value!, { name, code, description })),
-    joinAlliance: (code: string) => runAction(() => api.joinAlliance(token.value!, code)),
-    message: (body: string) => runAction(() => api.message(token.value!, body)),
+      runAction((worldCode) => api.createAlliance(token.value!, { name, code, description }, worldCode)),
+    joinAlliance: (code: string) => runAction((worldCode) => api.joinAlliance(token.value!, code, worldCode)),
+    message: (body: string) => runAction((worldCode) => api.message(token.value!, body, worldCode)),
   }
 
   function logout() {
     token.value = null
     state.value = null
+    activeWorldCode.value = ''
     localStorage.removeItem(TOKEN_KEY)
   }
 
@@ -138,6 +144,7 @@ export const useSessionStore = defineStore('session', () => {
     state,
     worlds,
     factions,
+    activeWorldCode,
     loading,
     error,
     isLoggedIn,

@@ -1,23 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">Logo de Grupo Independiente Liberal</title>
-  <desc id="desc">Sello naranja de ladrillo, grua y poder municipal para GIL.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="gilTitle gilDesc">
+  <title id="gilTitle">Logo de Grupo Independiente Liberticida</title>
+  <desc id="gilDesc">Sello naranja con grúa municipal, rotonda dorada, palmera y siglas GIL.</desc>
   <defs>
-    <linearGradient id="gilBg" x1="74" y1="64" x2="432" y2="450" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#ffc15c"/>
-      <stop offset="0.48" stop-color="#e25b27"/>
-      <stop offset="1" stop-color="#872011"/>
+    <linearGradient id="gilBg" x1="76" y1="58" x2="430" y2="452" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffc95c"/>
+      <stop offset="0.46" stop-color="#df6626"/>
+      <stop offset="1" stop-color="#7b2411"/>
     </linearGradient>
-    <linearGradient id="gilGold" x1="132" y1="86" x2="376" y2="430" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#fff1ad"/>
-      <stop offset="1" stop-color="#d9901d"/>
+    <linearGradient id="gilGold" x1="138" y1="86" x2="376" y2="428" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff3a8"/>
+      <stop offset="0.5" stop-color="#d89a28"/>
+      <stop offset="1" stop-color="#8d5b12"/>
     </linearGradient>
+    <filter id="gilShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#291001" flood-opacity="0.42"/>
+    </filter>
   </defs>
-  <rect width="512" height="512" rx="86" fill="#1b0d05"/>
-  <circle cx="256" cy="256" r="183" fill="url(#gilBg)"/>
-  <circle cx="256" cy="256" r="164" fill="none" stroke="url(#gilGold)" stroke-width="13"/>
-  <path d="M134 342h244v42H134z" fill="#fff1c0"/>
-  <path d="M158 302h64v40h-64zm72 0h64v40h-64zm72 0h64v40h-64zM190 262h64v40h-64zm72 0h64v40h-64z" fill="#fff1c0" opacity="0.92"/>
-  <path d="M168 158h206l-96-53v191" fill="none" stroke="#fff4cf" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M278 105h98v54M376 159c0 27-34 27-34 0" fill="none" stroke="#fff4cf" stroke-width="15" stroke-linecap="round"/>
-  <text x="256" y="252" text-anchor="middle" fill="#fff7df" font-family="Arial Black, Arial, sans-serif" font-size="112" font-weight="900" letter-spacing="-6">GIL</text>
+  <rect width="512" height="512" rx="78" fill="#180b04"/>
+  <circle cx="256" cy="248" r="184" fill="url(#gilBg)" filter="url(#gilShadow)"/>
+  <circle cx="256" cy="248" r="160" fill="none" stroke="url(#gilGold)" stroke-width="12"/>
+  <path d="M138 324c51-39 185-39 236 0-23 35-64 56-118 56s-95-21-118-56Z" fill="#fff0be"/>
+  <circle cx="256" cy="325" r="38" fill="#d87b26"/>
+  <circle cx="256" cy="325" r="18" fill="#fff0be"/>
+  <path d="M159 173h200l-95-54v161" fill="none" stroke="#fff4ca" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M264 119h108v58M372 177c0 28-37 28-37 0" fill="none" stroke="#fff4ca" stroke-width="15" stroke-linecap="round"/>
+  <path d="M164 260c20-22 42-24 66-6M348 260c-20-22-42-24-66-6" fill="none" stroke="#fff4ca" stroke-width="13" stroke-linecap="round"/>
+  <path d="M188 225c-18-31-14-64 14-99M204 226c7-36 27-61 61-77M222 231c28-27 59-36 96-27" fill="none" stroke="#ffe6a0" stroke-width="11" stroke-linecap="round" opacity="0.92"/>
+  <rect x="155" y="384" width="202" height="62" rx="16" fill="#241105" opacity="0.92"/>
+  <text x="256" y="431" text-anchor="middle" fill="#fff6d2" font-family="Arial Black, Arial, sans-serif" font-size="54" font-weight="900">GIL</text>
 </svg>

@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import UnitStatsPanel from '@/components/game/UnitStatsPanel.vue'
 import type { ResourceCostDto, TroopDefinitionDto } from '@/types/game'
+import { comparePartyCodes } from '@/utils/partyOrder'
 import { resourceIcon } from '@/utils/resourceIcons'
 import { troopPortrait } from '@/utils/troopPortraits'
 
@@ -63,7 +64,7 @@ const specialTroopGroups = computed(() => {
     groups.get(code)?.units.push(unit)
   }
 
-  return [...groups.values()]
+  return [...groups.values()].sort((a, b) => comparePartyCodes(a.code, b.code))
 })
 
 const tabItems = computed(() => [
@@ -82,7 +83,7 @@ const visibleSections = computed<TroopSection[]>(() => {
       {
         code: 'transportes',
         name: 'Medios de transporte',
-        meta: 'Unidades de apoyo para reglas de desplazamiento',
+        meta: 'Logística terrestre, marítima y aérea sin valor de ataque',
         color: 'var(--color-success)',
         units: transportUnits.value,
       },
@@ -110,28 +111,12 @@ const visibleSections = computed<TroopSection[]>(() => {
   ]
 })
 
-const summary = computed(() => {
-  const units = orderedUnits.value
-  const fastest = units.reduce((best, unit) => Math.min(best, unit.trainingSeconds), Number.POSITIVE_INFINITY)
-  const strongest = units.reduce((best, unit) => Math.max(best, unit.attack), 0)
-  const maxSlots = units.reduce((best, unit) => Math.max(best, unit.slots), 0)
-
-  return {
-    total: units.length,
-    common: commonUnits.value.length,
-    special: specialTroopGroups.value.reduce((total, group) => total + group.units.length, 0),
-    fastest: Number.isFinite(fastest) ? secondsLabel(fastest) : '0s',
-    strongest,
-    maxSlots,
-  }
-})
-
 function isTransportUnit(unit: TroopDefinitionDto) {
-  return unit.role.toLowerCase().startsWith('transporte')
+  return Boolean(unit.transportType || unit.role.toLowerCase().startsWith('transporte'))
 }
 
 function mainRole(unit: TroopDefinitionDto) {
-  if (isTransportUnit(unit)) return 'Transporte'
+  if (isTransportUnit(unit)) return unit.transportTypeLabel ?? 'Transporte'
   if (unit.attackType === 'INCISIVE') return 'Incisiva'
   if (unit.attackType === 'MEDIA') return 'Mediática'
   return 'Burocrática'
@@ -143,13 +128,6 @@ function unitAccent(unit: TroopDefinitionDto) {
   if (unit.attackType === 'INCISIVE') return 'var(--color-danger)'
   if (unit.attackType === 'MEDIA') return 'var(--color-info)'
   return 'var(--color-accent)'
-}
-
-function secondsLabel(seconds: number) {
-  if (seconds < 60) return `${seconds}s`
-  const minutes = Math.floor(seconds / 60)
-  const rest = seconds % 60
-  return rest ? `${minutes}m ${rest}s` : `${minutes}m`
 }
 
 function buildingLabel(code: string) {
@@ -166,40 +144,6 @@ function activeCosts(costs: ResourceCostDto[]) {
 
 <template>
   <section class="troop-guide">
-    <header class="troop-guide-heading">
-      <div class="heading-copy">
-        <p class="muted">Catálogo de unidades</p>
-        <h2>Unidades disponibles</h2>
-      </div>
-
-      <dl class="catalog-metrics" aria-label="Resumen de unidades">
-        <div>
-          <dt>Total</dt>
-          <dd>{{ summary.total }}</dd>
-        </div>
-        <div>
-          <dt>Comunes</dt>
-          <dd>{{ summary.common }}</dd>
-        </div>
-        <div>
-          <dt>Especiales</dt>
-          <dd>{{ summary.special }}</dd>
-        </div>
-        <div>
-          <dt>Ataque máx.</dt>
-          <dd>{{ summary.strongest }}</dd>
-        </div>
-        <div>
-          <dt>Plazas máx.</dt>
-          <dd>{{ summary.maxSlots }}</dd>
-        </div>
-        <div>
-          <dt>Más rápida</dt>
-          <dd>{{ summary.fastest }}</dd>
-        </div>
-      </dl>
-    </header>
-
     <nav class="troop-tabs" aria-label="Tipos de unidades">
       <button
         v-for="tab in tabItems"
@@ -213,6 +157,13 @@ function activeCosts(costs: ResourceCostDto[]) {
         <strong>{{ tab.count }}</strong>
       </button>
     </nav>
+
+    <header class="troop-guide-heading">
+      <div class="heading-copy">
+        <p class="muted">Catálogo de unidades</p>
+        <h2>Unidades disponibles</h2>
+      </div>
+    </header>
 
     <section class="unit-sections">
       <article
@@ -248,23 +199,25 @@ function activeCosts(costs: ResourceCostDto[]) {
               </div>
               <h4>{{ unit.name }}</h4>
               <p>{{ unit.description }}</p>
+
+              <div class="unlock-block">
+                <span>Desbloqueo</span>
+                <strong>{{ buildingLabel(unit.unlockBuildingCode) }}</strong>
+                <em>Nivel {{ unit.unlockBuildingLevel }}</em>
+              </div>
             </div>
 
             <UnitStatsPanel class="unit-stats" :unit="unit" dense />
 
-            <aside class="unit-economy" aria-label="Coste y desbloqueo">
+            <aside class="unit-economy" aria-label="Costes">
+              <h5>Costes</h5>
+
               <div class="cost-stack">
                 <span v-for="cost in activeCosts(unit.costs)" :key="`${unit.code}-${cost.code}`" class="cost-chip">
                   <img :src="resourceIcon(cost.code)" :alt="resourceNames[cost.code] ?? cost.code" />
                   <strong>{{ cost.amount.toLocaleString('es-ES') }}</strong>
                   <em>{{ resourceNames[cost.code] ?? cost.code }}</em>
                 </span>
-              </div>
-
-              <div class="unlock-block">
-                <span>Desbloqueo</span>
-                <strong>{{ buildingLabel(unit.unlockBuildingCode) }}</strong>
-                <em>Nivel {{ unit.unlockBuildingLevel }}</em>
               </div>
             </aside>
           </article>
@@ -276,16 +229,16 @@ function activeCosts(costs: ResourceCostDto[]) {
 
 <style scoped>
 .troop-guide {
+  --troop-tabs-height: 42px;
   display: grid;
   gap: var(--compact-gap);
-  scroll-margin-top: calc(var(--home-header-height) + var(--space-page));
+  padding-top: calc(var(--troop-tabs-height) + var(--compact-gap));
+  scroll-margin-top: calc(var(--home-header-height) + var(--troop-tabs-height) + var(--space-page));
 }
 
 .troop-guide-heading {
   display: grid;
-  grid-template-columns: minmax(260px, 0.72fr) minmax(520px, 1fr);
-  gap: var(--compact-gap);
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
 }
 
@@ -311,70 +264,79 @@ function activeCosts(costs: ResourceCostDto[]) {
   font-weight: 850;
 }
 
-.catalog-metrics {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: var(--compact-gap-sm);
-  min-width: 0;
-  margin: 0;
-}
-
-.catalog-metrics div {
-  display: grid;
-  gap: 0.12rem;
-  min-width: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--compact-card-padding);
-  background: var(--color-surface);
-}
-
-.catalog-metrics dt {
-  overflow: hidden;
-  color: var(--color-muted);
-  font-size: 0.62rem;
-  font-weight: 900;
-  letter-spacing: 0;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.catalog-metrics dd {
-  margin: 0;
-  color: var(--color-text);
-  font-size: 1rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 950;
-}
-
 .troop-tabs {
+  position: fixed;
+  z-index: 999;
+  top: var(--home-header-height);
+  right: 0;
+  left: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--compact-gap-sm);
+  gap: 0;
+  min-height: var(--troop-tabs-height);
   min-width: 0;
+  margin: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-accent) 34%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
+  padding: 0.18rem var(--space-page);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 9%, transparent), transparent 34rem),
+    linear-gradient(180deg, #111815 0%, #0b1110 100%);
+  box-shadow:
+    0 10px 18px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 241, 190, 0.05);
 }
 
 .troop-tabs button {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--compact-gap-sm);
+  gap: 0.48rem;
   align-items: center;
-  min-height: 36px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 0.34rem 0.52rem;
+  min-height: 34px;
+  border: 0;
+  border-right: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  border-radius: 0;
+  padding: 0.32rem 0.62rem;
   color: var(--color-muted);
-  background: var(--color-surface);
+  background: transparent;
   font-weight: 950;
   text-align: left;
+  transition:
+    color 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.troop-tabs button:first-child {
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+}
+
+.troop-tabs button::after {
+  content: '';
+  position: absolute;
+  right: 0.42rem;
+  bottom: 0.12rem;
+  left: 0.42rem;
+  height: 2px;
+  transform: scaleX(0);
+  background: var(--color-accent-strong);
+  transform-origin: center;
+  transition: transform 0.16s ease;
 }
 
 .troop-tabs button:hover,
 .troop-tabs button.active {
-  border-color: var(--color-accent);
-  color: var(--color-on-accent);
-  background: var(--color-accent);
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.troop-tabs button.active {
+  color: var(--color-accent-strong);
+}
+
+.troop-tabs button:hover::after,
+.troop-tabs button.active::after {
+  transform: scaleX(1);
 }
 
 .troop-tabs span {
@@ -384,6 +346,7 @@ function activeCosts(costs: ResourceCostDto[]) {
 }
 
 .troop-tabs strong {
+  color: currentColor;
   font-variant-numeric: tabular-nums;
 }
 
@@ -427,7 +390,7 @@ function activeCosts(costs: ResourceCostDto[]) {
 
 .unit-row {
   display: grid;
-  grid-template-columns: 88px minmax(230px, 1fr) minmax(290px, 0.95fr) minmax(210px, 0.72fr);
+  grid-template-columns: 160px minmax(260px, 1fr) minmax(320px, 0.95fr) minmax(220px, 0.72fr);
   gap: var(--compact-gap);
   align-items: stretch;
   min-width: 0;
@@ -441,7 +404,7 @@ function activeCosts(costs: ResourceCostDto[]) {
 .unit-portrait {
   position: relative;
   min-width: 0;
-  width: 88px;
+  width: 160px;
   aspect-ratio: 1 / 1;
   align-self: center;
   margin: 0;
@@ -468,8 +431,10 @@ function activeCosts(costs: ResourceCostDto[]) {
 
 .unit-main {
   display: grid;
-  align-content: center;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  align-content: stretch;
   gap: var(--compact-gap-sm);
+  min-height: 100%;
   min-width: 0;
 }
 
@@ -497,6 +462,7 @@ function activeCosts(costs: ResourceCostDto[]) {
 
 .unit-main p {
   display: -webkit-box;
+  align-self: start;
   max-width: 70ch;
   margin: 0;
   overflow: hidden;
@@ -508,19 +474,34 @@ function activeCosts(costs: ResourceCostDto[]) {
 }
 
 .unit-stats {
-  align-self: center;
+  align-self: stretch;
   min-width: 0;
 }
 
 .unit-economy {
   display: grid;
-  gap: var(--compact-gap-sm);
+  grid-template-rows: auto minmax(0, 1fr);
+  align-self: stretch;
+  gap: 0.2rem;
   min-width: 0;
+}
+
+.unit-economy h5 {
+  min-height: 1rem;
+  margin: 0;
+  color: var(--color-accent);
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .cost-stack {
   display: grid;
+  grid-auto-rows: minmax(0, 1fr);
   gap: 0.22rem;
+  height: 100%;
   min-width: 0;
 }
 
@@ -530,6 +511,7 @@ function activeCosts(costs: ResourceCostDto[]) {
   gap: 0.28rem;
   align-items: center;
   min-width: 0;
+  min-height: 2.06rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 0.24rem 0.34rem;
@@ -561,8 +543,10 @@ function activeCosts(costs: ResourceCostDto[]) {
 
 .unlock-block {
   display: grid;
+  align-self: end;
   gap: 0.12rem;
   min-width: 0;
+  margin-top: var(--space-1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 0.34rem 0.42rem;
@@ -601,43 +585,35 @@ function activeCosts(costs: ResourceCostDto[]) {
   }
 
   .unit-row {
-    grid-template-columns: 100px minmax(220px, 1fr) minmax(290px, 1fr);
+    grid-template-columns: 140px minmax(220px, 1fr) minmax(290px, 1fr);
   }
 
   .unit-portrait {
-    width: 100px;
+    width: 140px;
   }
 
   .unit-economy {
     grid-column: 2 / -1;
-    grid-template-columns: minmax(0, 1fr) minmax(190px, 0.56fr);
   }
 
   .cost-stack {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
   }
 }
 
 @media (max-width: 820px) {
-  .catalog-metrics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .unit-row {
-    grid-template-columns: 92px minmax(0, 1fr);
+    grid-template-columns: 126px minmax(0, 1fr);
   }
 
   .unit-portrait {
-    width: 92px;
+    width: 126px;
   }
 
   .unit-stats,
   .unit-economy {
     grid-column: 1 / -1;
-  }
-
-  .unit-economy {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -646,10 +622,23 @@ function activeCosts(costs: ResourceCostDto[]) {
     gap: var(--compact-gap);
   }
 
-  .catalog-metrics,
-  .troop-tabs,
   .cost-stack {
     grid-template-columns: 1fr;
+  }
+
+  .troop-tabs {
+    grid-template-columns: repeat(3, minmax(96px, 1fr));
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .troop-tabs button {
+    min-width: 96px;
+    padding: 0.32rem 0.44rem;
+  }
+
+  .cost-stack {
+    grid-auto-rows: minmax(0, 1fr);
   }
 
   .unit-row {
@@ -658,7 +647,7 @@ function activeCosts(costs: ResourceCostDto[]) {
   }
 
   .unit-portrait {
-    width: min(100%, 220px);
+    width: min(100%, 280px);
     justify-self: start;
   }
 }

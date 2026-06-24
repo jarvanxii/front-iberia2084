@@ -6,6 +6,8 @@ export interface DropdownOption {
   label: string
   meta?: string
   badge?: string
+  icon?: string
+  color?: string
   disabled?: boolean
 }
 
@@ -129,12 +131,16 @@ onUnmounted(() => {
     <button
       type="button"
       class="dropdown-trigger"
+      :class="{ 'has-icon': selectedOption?.icon }"
       :aria-label="ariaLabel"
       :aria-expanded="isOpen"
       :aria-controls="listboxId"
       @click="toggle"
       @keydown="onKeydown"
     >
+      <span v-if="selectedOption?.icon" class="option-icon" :style="{ '--option-color': selectedOption.color }">
+        <img :src="selectedOption.icon" :alt="''" />
+      </span>
       <span class="trigger-copy">
         <strong>{{ selectedOption?.label ?? placeholder }}</strong>
         <small v-if="selectedOption?.meta">{{ selectedOption.meta }}</small>
@@ -150,12 +156,15 @@ onUnmounted(() => {
         type="button"
         role="option"
         class="dropdown-option"
-        :class="{ selected: option.value === modelValue, highlighted: index === highlightedIndex }"
+        :class="{ selected: option.value === modelValue, highlighted: index === highlightedIndex, 'has-icon': option.icon }"
         :aria-selected="option.value === modelValue"
         :disabled="option.disabled"
         @mouseenter="highlightedIndex = index"
         @click="selectOption(option)"
       >
+        <span v-if="option.icon" class="option-icon" :style="{ '--option-color': option.color }">
+          <img :src="option.icon" :alt="''" />
+        </span>
         <span>
           <strong>{{ option.label }}</strong>
           <small v-if="option.meta">{{ option.meta }}</small>
@@ -187,6 +196,10 @@ onUnmounted(() => {
   text-align: left;
 }
 
+.dropdown-trigger.has-icon {
+  grid-template-columns: auto minmax(0, 1fr) auto 14px;
+}
+
 .dropdown-trigger:hover,
 .app-dropdown.open .dropdown-trigger {
   border-color: var(--color-accent);
@@ -198,6 +211,26 @@ onUnmounted(() => {
   display: grid;
   min-width: 0;
   gap: 0.08rem;
+}
+
+.option-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--option-color, var(--color-accent)) 48%, var(--color-border));
+  border-radius: var(--radius-sm);
+  background:
+    radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--option-color, var(--color-accent)) 12%, transparent), transparent 62%),
+    var(--color-surface);
+}
+
+.option-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .trigger-copy strong,
@@ -290,6 +323,10 @@ onUnmounted(() => {
   color: var(--color-text);
   background: transparent;
   text-align: left;
+}
+
+.dropdown-option.has-icon {
+  grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
 .dropdown-option:hover,

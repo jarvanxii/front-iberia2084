@@ -8,6 +8,38 @@ import {
 } from '@/data/spanishProvinceMap'
 import { useSessionStore } from '@/stores/session'
 import type { TerritoryDto } from '@/types/game'
+import { comparePartyCodes } from '@/utils/partyOrder'
+
+interface ResourceMultiplier {
+  code: string
+  label: string
+  value: number
+  tone: 'low' | 'neutral' | 'high'
+}
+
+interface AttackSimulation {
+  power: number
+  defense: number
+  chance: number
+  title: string
+  body: string
+  tone: 'good' | 'warn' | 'bad'
+}
+
+interface ProvincePartySummary {
+  code: string
+  label: string
+  color: string
+  count: number
+  percentage: number
+  free?: boolean
+}
+
+const multiplierResources = [
+  { code: 'pesetas', label: 'Pesetas' },
+  { code: 'votos', label: 'Votos' },
+  { code: 'favores', label: 'Favores' },
+]
 
 const session = useSessionStore()
 const firstProvince = provinceShapes[0]!
@@ -15,11 +47,12 @@ const selectedProvinceCode = ref<string | null>(null)
 const inviteEmail = ref('')
 const inviteStatus = ref<string | null>(null)
 const inviteError = ref<string | null>(null)
+const simulationResult = ref<AttackSimulation | null>(null)
 
 const state = computed(() => session.state)
 const player = computed(() => state.value?.player ?? null)
 const territories = computed(() => state.value?.territories ?? [])
-const regionalGovernments = computed(() => state.value?.regionalGovernments ?? [])
+const troops = computed(() => state.value?.troops ?? [])
 const territoryByCode = computed(() => new Map(territories.value.map((territory) => [territory.code, territory])))
 const activeWorld = computed(() => {
   if (!state.value || !player.value) return null
@@ -36,6 +69,72 @@ const selectedProvince = computed<ProvinceShape>(() => {
 
 const selectedTerritory = computed(() => territoryForProvince(selectedProvince.value))
 const selectedCanInvite = computed(() => Boolean(selectedTerritory.value && !selectedTerritory.value.ownerPlayerId))
+const resourceMultipliers = computed<ResourceMultiplier[]>(() =>
+  multiplierResources.map((resource) => {
+    const value = multiplierForResource(selectedTerritory.value, resource.code)
+
+    return {
+      ...resource,
+      value,
+      tone: multiplierTone(value),
+    }
+  }),
+)
+const attackPower = computed(() =>
+  troops.value.reduce((total, troop) => total + troop.amount * Math.max(0, troop.attack), 0),
+)
+const troopCount = computed(() => troops.value.reduce((total, troop) => total + troop.amount, 0))
+const provincePartySummary = computed<ProvincePartySummary[]>(() => {
+  const total = provinceShapes.length
+  const summaries = new Map<string, Omit<ProvincePartySummary, 'percentage'>>()
+  const sortedFactions = [...(state.value?.factions ?? [])].sort((a, b) => comparePartyCodes(a.code, b.code))
+
+  sortedFactions.forEach((faction) => {
+    summaries.set(faction.code, {
+      code: faction.code,
+      label: faction.shortName,
+      color: faction.color,
+      count: 0,
+    })
+  })
+
+  const freeSummary: Omit<ProvincePartySummary, 'percentage'> = {
+    code: 'sin-jugador',
+    label: 'Sin jugador',
+    color: 'var(--color-accent)',
+    count: 0,
+    free: true,
+  }
+
+  provinceShapes.forEach((province) => {
+    const territory = territoryForProvince(province)
+
+    if (!territory?.ownerPlayerId) {
+      freeSummary.count += 1
+      return
+    }
+
+    const code = territory.ownerFactionCode?.toLowerCase() ?? 'sin-datos'
+    const existing = summaries.get(code)
+
+    if (existing) {
+      existing.count += 1
+      return
+    }
+
+    summaries.set(code, {
+      code,
+      label: territory.ownerFactionShortName ?? territory.ownerFactionCode?.toUpperCase() ?? 'Sin datos',
+      color: territory.ownerFactionColor ?? fallbackOwnerColor(territory.ownerPlayerId),
+      count: 1,
+    })
+  })
+
+  return [...summaries.values(), freeSummary].map((summary) => ({
+    ...summary,
+    percentage: total > 0 ? Math.round((summary.count / total) * 100) : 0,
+  }))
+})
 const invitationLink = computed(() => {
   const origin = window.location.origin
   const params = new URLSearchParams({
@@ -60,12 +159,15 @@ function territoryForProvince(province: ProvinceShape): TerritoryDto | undefined
   return territoryByCode.value.get(province.code)
 }
 
-function regionGovernment(province: ProvinceShape) {
-  return regionalGovernments.value.find((region) => region.code === province.regionCode)
+function fallbackOwnerColor(ownerPlayerId: number) {
+  const colors = ['#d8b24c', '#59b89c', '#8aa7ff', '#de796d', '#b48ae2', '#7fc667', '#d38a48', '#5fb6d1']
+  return colors[Math.abs(ownerPlayerId - 1) % colors.length] ?? colors[0] ?? '#d8b24c'
 }
 
 function provinceColor(province: ProvinceShape) {
-  return territoryForProvince(province)?.color ?? regionGovernment(province)?.color ?? 'var(--color-border-strong)'
+  const territory = territoryForProvince(province)
+  if (!territory?.ownerPlayerId) return 'var(--color-border-strong)'
+  return territory.ownerFactionColor ?? fallbackOwnerColor(territory.ownerPlayerId)
 }
 
 function provinceOwner(province: ProvinceShape) {
@@ -75,9 +177,10 @@ function provinceOwner(province: ProvinceShape) {
   return 'Sin datos'
 }
 
-function provincePoliticalControl(province: ProvinceShape) {
+function provinceOwnerParty(province: ProvinceShape) {
   const territory = territoryForProvince(province)
-  return territory?.flavorFactionName ?? regionGovernment(province)?.controlledByFactionName ?? 'Neutral'
+  if (!territory?.ownerPlayerId) return 'Sin partido'
+  return territory.ownerFactionShortName ?? territory.ownerFactionCode?.toUpperCase() ?? 'Sin datos'
 }
 
 function provinceStatusLabel(province: ProvinceShape) {
@@ -88,10 +191,32 @@ function provinceStatusLabel(province: ProvinceShape) {
   return 'Libre'
 }
 
+function isMineProvince(province: ProvinceShape) {
+  return territoryForProvince(province)?.ownerPlayerId === player.value?.id
+}
+
+function provinceLabelBox(province: ProvinceShape) {
+  const width = Math.max(17, province.abbr.length * 7.5 + 8)
+  const height = province.inset ? 15 : 16
+
+  return {
+    x: province.labelX - width / 2,
+    y: province.labelY - height / 2,
+    width,
+    height,
+  }
+}
+
+function mineMarkerTransform(province: ProvinceShape) {
+  const box = provinceLabelBox(province)
+  return `translate(${box.x + box.width + 2} ${box.y - 1})`
+}
+
 function selectProvince(province: ProvinceShape) {
   selectedProvinceCode.value = province.code
   inviteStatus.value = null
   inviteError.value = null
+  simulationResult.value = null
 }
 
 function emailIsValid(value: string) {
@@ -119,6 +244,94 @@ function prepareInvitation() {
   window.location.href = mailto.toString()
   inviteStatus.value = `Invitación preparada para ${email}.`
 }
+
+function multiplierForResource(territory: TerritoryDto | undefined, resourceCode: string) {
+  if (!territory) return 1
+
+  const focusBonus = territory.resourceFocus === resourceCode ? 0.06 : 0
+  const drift = (stableNumber(`${territory.code}:${resourceCode}`) - 4) / 100
+  const defenseBias = resourceCode === 'favores' ? Math.min(0.03, territory.defense / 2500) : 0
+  const voteBias = resourceCode === 'votos' ? Math.min(0.03, territory.baseVotes / 4200) : 0
+
+  return clampNumber(1 + focusBonus + drift + defenseBias + voteBias, 0.88, 1.14)
+}
+
+function stableNumber(value: string) {
+  let hash = 0
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) % 997
+  }
+  return hash % 9
+}
+
+function multiplierTone(value: number): ResourceMultiplier['tone'] {
+  if (value >= 1.03) return 'high'
+  if (value <= 0.98) return 'low'
+  return 'neutral'
+}
+
+function multiplierLabel(value: number) {
+  return `x${value.toFixed(2)}`
+}
+
+function formatNumber(value: number) {
+  return value.toLocaleString('es-ES')
+}
+
+function provinceCountLabel(value: number) {
+  return value === 1 ? '1 provincia' : `${value} provincias`
+}
+
+function formatProvinceShare(value: number) {
+  return `${value}%`
+}
+
+function simulateAttack() {
+  if (!selectedTerritory.value) return
+
+  const power = attackPower.value
+  const defense = selectedTerritory.value.defense
+  const occupationModifier = selectedTerritory.value.ownerPlayerId ? -4 : 8
+  const pressureRatio = power / Math.max(1, power + defense * 9 + 120)
+  const chance = Math.round(clampNumber(32 + pressureRatio * 62 + occupationModifier, 4, 96))
+  const title = simulationTitle(power, chance)
+
+  simulationResult.value = {
+    power,
+    defense,
+    chance,
+    title,
+    body: simulationBody(power, chance),
+    tone: chance >= 65 ? 'good' : chance >= 42 ? 'warn' : 'bad',
+  }
+}
+
+function simulationTitle(power: number, chance: number) {
+  if (power <= 0) return 'Sin fuerza desplegable'
+  if (chance >= 65) return 'Ventaja operativa'
+  if (chance >= 42) return 'Riesgo controlado'
+  return 'Ataque desaconsejado'
+}
+
+function simulationBody(power: number, chance: number) {
+  if (power <= 0) {
+    return 'No hay reservas con capacidad de ataque. Entrena o reasigna unidades antes de lanzar una operación real.'
+  }
+
+  if (chance >= 65) {
+    return 'La presión estimada supera la defensa local. Aun así, revisa costes y tiempos antes de invadir.'
+  }
+
+  if (chance >= 42) {
+    return 'La provincia puede caer, pero el margen es estrecho. Una unidad de espionaje puede inclinar la lectura.'
+  }
+
+  return 'La defensa provincial está por encima de tu fuerza actual. Mejor prepara tropas, favores o una campaña previa.'
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
+}
 </script>
 
 <template>
@@ -131,7 +344,19 @@ function prepareInvitation() {
     <section class="map-layout">
       <article class="panel map-panel">
         <div class="map-stage" :style="{ '--map-aspect': MAP_ASPECT_RATIO }">
-          <svg class="province-map" :viewBox="MAP_VIEWBOX" role="img" aria-label="Mapa político de España por provincias">
+          <svg class="province-map" :viewBox="MAP_VIEWBOX" role="img" aria-label="Mapa de España por provincias">
+            <defs>
+              <pattern
+                id="province-mine-stripes"
+                width="7"
+                height="7"
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(45)"
+              >
+                <path d="M0 0H7" stroke="#f0d77b" stroke-opacity="0.36" stroke-width="2" />
+              </pattern>
+            </defs>
+
             <g class="inset-frame canarias-frame">
               <rect x="48" y="680" width="282" height="100" rx="14" />
               <text x="189" y="674">Canarias</text>
@@ -162,10 +387,23 @@ function prepareInvitation() {
               @keyup.space="selectProvince(province)"
             >
               <title>
-                {{ province.name }} · Jugador: {{ provinceOwner(province) }} · Partido: {{ provincePoliticalControl(province) }}
+                {{ province.name }} · Jugador: {{ provinceOwner(province) }} · Partido: {{ provinceOwnerParty(province) }} · Estado:
+                {{ provinceStatusLabel(province) }}
               </title>
-              <path :d="province.path" />
-              <text :x="province.labelX" :y="province.labelY + 4">{{ province.abbr }}</text>
+              <path class="province-base" :d="province.path" />
+              <path v-if="isMineProvince(province)" class="province-mine-stripes" :d="province.path" />
+              <rect
+                class="province-label-frame"
+                :x="provinceLabelBox(province).x"
+                :y="provinceLabelBox(province).y"
+                :width="provinceLabelBox(province).width"
+                :height="provinceLabelBox(province).height"
+                rx="3"
+              />
+              <text :x="province.labelX" :y="province.labelY" dominant-baseline="middle">{{ province.abbr }}</text>
+              <g v-if="isMineProvince(province)" class="province-mine-marker" :transform="mineMarkerTransform(province)">
+                <path d="M0 -6 5 0 0 6 -5 0Z" />
+              </g>
             </g>
           </svg>
         </div>
@@ -173,7 +411,7 @@ function prepareInvitation() {
 
       <aside class="panel detail-panel">
         <span :style="{ background: provinceColor(selectedProvince) }"></span>
-        <p class="muted">{{ selectedProvince.regionName }}</p>
+        <p class="muted">Mapa provincial</p>
         <h2>{{ selectedProvince.name }}</h2>
         <dl>
           <div>
@@ -181,8 +419,8 @@ function prepareInvitation() {
             <dd>{{ provinceOwner(selectedProvince) }}</dd>
           </div>
           <div>
-            <dt>Partido/color</dt>
-            <dd>{{ provincePoliticalControl(selectedProvince) }}</dd>
+            <dt>Partido</dt>
+            <dd>{{ provinceOwnerParty(selectedProvince) }}</dd>
           </div>
           <div>
             <dt>Defensa</dt>
@@ -214,6 +452,50 @@ function prepareInvitation() {
           </button>
         </div>
 
+        <section class="multiplier-panel" aria-label="Multiplicadores provinciales">
+          <header>
+            <span>Multiplicadores</span>
+            <strong>Rendimiento local</strong>
+          </header>
+          <table>
+            <tbody>
+              <tr v-for="multiplier in resourceMultipliers" :key="multiplier.code">
+                <th scope="row">{{ multiplier.label }}</th>
+                <td :class="`multiplier-${multiplier.tone}`">{{ multiplierLabel(multiplier.value) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="simulator-panel" aria-label="Simulador de ataque">
+          <header>
+            <span>Simulador</span>
+            <strong>Prueba de ataque</strong>
+          </header>
+          <dl class="simulator-stats">
+            <div>
+              <dt>Fuerza</dt>
+              <dd>{{ formatNumber(attackPower) }}</dd>
+            </div>
+            <div>
+              <dt>Tropas</dt>
+              <dd>{{ formatNumber(troopCount) }}</dd>
+            </div>
+            <div>
+              <dt>Defensa</dt>
+              <dd>{{ selectedTerritory?.defense ?? 'Sin datos' }}</dd>
+            </div>
+          </dl>
+          <button class="app-button secondary simulator-button" :disabled="!selectedTerritory" @click="simulateAttack">
+            Simular ataque
+          </button>
+          <div v-if="simulationResult" class="simulation-result" :class="`simulation-result-${simulationResult.tone}`">
+            <strong>{{ simulationResult.title }}</strong>
+            <span>{{ simulationResult.chance }}% estimado</span>
+            <p>{{ simulationResult.body }}</p>
+          </div>
+        </section>
+
         <section class="invite-panel" :class="{ disabled: !selectedCanInvite }" aria-label="Invitar jugador">
           <div>
             <span>Invitación</span>
@@ -241,22 +523,52 @@ function prepareInvitation() {
       </aside>
     </section>
 
-    <article class="panel province-grid">
-      <button
-        v-for="province in provinceShapes"
-        :key="province.code"
-        :class="{
-          active: province.code === selectedProvince.code,
-          inactive: !territoryForProvince(province),
-          free: territoryForProvince(province) && !territoryForProvince(province)?.ownerPlayerId,
-        }"
-        @click="selectProvince(province)"
-      >
-        <i :style="{ background: provinceColor(province) }"></i>
-        <strong>{{ province.name }}</strong>
-        <span>{{ provinceStatusLabel(province) }}</span>
-        <em>{{ provinceOwner(province) }}</em>
-      </button>
+    <article class="panel province-overview">
+      <header class="province-overview-header">
+        <div>
+          <span>Resumen por partido</span>
+          <strong>Control provincial</strong>
+        </div>
+        <em>{{ provinceCountLabel(provinceShapes.length) }}</em>
+      </header>
+
+      <section class="party-control-summary" aria-label="Resumen de control provincial por partido">
+        <article
+          v-for="summary in provincePartySummary"
+          :key="summary.code"
+          class="party-summary-card"
+          :class="{ free: summary.free, empty: summary.count === 0 }"
+          :style="{ '--party-color': summary.color }"
+        >
+          <i></i>
+          <div>
+            <strong>{{ summary.label }}</strong>
+            <span>{{ provinceCountLabel(summary.count) }}</span>
+          </div>
+          <em>{{ formatProvinceShare(summary.percentage) }}</em>
+        </article>
+      </section>
+
+      <div class="province-grid">
+        <button
+          v-for="province in provinceShapes"
+          :key="province.code"
+          :class="{
+            active: province.code === selectedProvince.code,
+            inactive: !territoryForProvince(province),
+            free: territoryForProvince(province) && !territoryForProvince(province)?.ownerPlayerId,
+            owned: Boolean(territoryForProvince(province)?.ownerPlayerId),
+            mine: isMineProvince(province),
+          }"
+          :style="{ '--province-color': provinceColor(province) }"
+          @click="selectProvince(province)"
+        >
+          <i></i>
+          <strong>{{ province.name }}</strong>
+          <span>{{ provinceStatusLabel(province) }}</span>
+          <em>{{ provinceOwner(province) }} · {{ provinceOwnerParty(province) }}</em>
+        </button>
+      </div>
     </article>
   </section>
 </template>
@@ -270,7 +582,7 @@ function prepareInvitation() {
 .intro-panel,
 .map-panel,
 .detail-panel,
-.province-grid {
+.province-overview {
   padding: var(--compact-panel-padding);
 }
 
@@ -329,7 +641,7 @@ function prepareInvitation() {
   outline: none;
 }
 
-.province-cell path {
+.province-cell .province-base {
   fill: var(--province-color);
   fill-rule: evenodd;
   stroke: var(--color-bg);
@@ -339,37 +651,46 @@ function prepareInvitation() {
   vector-effect: non-scaling-stroke;
 }
 
-.province-cell.inactive path {
+.province-cell.inactive .province-base {
   opacity: 0.34;
   stroke-dasharray: 5 4;
 }
 
-.province-cell.free path {
+.province-cell.free .province-base {
   opacity: 0.58;
   stroke: color-mix(in srgb, var(--color-accent) 60%, var(--color-bg));
   stroke-dasharray: 6 4;
 }
 
-.province-cell.owned path {
-  opacity: 0.86;
+.province-cell.owned .province-base {
+  opacity: 0.9;
 }
 
-.province-cell.mine path {
+.province-cell.mine .province-base {
   stroke: var(--color-success);
-  stroke-width: 2.6;
+  stroke-width: 3;
 }
 
-.province-cell.selected path,
-.province-cell:hover path,
-.province-cell:focus-visible path {
+.province-cell.selected .province-base,
+.province-cell:hover .province-base,
+.province-cell:focus-visible .province-base {
   opacity: 1;
   stroke: var(--color-accent);
   stroke-width: 3.4;
 }
 
+.province-mine-stripes {
+  fill: url('#province-mine-stripes');
+  fill-rule: evenodd;
+  opacity: 0.82;
+  pointer-events: none;
+  stroke: transparent;
+  stroke-width: 0;
+}
+
 .province-cell text {
-  fill: var(--color-bg);
-  font-size: 10px;
+  fill: var(--color-text);
+  font-size: 9px;
   font-weight: 950;
   letter-spacing: 0;
   pointer-events: none;
@@ -377,7 +698,41 @@ function prepareInvitation() {
 }
 
 .province-cell.inset text {
-  font-size: 10px;
+  font-size: 8.5px;
+}
+
+.province-label-frame {
+  fill: color-mix(in srgb, var(--color-bg) 86%, transparent);
+  stroke: color-mix(in srgb, var(--color-border-strong) 72%, var(--color-bg));
+  stroke-width: 1;
+  opacity: 0.9;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.province-cell.owned .province-label-frame {
+  fill: color-mix(in srgb, var(--province-color) 22%, var(--color-bg));
+  stroke: color-mix(in srgb, var(--province-color) 74%, var(--color-bg));
+}
+
+.province-cell.free .province-label-frame {
+  fill: color-mix(in srgb, var(--color-bg) 76%, transparent);
+}
+
+.province-cell.mine .province-label-frame {
+  stroke: var(--color-success);
+  stroke-width: 1.5;
+}
+
+.province-mine-marker {
+  pointer-events: none;
+}
+
+.province-mine-marker path {
+  fill: var(--color-success);
+  stroke: var(--color-bg);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
 }
 
 .detail-panel {
@@ -413,6 +768,134 @@ dd {
   display: flex;
   flex-wrap: wrap;
   gap: var(--compact-gap-sm);
+}
+
+.multiplier-panel,
+.simulator-panel {
+  display: grid;
+  gap: var(--compact-gap-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--compact-card-padding);
+  background: var(--color-surface-soft);
+}
+
+.multiplier-panel header,
+.simulator-panel header {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.multiplier-panel header span,
+.simulator-panel header span {
+  color: var(--color-accent);
+  font-size: 0.66rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.multiplier-panel header strong,
+.simulator-panel header strong {
+  color: var(--color-text);
+  font-size: 0.92rem;
+  line-height: 1.05;
+}
+
+.multiplier-panel table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.multiplier-panel tr {
+  border-top: 1px solid var(--color-border);
+}
+
+.multiplier-panel th,
+.multiplier-panel td {
+  padding: 0.36rem 0;
+  font-size: 0.82rem;
+}
+
+.multiplier-panel th {
+  color: var(--color-muted);
+  font-weight: 850;
+  text-align: left;
+}
+
+.multiplier-panel td {
+  color: var(--color-text);
+  font-weight: 950;
+  text-align: right;
+}
+
+.multiplier-panel .multiplier-high {
+  color: var(--color-success);
+}
+
+.multiplier-panel .multiplier-low {
+  color: var(--color-danger);
+}
+
+.simulator-panel {
+  border-left: 3px solid var(--color-info);
+}
+
+.simulator-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--compact-gap-sm);
+}
+
+.simulator-stats div {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.34rem;
+  background: color-mix(in srgb, var(--color-bg) 70%, transparent);
+}
+
+.simulator-stats dd {
+  color: var(--color-text);
+  font-weight: 950;
+}
+
+.simulator-button {
+  width: 100%;
+}
+
+.simulation-result {
+  display: grid;
+  gap: 0.12rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--compact-card-padding);
+  background: color-mix(in srgb, var(--color-bg) 76%, transparent);
+}
+
+.simulation-result strong {
+  color: var(--color-text);
+}
+
+.simulation-result span {
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.simulation-result p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.simulation-result-good {
+  border-color: color-mix(in srgb, var(--color-success) 68%, var(--color-border));
+}
+
+.simulation-result-warn {
+  border-color: color-mix(in srgb, var(--color-accent) 70%, var(--color-border));
+}
+
+.simulation-result-bad {
+  border-color: color-mix(in srgb, var(--color-danger) 70%, var(--color-border));
 }
 
 .invite-panel {
@@ -488,6 +971,116 @@ dd {
   color: var(--color-success);
 }
 
+.province-overview {
+  display: grid;
+  gap: var(--compact-gap);
+}
+
+.province-overview-header {
+  display: flex;
+  gap: var(--compact-gap);
+  align-items: end;
+  justify-content: space-between;
+  min-width: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 16%, transparent);
+  padding-bottom: 0.5rem;
+}
+
+.province-overview-header div {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.province-overview-header span {
+  color: var(--color-accent);
+  font-size: 0.68rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.province-overview-header strong {
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.province-overview-header em {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-style: normal;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.party-control-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: var(--compact-gap-sm);
+}
+
+.party-summary-card {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  gap: 0.42rem;
+  align-items: center;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--party-color) 34%, var(--color-border));
+  border-radius: var(--radius-sm);
+  padding: 0.42rem 0.48rem;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--party-color) 12%, transparent), transparent 56%),
+    var(--color-surface-soft);
+}
+
+.party-summary-card.empty {
+  opacity: 0.62;
+}
+
+.party-summary-card.free {
+  border-style: dashed;
+}
+
+.party-summary-card i {
+  width: 8px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--party-color);
+}
+
+.party-summary-card div {
+  display: grid;
+  min-width: 0;
+  gap: 0.08rem;
+}
+
+.party-summary-card strong,
+.party-summary-card span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.party-summary-card strong {
+  color: var(--color-text);
+  font-size: 0.84rem;
+  font-weight: 950;
+}
+
+.party-summary-card span {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 820;
+}
+
+.party-summary-card em {
+  color: color-mix(in srgb, var(--party-color) 72%, var(--color-text));
+  font-size: 0.9rem;
+  font-style: normal;
+  font-weight: 950;
+}
+
 .province-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -512,6 +1105,17 @@ dd {
   border-color: var(--color-accent);
 }
 
+.province-grid button.owned {
+  border-left: 3px solid var(--province-color);
+}
+
+.province-grid button.mine {
+  border-color: var(--color-success);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-success) 12%, transparent), transparent 42%),
+    var(--color-surface-soft);
+}
+
 .province-grid button.free {
   border-left: 3px solid var(--color-accent);
 }
@@ -525,6 +1129,7 @@ dd {
   width: 10px;
   height: 42px;
   border-radius: var(--radius-sm);
+  background: var(--province-color);
 }
 
 .province-grid strong,
@@ -559,7 +1164,7 @@ dd {
   .intro-panel,
   .map-panel,
   .detail-panel,
-  .province-grid {
+  .province-overview {
     padding: var(--compact-panel-padding);
   }
 
@@ -572,6 +1177,10 @@ dd {
   }
 
   .invite-panel form {
+    grid-template-columns: 1fr;
+  }
+
+  .simulator-stats {
     grid-template-columns: 1fr;
   }
 }

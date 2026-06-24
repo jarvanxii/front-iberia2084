@@ -2,11 +2,13 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import { partyLogo } from '@/utils/partyLogos'
 
 const router = useRouter()
 const route = useRoute()
 const session = useSessionStore()
 const menuOpen = ref(false)
+const appLogoUrl = '/logo-iberia84.png'
 
 const state = computed(() => session.state)
 const player = computed(() => state.value?.player ?? null)
@@ -25,13 +27,16 @@ const playerInitials = computed(() => {
     .join('')
 })
 const userDisplayName = computed(() => player.value?.leaderName ?? 'Sesión activa')
-const partyLabel = computed(() => player.value?.faction.shortName ?? 'Sin partido')
-const worldLabel = computed(() => activeWorld.value?.name ?? 'Sin partida')
+const userPartyLogo = computed(() => (player.value ? partyLogo(player.value.faction.code) : ''))
 
 const navItems = [
-  { to: { name: 'home' }, routeName: 'home', label: 'Partidas' },
+  { to: { name: 'home' }, routeName: 'home', label: 'Inicio' },
+  { to: { name: 'homeGames' }, routeName: 'homeGames', label: 'Partidas' },
   { to: { name: 'homeParties' }, routeName: 'homeParties', label: 'Partidos' },
   { to: { name: 'homeTroops' }, routeName: 'homeTroops', label: 'Unidades' },
+  { to: { name: 'homeBuildings' }, routeName: 'homeBuildings', label: 'Edificios' },
+  { to: { name: 'homeEvents' }, routeName: 'homeEvents', label: 'Eventos' },
+  { to: { name: 'homeResearch' }, routeName: 'homeResearch', label: 'Investigaciones' },
 ]
 
 function isActiveRoute(routeName: string) {
@@ -44,9 +49,22 @@ async function logout() {
   await router.push({ name: 'access' })
 }
 
-function enterActiveWorld() {
-  if (!activeWorld.value) return { name: 'home' }
-  return { name: 'gameCity', params: { worldCode: activeWorld.value.code } }
+function closeUserMenu() {
+  menuOpen.value = false
+}
+
+async function leaveToMainMenu() {
+  menuOpen.value = false
+  await router.push({ name: 'home' })
+}
+
+async function openAllianceChat() {
+  menuOpen.value = false
+  if (!activeWorld.value) {
+    await router.push({ name: 'home' })
+    return
+  }
+  await router.push({ name: 'gameAlliance', params: { worldCode: activeWorld.value.code } })
 }
 
 function closeOnOutsideClick(event: MouseEvent) {
@@ -54,12 +72,18 @@ function closeOnOutsideClick(event: MouseEvent) {
   if (!event.target.closest('.home-user')) menuOpen.value = false
 }
 
+function closeOnEscape(event: KeyboardEvent) {
+  if (event.key === 'Escape') menuOpen.value = false
+}
+
 onMounted(() => {
   window.addEventListener('click', closeOnOutsideClick)
+  window.addEventListener('keydown', closeOnEscape)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('click', closeOnOutsideClick)
+  window.removeEventListener('keydown', closeOnEscape)
 })
 </script>
 
@@ -67,6 +91,7 @@ onBeforeUnmount(() => {
   <header class="home-header" aria-label="Cabecera de Home">
     <div class="home-header-inner">
       <RouterLink class="home-brand" :to="{ name: 'home' }">
+        <img class="home-brand-logo" :src="appLogoUrl" alt="" />
         <strong>Iberia 2084</strong>
       </RouterLink>
 
@@ -90,23 +115,30 @@ onBeforeUnmount(() => {
           aria-label="Abrir menú de usuario"
           @click.stop="menuOpen = !menuOpen"
         >
-          <span class="home-user-avatar">{{ playerInitials }}</span>
+          <span class="home-user-avatar">
+            <img v-if="userPartyLogo" :src="userPartyLogo" :alt="''" />
+            <b v-else>{{ playerInitials }}</b>
+          </span>
           <span class="home-user-copy">
             <strong>{{ userDisplayName }}</strong>
-            <small>{{ partyLabel }} · {{ worldLabel }}</small>
           </span>
         </button>
 
         <section v-if="menuOpen" class="home-user-menu" aria-label="Menú de usuario" @click.stop>
           <div class="menu-user-summary">
             <strong>{{ userDisplayName }}</strong>
-            <span>{{ partyLabel }} · {{ worldLabel }}</span>
+            <span>Cuenta de Iberia 2084</span>
           </div>
 
-          <RouterLink class="home-menu-action primary" :to="enterActiveWorld()" @click="menuOpen = false">
-            {{ activeWorld ? 'Entrar en partida' : 'Elegir partida' }}
-          </RouterLink>
-          <button type="button" class="home-menu-action" @click="logout">Cerrar sesión</button>
+          <div class="home-user-actions">
+            <button type="button" class="home-menu-action" @click="closeUserMenu">Preferencias</button>
+            <button type="button" class="home-menu-action" @click="closeUserMenu">Notificaciones</button>
+            <button type="button" class="home-menu-action" @click="closeUserMenu">Cuenta y seguridad</button>
+            <button type="button" class="home-menu-action" @click="openAllianceChat">Chat</button>
+            <button type="button" class="home-menu-action" @click="closeUserMenu">Amigos</button>
+            <button type="button" class="home-menu-action" @click="leaveToMainMenu">Salir al menú principal</button>
+            <button type="button" class="home-menu-action danger" @click="logout">Cerrar sesión</button>
+          </div>
         </section>
       </div>
     </div>
@@ -147,13 +179,13 @@ onBeforeUnmount(() => {
 
 .home-header-inner {
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) auto minmax(190px, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.74rem;
   align-items: center;
-  width: min(1440px, 100%);
+  width: 100%;
   min-height: var(--home-header-height);
-  margin: 0 auto;
-  padding: 0 0.7rem;
+  margin: 0;
+  padding: 0 0.52rem;
 }
 
 .home-brand,
@@ -163,8 +195,21 @@ onBeforeUnmount(() => {
 }
 
 .home-brand {
+  display: grid;
+  grid-template-columns: 38px minmax(0, auto);
+  gap: 0.5rem;
+  align-items: center;
+  justify-self: start;
   color: var(--color-accent-strong);
   text-decoration: none;
+}
+
+.home-brand-logo {
+  display: block;
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-accent) 22%, transparent));
 }
 
 .home-brand strong {
@@ -230,7 +275,7 @@ onBeforeUnmount(() => {
 
 .home-user-button {
   display: grid;
-  grid-template-columns: 32px minmax(0, 150px);
+  grid-template-columns: 32px minmax(0, max-content);
   gap: 0.44rem;
   align-items: center;
   border: 0;
@@ -245,6 +290,7 @@ onBeforeUnmount(() => {
   width: 32px;
   height: 32px;
   place-items: center;
+  overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--color-accent) 44%, transparent);
   border-radius: var(--radius-sm);
   color: var(--color-accent-strong);
@@ -253,14 +299,21 @@ onBeforeUnmount(() => {
   font-weight: 900;
 }
 
+.home-user-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .home-user-copy {
   display: grid;
   min-width: 0;
+  max-width: 180px;
   text-align: left;
 }
 
 .home-user-copy strong,
-.home-user-copy small,
 .menu-user-summary strong,
 .menu-user-summary span {
   overflow: hidden;
@@ -269,10 +322,10 @@ onBeforeUnmount(() => {
 }
 
 .home-user-copy strong {
-  font-size: 0.86rem;
+  font-size: 0.88rem;
+  line-height: 1;
 }
 
-.home-user-copy small,
 .menu-user-summary span {
   color: var(--color-muted);
   font-size: 0.72rem;
@@ -301,25 +354,42 @@ onBeforeUnmount(() => {
   padding-bottom: 0.45rem;
 }
 
+.home-user-actions {
+  display: grid;
+}
+
 .home-menu-action {
   display: block;
   width: 100%;
+  min-height: 34px;
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 10%, transparent);
-  padding: 0.5rem 0;
+  padding: 0.48rem 0;
   color: var(--color-muted);
   background: transparent;
   font-weight: 800;
   text-align: left;
   text-decoration: none;
+  transition:
+    color 0.15s ease,
+    padding-left 0.15s ease;
 }
 
-.home-menu-action.primary {
-  color: var(--color-accent-strong);
-}
-
-.home-menu-action:hover {
+.home-menu-action:hover,
+.home-menu-action:focus-visible {
   color: var(--color-text);
+  outline: none;
+  padding-left: 0.18rem;
+}
+
+.home-menu-action.danger {
+  border-bottom: 0;
+  color: color-mix(in srgb, var(--color-danger) 58%, var(--color-text));
+}
+
+.home-menu-action.danger:hover,
+.home-menu-action.danger:focus-visible {
+  color: color-mix(in srgb, var(--color-danger) 28%, var(--color-text));
 }
 
 @media (max-width: 980px) {
@@ -348,6 +418,16 @@ onBeforeUnmount(() => {
 
   .home-brand strong {
     font-size: 0.98rem;
+  }
+
+  .home-brand {
+    grid-template-columns: 32px minmax(0, auto);
+    gap: 0.4rem;
+  }
+
+  .home-brand-logo {
+    width: 32px;
+    height: 32px;
   }
 
   .home-section-nav {

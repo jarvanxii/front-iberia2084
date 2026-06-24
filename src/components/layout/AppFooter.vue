@@ -29,29 +29,49 @@ const statusLabel = computed(() => {
 
 <template>
   <footer :class="['app-footer', `app-footer--${shell}`]">
-    <div class="footer-brand">
-      <span class="footer-code">IB</span>
-      <div>
-        <strong>Iberia 2084</strong>
-        <small>Juego de estrategia provincial</small>
-      </div>
+    <div class="footer-command">
+      <section class="footer-identity" aria-label="Iberia 2084">
+        <span class="footer-mark" aria-hidden="true">
+          <span>IB</span>
+          <strong>2084</strong>
+        </span>
+        <div class="footer-copy">
+          <strong>Iberia 2084</strong>
+          <small>Simulación estratégica por provincias</small>
+        </div>
+      </section>
+
+      <section class="footer-status" aria-label="Estado actual">
+        <span class="footer-eyebrow">{{ shellLabel }}</span>
+        <strong>{{ statusLabel }}</strong>
+      </section>
+
+      <nav v-if="session.isLoggedIn" class="footer-nav" aria-label="Navegación secundaria">
+        <span class="footer-eyebrow">Accesos</span>
+        <div class="footer-nav-links">
+          <RouterLink :to="{ name: 'home' }">Inicio</RouterLink>
+          <RouterLink :to="{ name: 'homeGames' }">Partidas</RouterLink>
+          <RouterLink :to="{ name: 'homeParties' }">Partidos</RouterLink>
+          <RouterLink :to="{ name: 'homeTroops' }">Unidades</RouterLink>
+          <RouterLink :to="{ name: 'homeBuildings' }">Edificios</RouterLink>
+          <RouterLink :to="{ name: 'homeEvents' }">Eventos</RouterLink>
+          <RouterLink :to="{ name: 'homeResearch' }">Investigaciones</RouterLink>
+        </div>
+      </nav>
+
+      <p v-else class="footer-note">Partidos ficticios · mapa por provincias · beta jugable</p>
     </div>
 
-    <div class="footer-status" aria-label="Estado de juego">
-      <span>{{ shellLabel }}</span>
-      <strong>{{ statusLabel }}</strong>
+    <div class="footer-bottom">
+      <p class="footer-legal">
+        <strong>Aviso legal</strong>
+        <span>
+          Iberia 2084 es una obra de ficción y sátira. Sus partidos, instituciones, territorios, personajes y
+          situaciones son ficticios y no representan a entidades, cargos ni personas reales.
+        </span>
+      </p>
+      <span class="footer-classification">Beta estratégica · 3 recursos principales</span>
     </div>
-
-    <nav v-if="session.isLoggedIn" class="footer-links" aria-label="Navegación secundaria">
-      <RouterLink :to="{ name: 'home' }">Partidas</RouterLink>
-      <RouterLink :to="{ name: 'homeParties' }">Partidos</RouterLink>
-      <RouterLink :to="{ name: 'homeTroops' }">Unidades</RouterLink>
-      <RouterLink v-if="activeWorld" :to="{ name: 'gameIberopedia', params: { worldCode: activeWorld.code } }">
-        Iberopedia
-      </RouterLink>
-    </nav>
-
-    <p v-else class="footer-note">Partidos ficticios · mapa por provincias · beta jugable</p>
   </footer>
 </template>
 
@@ -59,33 +79,30 @@ const statusLabel = computed(() => {
 .app-footer {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: var(--compact-gap);
-  align-items: center;
   margin: 0;
-  border-top: 1px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
-  padding: 0.58rem var(--space-page) 0.48rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-accent) 42%, var(--color-border));
   color: var(--color-muted);
   background:
-    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 18rem),
-    linear-gradient(180deg, #101612 0%, #0a0f0d 100%);
+    linear-gradient(90deg, rgba(69, 45, 28, 0.34), transparent 24rem),
+    linear-gradient(180deg, #151710 0%, #0e1210 55%, #080a09 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 241, 190, 0.04),
-    0 -10px 24px rgba(0, 0, 0, 0.26);
+    inset 0 1px 0 rgba(255, 241, 190, 0.06),
+    0 -12px 26px rgba(0, 0, 0, 0.28);
 }
 
 .app-footer::before {
   content: '';
   position: absolute;
-  top: -1px;
+  top: 0;
   right: 0;
   left: 0;
-  height: 1px;
+  height: 2px;
   background: linear-gradient(
     90deg,
     transparent,
-    color-mix(in srgb, var(--color-accent) 58%, transparent),
-    color-mix(in srgb, var(--color-accent-strong) 74%, transparent),
+    color-mix(in srgb, var(--color-accent) 72%, transparent) 18%,
+    color-mix(in srgb, var(--color-info) 38%, transparent) 50%,
+    color-mix(in srgb, var(--color-accent) 72%, transparent) 82%,
     transparent
   );
 }
@@ -94,140 +111,272 @@ const statusLabel = computed(() => {
   margin-top: 0;
 }
 
-.footer-brand,
+.footer-command {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(190px, 0.55fr) minmax(360px, 1.2fr);
+  gap: clamp(0.8rem, 2vw, 2rem);
+  align-items: center;
+  min-width: 0;
+  padding: 0.82rem var(--space-page) 0.72rem;
+}
+
+.footer-identity,
 .footer-status,
-.footer-links {
+.footer-nav {
   min-width: 0;
 }
 
-.footer-brand {
+.footer-identity {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 54px minmax(0, 1fr);
   gap: var(--space-3);
   align-items: center;
 }
 
-.footer-code {
+.footer-mark {
   display: grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border: 0;
-  border-right: 1px solid color-mix(in srgb, var(--color-accent) 26%, transparent);
-  border-radius: 0;
+  width: 54px;
+  min-height: 48px;
+  align-content: center;
+  justify-items: center;
+  border-left: 2px solid var(--color-accent);
+  border-right: 1px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
   color: var(--color-accent-strong);
-  background: transparent;
-  font-size: 0.7rem;
+  background:
+    linear-gradient(180deg, rgba(210, 173, 84, 0.14), rgba(210, 173, 84, 0.02)),
+    rgba(8, 10, 9, 0.45);
+  line-height: 1;
+}
+
+.footer-mark span {
+  font-size: 0.64rem;
   font-weight: 950;
 }
 
-.footer-brand strong,
+.footer-mark strong {
+  margin-top: 0.12rem;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.footer-copy {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.footer-copy strong,
 .footer-status strong {
   display: block;
   overflow: hidden;
   color: var(--color-text);
-  font-size: 0.84rem;
-  line-height: 1.1;
+  font-size: 0.92rem;
+  font-weight: 950;
+  line-height: 1.08;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.footer-brand small,
-.footer-status span,
+.footer-copy small,
 .footer-note {
   color: var(--color-muted);
-  font-size: 0.68rem;
-  font-weight: 800;
+  font-size: 0.72rem;
+  font-weight: 780;
+}
+
+.footer-eyebrow {
+  color: color-mix(in srgb, var(--color-accent-strong) 76%, var(--color-muted));
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .footer-status {
   display: grid;
-  gap: 0.08rem;
-  justify-items: end;
-  max-width: 240px;
-  border-left: 1px solid color-mix(in srgb, var(--color-accent) 16%, transparent);
+  gap: 0.2rem;
+  align-content: center;
+  border-left: 1px solid color-mix(in srgb, var(--color-accent) 26%, transparent);
   padding-left: var(--space-4);
 }
 
-.footer-status span {
-  color: var(--color-accent);
-  text-transform: uppercase;
+.footer-nav {
+  display: grid;
+  gap: 0.34rem;
+  align-content: center;
+  justify-items: end;
 }
 
-.footer-links {
+.footer-nav-links {
   display: flex;
   flex-wrap: wrap;
   gap: 0;
   justify-content: end;
-  border-left: 1px solid color-mix(in srgb, var(--color-accent) 16%, transparent);
-  padding-left: var(--space-3);
+  min-width: 0;
 }
 
-.footer-links a,
-.footer-note {
-  padding: 0.18rem 0.42rem;
-  background: transparent;
-}
-
-.footer-links a {
+.footer-nav-links a {
   position: relative;
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  border-right: 1px solid color-mix(in srgb, var(--color-border) 68%, transparent);
+  padding: 0 0.52rem;
   color: var(--color-muted);
-  font-size: 0.7rem;
-  font-weight: 850;
+  font-size: 0.72rem;
+  font-weight: 880;
+  line-height: 1;
   text-decoration: none;
 }
 
-.footer-links a::after {
+.footer-nav-links a:first-child {
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 68%, transparent);
+}
+
+.footer-nav-links a::after {
   content: '';
   position: absolute;
-  right: 0.42rem;
+  right: 0.52rem;
   bottom: 0;
-  left: 0.42rem;
+  left: 0.52rem;
   height: 1px;
   transform: scaleX(0);
-  background: var(--color-accent);
+  background: var(--color-accent-strong);
   transform-origin: center;
   transition: transform 0.16s ease;
 }
 
-.footer-links a:hover,
-.footer-links a.router-link-active {
+.footer-nav-links a:hover,
+.footer-nav-links a.router-link-active {
   color: var(--color-text);
 }
 
-.footer-links a:hover::after,
-.footer-links a.router-link-active::after {
+.footer-nav-links a:hover::after,
+.footer-nav-links a.router-link-active::after {
   transform: scaleX(1);
 }
 
 .footer-note {
+  justify-self: end;
   margin: 0;
+  border-left: 1px solid color-mix(in srgb, var(--color-accent) 26%, transparent);
+  padding-left: var(--space-4);
   text-align: right;
 }
 
-@media (max-width: 900px) {
-  .app-footer {
-    grid-template-columns: 1fr;
-    align-items: start;
+.footer-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--compact-gap);
+  align-items: center;
+  min-width: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-accent) 18%, transparent);
+  padding: 0.48rem var(--space-page) 0.56rem;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 36rem),
+    rgba(4, 5, 5, 0.36);
+}
+
+.footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
+  align-items: baseline;
+  min-width: 0;
+  margin: 0;
+  color: color-mix(in srgb, var(--color-muted) 82%, var(--color-text));
+  font-size: 0.68rem;
+  font-weight: 760;
+  line-height: 1.34;
+}
+
+.footer-legal strong {
+  color: var(--color-accent-strong);
+  font-size: 0.66rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.footer-legal span {
+  min-width: min(100%, 30ch);
+  overflow-wrap: anywhere;
+}
+
+.footer-classification {
+  color: color-mix(in srgb, var(--color-info) 58%, var(--color-muted));
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-align: right;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@media (max-width: 1040px) {
+  .footer-command {
+    grid-template-columns: minmax(220px, 1fr) minmax(170px, auto);
   }
 
-  .footer-status,
-  .footer-links,
+  .footer-nav,
   .footer-note {
-    border-left: 0;
-    padding-left: 0;
+    grid-column: 1 / -1;
+    justify-self: stretch;
     justify-items: start;
+    border-top: 1px solid color-mix(in srgb, var(--color-accent) 15%, transparent);
+    padding-top: var(--space-3);
+  }
+
+  .footer-nav-links {
     justify-content: start;
-    text-align: left;
   }
 }
 
-@media (max-width: 560px) {
-  .app-footer {
-    margin-right: 0;
-    margin-left: 0;
+@media (max-width: 720px) {
+  .footer-command,
+  .footer-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-command {
+    gap: var(--space-4);
+    padding-top: 0.7rem;
+  }
+
+  .footer-status,
+  .footer-note {
+    border-left: 0;
+    padding-left: 0;
+    text-align: left;
+  }
+
+  .footer-nav {
+    justify-items: start;
+  }
+
+  .footer-classification {
+    text-align: left;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 460px) {
+  .footer-identity {
+    grid-template-columns: 46px minmax(0, 1fr);
+  }
+
+  .footer-mark {
+    width: 46px;
+    min-height: 44px;
+  }
+
+  .footer-nav-links a,
+  .footer-nav-links a:first-child {
     border-right: 0;
-    border-radius: 0;
+    border-left: 0;
+    padding: 0.16rem 0.5rem 0.16rem 0;
   }
 }
 </style>

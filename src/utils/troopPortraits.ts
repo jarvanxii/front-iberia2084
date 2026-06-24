@@ -1,7 +1,9 @@
 import administrativoPortrait from '@/assets/troops/administrativo.png'
+import agenteDossierFantasmaPortrait from '@/assets/troops/agente-dossier-fantasma.svg'
 import alcaldePortrait from '@/assets/troops/alcalde.png'
 import asesorSombraPortrait from '@/assets/troops/asesor-sombra.png'
 import autobusPartidoPortrait from '@/assets/troops/autobus-partido.png'
+import avionetaContrabandoPortrait from '@/assets/troops/avioneta-contrabando.png'
 import baronTerritorialPortrait from '@/assets/troops/baron-territorial.png'
 import concejalPortrait from '@/assets/troops/concejal.png'
 import fiscalizadorContratosPortrait from '@/assets/troops/fiscalizador-contratos.png'
@@ -23,18 +25,22 @@ import peugeotCampanaPortrait from '@/assets/troops/peugeot-campana.png'
 import pisoeBaronesaComitePortrait from '@/assets/troops/pisoe-baronesa-comite-eterno.png'
 import pisoeDoctorArgumentarioPortrait from '@/assets/troops/pisoe-doctor-argumentario-reversible.png'
 import pisoeFontaneraComitePortrait from '@/assets/troops/pisoe-fontanera-comite.png'
+import pisoeFontaneroComitePortrait from '@/assets/troops/pisoe-fontanero-comite.png'
 import pisoeMinistroRuedaPortrait from '@/assets/troops/pisoe-ministro-rueda-perpetua.png'
 import pisoePortavozPlasmaPortrait from '@/assets/troops/pisoe-portavoz-plasma-4k.png'
 import ppMarquesPalcoPortrait from '@/assets/troops/pp-marques-palco-vip.png'
 import ppNotariaSobremesaPortrait from '@/assets/troops/pp-notaria-sobremesa-infinita.png'
+import ppRegistradorBlindadoPortrait from '@/assets/troops/pp-registrador-blindado.png'
 import ppRegistradorPuertaPortrait from '@/assets/troops/pp-registrador-puerta-giratoria.png'
 import ppSenadorPuroPortrait from '@/assets/troops/pp-senador-puro-presupuestario.png'
+import ppSenorPalcoPortrait from '@/assets/troops/pp-senor-del-palco.png'
 import ppTesoreraCajaPortrait from '@/assets/troops/pp-tesorera-caja-fuerte.png'
 import presentadorTvPortrait from '@/assets/troops/presentador-tv.png'
 import puffAsambleariaMegafonoPortrait from '@/assets/troops/puff-asamblearia-megafono-morado.png'
 import puffGuardianaCirculoPortrait from '@/assets/troops/puff-guardiana-circulo-infinito.png'
 import puffInfluencerPancartaPortrait from '@/assets/troops/puff-influencer-pancarta-morada.png'
 import puffMediadoraSillasPortrait from '@/assets/troops/puff-mediadora-sillas-infinitas.png'
+import puffSindicalistaExpedientePortrait from '@/assets/troops/puff-sindicalista-expediente-eterno.png'
 import puffSindicalistaMegaselloPortrait from '@/assets/troops/puff-sindicalista-megasello.png'
 import tertulianoPrimeTimePortrait from '@/assets/troops/tertuliano-prime-time.png'
 import ujierCordonPortrait from '@/assets/troops/ujier-cordon.png'
@@ -47,12 +53,16 @@ import yateDesgrabablePortrait from '@/assets/troops/yate-desgrabable.png'
 
 const troopPortraits: Record<string, string> = {
   administrativo: administrativoPortrait,
+  'agente-dossier-fantasma': agenteDossierFantasmaPortrait,
   alcalde: alcaldePortrait,
   'asesor-sombra': asesorSombraPortrait,
   'autobus-partido': autobusPartidoPortrait,
+  'avioneta-contrabando': avionetaContrabandoPortrait,
   'baron-territorial': baronTerritorialPortrait,
+  'charter-agenda-oficial': avionetaContrabandoPortrait,
   concejal: concejalPortrait,
   'fiscalizador-contratos': fiscalizadorContratosPortrait,
+  'furgon-pancartas': autobusPartidoPortrait,
   'funcionario-raso': funcionarioRasoPortrait,
   'gil-capataz-grua-dorada': gilCapatazGruaPortrait,
   'gil-concejala-festejos-premium': gilConcejalaFestejosPortrait,
@@ -71,18 +81,22 @@ const troopPortraits: Record<string, string> = {
   'pisoe-baronesa-comite-eterno': pisoeBaronesaComitePortrait,
   'pisoe-doctor-argumentario-reversible': pisoeDoctorArgumentarioPortrait,
   'pisoe-fontanera-comite': pisoeFontaneraComitePortrait,
+  'pisoe-fontanero-comite': pisoeFontaneroComitePortrait,
   'pisoe-ministro-rueda-perpetua': pisoeMinistroRuedaPortrait,
   'pisoe-portavoz-plasma-4k': pisoePortavozPlasmaPortrait,
   'pp-marques-palco-vip': ppMarquesPalcoPortrait,
   'pp-notaria-sobremesa-infinita': ppNotariaSobremesaPortrait,
+  'pp-registrador-blindado': ppRegistradorBlindadoPortrait,
   'pp-registrador-puerta-giratoria': ppRegistradorPuertaPortrait,
   'pp-senador-puro-presupuestario': ppSenadorPuroPortrait,
+  'pp-senor-del-palco': ppSenorPalcoPortrait,
   'pp-tesorera-caja-fuerte': ppTesoreraCajaPortrait,
   'presentador-tv': presentadorTvPortrait,
   'puff-asamblearia-megafono-morado': puffAsambleariaMegafonoPortrait,
   'puff-guardiana-circulo-infinito': puffGuardianaCirculoPortrait,
   'puff-influencer-pancarta-morada': puffInfluencerPancartaPortrait,
   'puff-mediadora-sillas-infinitas': puffMediadoraSillasPortrait,
+  'puff-sindicalista-expediente-eterno': puffSindicalistaExpedientePortrait,
   'puff-sindicalista-megasello': puffSindicalistaMegaselloPortrait,
   'tertuliano-prime-time': tertulianoPrimeTimePortrait,
   'ujier-cordon': ujierCordonPortrait,

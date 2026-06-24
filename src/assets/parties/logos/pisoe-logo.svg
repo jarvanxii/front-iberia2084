@@ -1,26 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">Logo de Union Progresista Nacional</title>
-  <desc id="desc">Marca roja con punio y rosa sobre baldosas, para PISOE.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="pisoeTitle pisoeDesc">
+  <title id="pisoeTitle">Logo de Partido Ibérico de Subvenciones, Obras y Excusas</title>
+  <desc id="pisoeDesc">Sello rojo con expediente, cono de obra, cinta inaugural y siglas PISOE.</desc>
   <defs>
-    <linearGradient id="pisoeBg" x1="72" y1="66" x2="432" y2="448" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#ff6860"/>
-      <stop offset="0.48" stop-color="#dc1d24"/>
-      <stop offset="1" stop-color="#8f0f17"/>
+    <linearGradient id="pisoeBg" x1="78" y1="62" x2="430" y2="450" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff766d"/>
+      <stop offset="0.45" stop-color="#d82029"/>
+      <stop offset="1" stop-color="#7e1017"/>
     </linearGradient>
-    <filter id="drop" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#320006" flood-opacity="0.42"/>
+    <linearGradient id="pisoePaper" x1="154" y1="120" x2="348" y2="368" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff5dc"/>
+      <stop offset="1" stop-color="#e7d2ab"/>
+    </linearGradient>
+    <filter id="pisoeShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#2b0005" flood-opacity="0.44"/>
     </filter>
   </defs>
-  <rect width="512" height="512" rx="86" fill="#170809"/>
-  <rect x="74" y="74" width="364" height="364" rx="52" fill="url(#pisoeBg)" filter="url(#drop)"/>
-  <path d="M110 144h292M110 214h292M110 284h292M182 112v210M258 112v210M334 112v210" stroke="#fff0d4" stroke-width="8" opacity="0.3"/>
-  <path d="M111 111h290v214H111z" fill="none" stroke="#fff0d4" stroke-width="12"/>
-  <g transform="translate(256 201)">
-    <path d="M-86 30c-9-35 5-66 36-76 24-8 44 3 61 26 18-24 39-35 64-26 31 12 45 44 36 79-38-5-68 6-98 36-31-31-63-42-99-39Z" fill="#fff4dc"/>
-    <path d="M-62 59h124c24 0 44 20 44 44v10H-106v-10c0-24 20-44 44-44Z" fill="#fff4dc"/>
-    <path d="M-86 106H86" stroke="#dc1d24" stroke-width="9" stroke-linecap="round" opacity="0.58"/>
-    <path d="M45-3c31 19 49 46 57 82" fill="none" stroke="#fff4dc" stroke-width="13" stroke-linecap="round"/>
+  <rect width="512" height="512" rx="78" fill="#180708"/>
+  <rect x="76" y="70" width="360" height="360" rx="50" fill="url(#pisoeBg)" filter="url(#pisoeShadow)"/>
+  <path d="M116 128h280M116 206h280M116 284h280M166 96v226M256 96v226M346 96v226" stroke="#ffd9c8" stroke-width="7" opacity="0.22"/>
+  <g transform="translate(0 4)">
+    <path d="M180 114h152l36 45v174H180V114Z" fill="url(#pisoePaper)"/>
+    <path d="M332 114v47h36" fill="none" stroke="#b02125" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M207 176h93M207 212h122M207 248h96" stroke="#8f181d" stroke-width="14" stroke-linecap="round" opacity="0.78"/>
+    <path d="M170 318h172" stroke="#fff5dc" stroke-width="18" stroke-linecap="round"/>
+    <path d="M193 318c17-28 31-64 42-110h42c9 45 24 82 42 110" fill="#ffb347"/>
+    <path d="M218 262h76M203 297h106" stroke="#fff5dc" stroke-width="12" stroke-linecap="round"/>
+    <path d="M145 345c68-42 154-42 222 0" fill="none" stroke="#fff2c6" stroke-width="16" stroke-linecap="round"/>
+    <path d="M152 360c67 31 141 31 208 0" fill="none" stroke="#fff2c6" stroke-width="10" stroke-linecap="round" opacity="0.72"/>
   </g>
-  <rect x="104" y="346" width="304" height="62" rx="18" fill="#fff4dc"/>
-  <text x="256" y="395" text-anchor="middle" fill="#d71920" font-family="Arial Black, Arial, sans-serif" font-size="58" font-weight="900" letter-spacing="-4">PISOE</text>
+  <rect x="114" y="382" width="284" height="58" rx="15" fill="#fff2d2"/>
+  <text x="256" y="423" text-anchor="middle" fill="#c71922" font-family="Arial Black, Arial, sans-serif" font-size="46" font-weight="900">PISOE</text>
 </svg>

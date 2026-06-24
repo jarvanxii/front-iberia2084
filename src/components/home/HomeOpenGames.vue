@@ -2,13 +2,16 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
-import type { FactionDto, WorldDto } from '@/types/game'
+import type { FactionDto, PlayerDto, WorldDto } from '@/types/game'
 import { useSessionStore } from '@/stores/session'
 import { partyLogo } from '@/utils/partyLogos'
+import { sortByPartyOrder } from '@/utils/partyOrder'
+import { worldSpeedRatio } from '@/utils/worldSpeed'
 
 const props = defineProps<{
   worlds: WorldDto[]
   activeWorld: WorldDto | null
+  players: PlayerDto[]
   factions: FactionDto[]
   hasPlayer: boolean
 }>()
@@ -30,23 +33,34 @@ const selectedWorld = computed(() => {
     null
   )
 })
+const orderedFactions = computed(() => sortByPartyOrder(props.factions))
 const selectedFaction = computed(
-  () => props.factions.find((faction) => faction.code === factionCode.value) ?? props.factions[0] ?? null,
+  () => orderedFactions.value.find((faction) => faction.code === factionCode.value) ?? orderedFactions.value[0] ?? null,
 )
 const selectedFactionLogo = computed(() => (selectedFaction.value ? partyLogo(selectedFaction.value.code) : ''))
+const maxJoinedWorlds = 2
+const joinedWorldIds = computed(() => new Set(props.players.map((player) => player.worldId)))
+const joinedWorldCount = computed(() => joinedWorldIds.value.size)
+const selectedPlayer = computed(() => {
+  if (!selectedWorld.value) return null
+  return props.players.find((player) => player.worldId === selectedWorld.value?.id) ?? null
+})
 const selectedIsActive = computed(() => selectedWorld.value?.id === props.activeWorld?.id)
 const invitedWorldCode = computed(() => (typeof route.query.mundo === 'string' ? route.query.mundo : ''))
 const invitedProvinceCode = computed(() => (typeof route.query.provincia === 'string' ? route.query.provincia : ''))
 const canEnterSelected = computed(() => {
   if (!selectedWorld.value) return false
-  return props.hasPlayer ? selectedIsActive.value : selectedWorld.value.joinable
+  if (selectedPlayer.value) return true
+  return selectedWorld.value.joinable && joinedWorldCount.value < maxJoinedWorlds
 })
 const factionOptions = computed(() =>
-  props.factions.map((faction) => ({
+  orderedFactions.value.map((faction) => ({
     value: faction.code,
     label: faction.name,
-    meta: faction.startingRegion,
+    meta: faction.motto,
     badge: faction.shortName,
+    icon: partyLogo(faction.code),
+    color: faction.color,
   })),
 )
 const selectedWorldNotice = computed(() => {
@@ -54,10 +68,14 @@ const selectedWorldNotice = computed(() => {
   if (!props.hasPlayer && invitedProvinceCode.value && selectedWorld.value.code === invitedWorldCode.value) {
     return `Invitación recibida para el hueco ${invitedProvinceCode.value}.`
   }
-  if (props.hasPlayer && !selectedIsActive.value) {
-    return 'Ya tienes una partida activa. Puedes consultar otras, pero solo entrar en la tuya.'
+  if (selectedPlayer.value) {
+    return selectedIsActive.value
+      ? 'Esta es la partida que tienes abierta ahora.'
+      : 'Ya formas parte de esta partida. Puedes entrar y cambiar el contexto activo.'
   }
-  if (!props.hasPlayer && !selectedWorld.value.joinable) return 'Esta partida no admite altas nuevas.'
+  if (joinedWorldCount.value >= maxJoinedWorlds) return 'Ya estás en 2 partidas, el máximo permitido por cuenta.'
+  if (!selectedWorld.value.joinable) return 'Esta partida no admite altas nuevas.'
+  if (props.hasPlayer) return 'Puedes estar en hasta 2 partidas distintas con la misma cuenta.'
   return ''
 })
 
@@ -73,10 +91,10 @@ watch(
 )
 
 watch(
-  () => props.factions.map((faction) => faction.code).join('|'),
+  () => orderedFactions.value.map((faction) => faction.code).join('|'),
   () => {
-    if (factionCode.value && props.factions.some((faction) => faction.code === factionCode.value)) return
-    factionCode.value = props.factions[0]?.code ?? ''
+    if (factionCode.value && orderedFactions.value.some((faction) => faction.code === factionCode.value)) return
+    factionCode.value = orderedFactions.value[0]?.code ?? ''
   },
   { immediate: true },
 )
@@ -123,7 +141,7 @@ function selectWorld(code: string) {
 async function enterSelectedWorld() {
   if (!selectedWorld.value || !canEnterSelected.value) return
 
-  if (!props.hasPlayer) {
+  if (!selectedPlayer.value) {
     const cleanLeaderName = leaderName.value.trim()
     if (cleanLeaderName.length < 3) {
       setupError.value = 'El líder de campaña necesita al menos 3 caracteres.'
@@ -139,6 +157,8 @@ async function enterSelectedWorld() {
       leaderName: cleanLeaderName,
       provinceCode: selectedWorld.value.code === invitedWorldCode.value ? invitedProvinceCode.value || undefined : undefined,
     })
+  } else {
+    await session.refresh(selectedWorld.value.code)
   }
 
   await router.push({ name: 'gameCity', params: { worldCode: selectedWorld.value.code } })
@@ -151,6 +171,7 @@ async function enterSelectedWorld() {
       <div class="games-heading-copy">
         <p class="muted">Partidas</p>
         <h1>Selecciona partida</h1>
+        <span class="games-limit">Puedes jugar hasta 2 partidas a la vez.</span>
       </div>
 
       <button
@@ -159,7 +180,7 @@ async function enterSelectedWorld() {
         :disabled="!canEnterSelected || session.loading"
         @click="enterSelectedWorld"
       >
-        {{ hasPlayer ? 'Entrar' : 'Unirse' }}
+        {{ selectedPlayer ? 'Entrar' : 'Unirse' }}
       </button>
     </header>
 
@@ -173,13 +194,14 @@ async function enterSelectedWorld() {
           :class="{
             selected: world.code === selectedWorld.code,
             active: world.id === activeWorld?.id,
-            locked: hasPlayer ? world.id !== activeWorld?.id : !world.joinable,
+            joined: joinedWorldIds.has(world.id),
+            locked: !joinedWorldIds.has(world.id) && (!world.joinable || joinedWorldCount >= maxJoinedWorlds),
           }"
           @click="selectWorld(world.code)"
         >
           <span class="world-main">
             <strong>{{ world.name }}</strong>
-            <small>{{ world.difficultyName }} · nivel {{ world.difficultyLevel }}</small>
+            <small>{{ world.difficultyName }} · {{ worldSpeedRatio(world.tickSeconds) }}</small>
           </span>
           <span class="world-side">
             <i :class="statusClass(world.status)">{{ statusLabel(world.status) }}</i>
@@ -202,6 +224,10 @@ async function enterSelectedWorld() {
             <dd>{{ worldDateLabel(selectedWorld) }}</dd>
           </div>
           <div>
+            <dt>Dificultad</dt>
+            <dd>{{ selectedWorld.difficultyName }}</dd>
+          </div>
+          <div>
             <dt>Plazas</dt>
             <dd>{{ worldFillLabel(selectedWorld) }} provincias</dd>
           </div>
@@ -210,12 +236,16 @@ async function enterSelectedWorld() {
             <dd>{{ selectedWorld.controlledTerritories }} / {{ selectedWorld.totalTerritories || '??' }}</dd>
           </div>
           <div>
-            <dt>Turno</dt>
-            <dd>{{ selectedWorld.tickSeconds }}s</dd>
+            <dt>Velocidad</dt>
+            <dd>{{ worldSpeedRatio(selectedWorld.tickSeconds) }}</dd>
           </div>
         </dl>
 
-        <section v-if="!hasPlayer && selectedWorld.joinable" class="join-panel" aria-label="Alta en partida">
+        <section
+          v-if="!selectedPlayer && selectedWorld.joinable && joinedWorldCount < maxJoinedWorlds"
+          class="join-panel"
+          aria-label="Alta en partida"
+        >
           <label>
             Líder
             <input v-model="leaderName" placeholder="Nombre visible" @keydown.enter.prevent="enterSelectedWorld" />
@@ -292,6 +322,12 @@ async function enterSelectedWorld() {
   text-transform: uppercase;
 }
 
+.games-limit {
+  color: var(--color-muted);
+  font-size: 0.74rem;
+  font-weight: 820;
+}
+
 .games-header h1,
 .world-detail-header h2 {
   margin: 0;
@@ -358,6 +394,13 @@ async function enterSelectedWorld() {
 
 .world-row.active .world-main strong::after {
   content: ' · tu partida';
+  color: var(--color-success);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.world-row.joined:not(.active) .world-main strong::after {
+  content: ' · dentro';
   color: var(--color-success);
   font-size: 0.72rem;
   font-weight: 850;
@@ -451,7 +494,7 @@ async function enterSelectedWorld() {
 
 .world-facts {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--space-2);
   margin: 0;
 }
@@ -533,7 +576,7 @@ async function enterSelectedWorld() {
 .party-mark img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .party-summary strong,

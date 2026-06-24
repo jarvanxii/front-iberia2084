@@ -1,25 +1,28 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import UnitStatsPanel from '@/components/game/UnitStatsPanel.vue'
 import { useSessionStore } from '@/stores/session'
-import type { CityBuildingDto, ResourceCostDto } from '@/types/game'
+import type { ResearchDefinitionDto, ResourceCostDto, TroopDefinitionDto } from '@/types/game'
+import { buildingImage } from '@/utils/buildingImages'
+import { eventImage } from '@/utils/eventImages'
+import { comparePartyCodes, sortByPartyOrder } from '@/utils/partyOrder'
 import { partyLogo } from '@/utils/partyLogos'
+import { researchImage } from '@/utils/researchImages'
+import { resourceIcon } from '@/utils/resourceIcons'
 import { troopPortrait } from '@/utils/troopPortraits'
 
-type CategoryKey = 'base' | 'catalogo' | 'politica' | 'territorio' | 'riesgo'
 type TopicKey =
   | 'resumen'
-  | 'mundos'
+  | 'partidas'
   | 'recursos'
   | 'unidades'
+  | 'transportes'
   | 'edificios'
   | 'investigaciones'
+  | 'eventos'
   | 'partidos'
-  | 'ministerios'
-  | 'gobiernos'
   | 'provincias'
-  | 'corrupcion'
-  | 'crisis'
+  | 'ministerios'
+  | 'riesgos'
 
 interface TopicDefinition {
   key: TopicKey
@@ -28,204 +31,174 @@ interface TopicDefinition {
   description: string
 }
 
-interface CategoryDefinition {
-  key: CategoryKey
-  label: string
-  eyebrow: string
-  topics: TopicDefinition[]
-}
-
 const session = useSessionStore()
-const activeCategory = ref<CategoryKey>('base')
 const activeTopic = ref<TopicKey>('resumen')
 
-const categories: CategoryDefinition[] = [
+const topics: TopicDefinition[] = [
   {
-    key: 'base',
-    label: 'Base de juego',
-    eyebrow: 'Reglas',
-    topics: [
-      {
-        key: 'resumen',
-        label: 'Resumen',
-        eyebrow: 'Inicio',
-        description: 'Vista general de los sistemas principales de Iberia 2084.',
-      },
-      {
-        key: 'mundos',
-        label: 'Mundos',
-        eyebrow: 'Partidas',
-        description: 'Mapas persistentes, estado, dificultad y cierre de mundo.',
-      },
-      {
-        key: 'recursos',
-        label: 'Recursos',
-        eyebrow: 'Economía',
-        description: 'Las tres monedas jugables: pesetas, votos y favores.',
-      },
-    ],
+    key: 'resumen',
+    label: 'Resumen',
+    eyebrow: 'Base',
+    description: 'Cómo se lee Iberia 2084 sin entrar en datos de ninguna partida concreta.',
   },
   {
-    key: 'catalogo',
-    label: 'Catálogo',
-    eyebrow: 'Juego',
-    topics: [
-      {
-        key: 'unidades',
-        label: 'Unidades',
-        eyebrow: 'Cuartel',
-        description: 'Tropas comunes y especiales con costes, estadísticas y desbloqueos.',
-      },
-      {
-        key: 'edificios',
-        label: 'Edificios',
-        eyebrow: 'Provincia',
-        description: 'Infraestructura urbana, niveles, efectos y costes de mejora.',
-      },
-      {
-        key: 'investigaciones',
-        label: 'Investigaciones',
-        eyebrow: 'Mejoras',
-        description: 'Tecnologías de partida con coste, duración y efecto.',
-      },
-    ],
+    key: 'partidas',
+    label: 'Partidas',
+    eyebrow: 'Mundos',
+    description: 'Reglas generales de plazas, velocidad, dificultad y permanencia.',
   },
   {
-    key: 'politica',
-    label: 'Política',
-    eyebrow: 'Poder',
-    topics: [
-      {
-        key: 'partidos',
-        label: 'Partidos',
-        eyebrow: 'Ficciones',
-        description: 'Partidos jugables, lemas, afinidades y tono satírico.',
-      },
-      {
-        key: 'ministerios',
-        label: 'Ministerios',
-        eyebrow: 'Estado',
-        description: 'Bonos pasivos y apoyo institucional requerido.',
-      },
-      {
-        key: 'gobiernos',
-        label: 'Gobiernos',
-        eyebrow: 'Regiones',
-        description: 'Control regional, estabilidad y soporte territorial.',
-      },
-    ],
+    key: 'recursos',
+    label: 'Recursos',
+    eyebrow: 'Economía',
+    description: 'Para qué sirve cada recurso y qué decisiones empuja.',
   },
   {
-    key: 'territorio',
-    label: 'Territorio',
+    key: 'unidades',
+    label: 'Unidades',
+    eyebrow: 'Cuartel',
+    description: 'Tropas comunes y especiales por partido, con coste, tiempo y estadísticas base.',
+  },
+  {
+    key: 'transportes',
+    label: 'Transportes',
+    eyebrow: 'Movimiento',
+    description: 'Medios terrestres, marítimos y aéreos. No atacan: mueven unidades.',
+  },
+  {
+    key: 'edificios',
+    label: 'Edificios',
+    eyebrow: 'Provincia',
+    description: 'Infraestructura común de una provincia, sus usos, desbloqueos y costes base.',
+  },
+  {
+    key: 'investigaciones',
+    label: 'Investigaciones',
+    eyebrow: 'Mejoras',
+    description: 'Investigaciones comunes y especiales por partido, siempre como catálogo general.',
+  },
+  {
+    key: 'eventos',
+    label: 'Eventos',
+    eyebrow: 'Crisis',
+    description: 'Eventos globales que pueden afectar a todos los jugadores.',
+  },
+  {
+    key: 'partidos',
+    label: 'Partidos',
+    eyebrow: 'Política',
+    description: 'Partidos ficticios, lemas y personalidad jugable.',
+  },
+  {
+    key: 'provincias',
+    label: 'Provincias',
     eyebrow: 'Mapa',
-    topics: [
-      {
-        key: 'provincias',
-        label: 'Provincias',
-        eyebrow: 'Mapa',
-        description: 'Provincias del mundo activo con defensa, población y recurso local.',
-      },
-    ],
+    description: 'Catálogo territorial: una ciudad equivale a una capital de provincia.',
   },
   {
-    key: 'riesgo',
-    label: 'Riesgo',
-    eyebrow: 'Caos',
-    topics: [
-      {
-        key: 'corrupcion',
-        label: 'Corrupción',
-        eyebrow: 'Opaco',
-        description: 'Operaciones arriesgadas, costes, premios y castigos.',
-      },
-      {
-        key: 'crisis',
-        label: 'Crisis',
-        eyebrow: 'Gestión',
-        description: 'Planes de respuesta, porcentaje de éxito y eventos activos.',
-      },
-    ],
+    key: 'ministerios',
+    label: 'Ministerios',
+    eyebrow: 'Estado',
+    description: 'Instituciones generales y sus bonificaciones, sin control actual de partida.',
+  },
+  {
+    key: 'riesgos',
+    label: 'Riesgos',
+    eyebrow: 'Opaco',
+    description: 'Operaciones arriesgadas y planes de respuesta ante crisis.',
   },
 ]
-const defaultCategory = categories[0]!
-
-const resourcePurpose: Record<string, { usage: string; pressure: string }> = {
-  pesetas: {
-    usage: 'Comprar edificios, unidades, investigaciones y mejoras con factura.',
-    pressure: 'Si faltan, la provincia se queda en promesa pública con andamios.',
-  },
-  votos: {
-    usage: 'Sostener presión territorial, unidades ofensivas y músculo político.',
-    pressure: 'Si bajan, atacas poco y la oposición huele sangre.',
-  },
-  favores: {
-    usage: 'Pagar defensa, pactos internos, corrupción y atajos administrativos.',
-    pressure: 'Sin favores, cualquier provincia queda vendida al primer escándalo serio.',
-  },
-}
 
 const state = computed(() => session.state)
-const worlds = computed(() => state.value?.worlds ?? [])
 const resources = computed(() => state.value?.resources ?? [])
-const factions = computed(() => state.value?.factions ?? [])
-const troopDefinitions = computed(() => [...(state.value?.troopDefinitions ?? [])].sort((a, b) => a.tier - b.tier))
-const research = computed(() => [...(state.value?.research ?? [])].sort((a, b) => a.durationSeconds - b.durationSeconds))
-const ministries = computed(() => state.value?.ministries ?? [])
-const regionalGovernments = computed(() => state.value?.regionalGovernments ?? [])
-const territories = computed(() =>
-  [...(state.value?.territories ?? [])].sort((a, b) => a.region.localeCompare(b.region, 'es') || a.name.localeCompare(b.name, 'es')),
+const factions = computed(() => sortByPartyOrder(state.value?.factions ?? []))
+const troopDefinitions = computed(() =>
+  [...(state.value?.troopDefinitions ?? [])].sort(
+    (a, b) =>
+      (a.factionCode ? 1 : 0) - (b.factionCode ? 1 : 0) ||
+      comparePartyCodes(a.factionCode, b.factionCode) ||
+      a.tier - b.tier ||
+      a.name.localeCompare(b.name, 'es'),
+  ),
 )
+const combatUnits = computed(() => troopDefinitions.value.filter((unit) => !isTransportUnit(unit)))
+const transportUnits = computed(() => troopDefinitions.value.filter(isTransportUnit))
+const buildings = computed(() =>
+  [...(state.value?.buildingDefinitions ?? [])].sort(
+    (a, b) => a.category.localeCompare(b.category, 'es') || a.name.localeCompare(b.name, 'es'),
+  ),
+)
+const researchDefinitions = computed(() =>
+  [...(state.value?.researchDefinitions ?? [])].sort(
+    (a, b) =>
+      (a.factionCode ? 1 : 0) - (b.factionCode ? 1 : 0) ||
+      comparePartyCodes(a.factionCode, b.factionCode) ||
+      a.category.localeCompare(b.category, 'es') ||
+      a.name.localeCompare(b.name, 'es'),
+  ),
+)
+const eventDefinitions = computed(() =>
+  [...(state.value?.eventDefinitions ?? [])].sort(
+    (a, b) => a.category.localeCompare(b.category, 'es') || a.name.localeCompare(b.name, 'es'),
+  ),
+)
+const territories = computed(() =>
+  [...(state.value?.territories ?? [])].sort(
+    (a, b) => a.region.localeCompare(b.region, 'es') || a.name.localeCompare(b.name, 'es'),
+  ),
+)
+const ministries = computed(() => [...(state.value?.ministries ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'es')))
 const corruptionSchemes = computed(() => state.value?.corruptionSchemes ?? [])
 const disasterPlans = computed(() => state.value?.disasterPlans ?? [])
-const activeEvents = computed(() => state.value?.events ?? [])
-const buildingGroups = computed(() => groupBuildings(state.value?.cityBuildings ?? []))
-const currentCategory = computed<CategoryDefinition>(
-  () => categories.find((category) => category.key === activeCategory.value) ?? defaultCategory,
-)
-const currentTopics = computed<TopicDefinition[]>(() => currentCategory.value.topics)
-const activeTopicInfo = computed<TopicDefinition>(
-  () => currentTopics.value.find((topic) => topic.key === activeTopic.value) ?? currentTopics.value[0]!,
-)
+const currentTopic = computed(() => topics.find((topic) => topic.key === activeTopic.value) ?? topics[0]!)
 
-function selectCategory(category: CategoryDefinition) {
-  activeCategory.value = category.key
-  activeTopic.value = category.topics[0]!.key
-}
-
-function groupBuildings(buildings: CityBuildingDto[]) {
-  const groups: { category: string; buildings: CityBuildingDto[] }[] = []
-  const groupIndex = new Map<string, { category: string; buildings: CityBuildingDto[] }>()
-  for (const building of buildings) {
-    const category = building.category || 'General'
-    const existing = groupIndex.get(category)
-    if (existing) {
-      existing.buildings.push(building)
-    } else {
-      const created = { category, buildings: [building] }
-      groups.push(created)
-      groupIndex.set(category, created)
-    }
-  }
-  return groups
+const resourcePurpose: Record<string, { usage: string; tension: string }> = {
+  pesetas: {
+    usage: 'Construcción, entrenamiento, investigaciones y acciones que necesitan caja.',
+    tension: 'Aceleran el crecimiento, pero no sustituyen la defensa política.',
+  },
+  votos: {
+    usage: 'Presión territorial, legitimidad ofensiva y músculo público.',
+    tension: 'Sirven para empujar el mapa; gastarlos sin plan deja la retaguardia floja.',
+  },
+  favores: {
+    usage: 'Atajos, pactos, defensa delicada y operaciones con letra pequeña.',
+    tension: 'Son potentes, escasos y peligrosos cuando todo el mundo empieza a pedir explicaciones.',
+  },
+  influencia: {
+    usage: 'Capacidad de condicionar decisiones sin ocupar directamente.',
+    tension: 'Funciona mejor como presión sostenida que como golpe aislado.',
+  },
+  funcionarios: {
+    usage: 'Burocracia disponible para edificios, defensas y planes largos.',
+    tension: 'Sin estructura administrativa, las promesas se quedan en rueda de prensa.',
+  },
+  escanos: {
+    usage: 'Peso institucional para ministerios, pactos y desbloqueos políticos.',
+    tension: 'No ganan una provincia solos, pero cambian qué herramientas puedes activar.',
+  },
 }
 
 function topicCount(key: TopicKey) {
-  const counts: Record<TopicKey, number> = {
-    resumen: 5,
-    mundos: worlds.value.length,
+  const counts: Record<TopicKey, number | string> = {
+    resumen: 'Manual',
+    partidas: 'Reglas',
     recursos: resources.value.length,
-    unidades: troopDefinitions.value.length,
-    edificios: buildingGroups.value.reduce((total, group) => total + group.buildings.length, 0),
-    investigaciones: research.value.length,
+    unidades: combatUnits.value.length,
+    transportes: transportUnits.value.length,
+    edificios: buildings.value.length,
+    investigaciones: researchDefinitions.value.length,
+    eventos: eventDefinitions.value.length,
     partidos: factions.value.length,
-    ministerios: ministries.value.length,
-    gobiernos: regionalGovernments.value.length,
     provincias: territories.value.length,
-    corrupcion: corruptionSchemes.value.length,
-    crisis: disasterPlans.value.length + activeEvents.value.length,
+    ministerios: ministries.value.length,
+    riesgos: corruptionSchemes.value.length + disasterPlans.value.length,
   }
   return counts[key]
+}
+
+function isTransportUnit(unit: TroopDefinitionDto) {
+  return Boolean(unit.transportType)
 }
 
 function resourceName(code: string) {
@@ -237,6 +210,14 @@ function costLabel(costs: ResourceCostDto[]) {
   return costs.map((cost) => `${cost.amount.toLocaleString('es-ES')} ${resourceName(cost.code)}`).join(' · ')
 }
 
+function researchCostLabel(item: ResearchDefinitionDto) {
+  return [
+    `${item.costPesetas.toLocaleString('es-ES')} pesetas`,
+    `${item.costVotos.toLocaleString('es-ES')} votos`,
+    `${item.costFavores.toLocaleString('es-ES')} favores`,
+  ].join(' · ')
+}
+
 function secondsLabel(seconds: number) {
   if (seconds < 60) return `${seconds} s`
   const minutes = Math.floor(seconds / 60)
@@ -244,853 +225,696 @@ function secondsLabel(seconds: number) {
   return rest ? `${minutes} min ${rest} s` : `${minutes} min`
 }
 
-function riskClass(risk: number) {
-  if (risk >= 55) return 'high'
-  if (risk >= 30) return 'medium'
-  return 'low'
+function buildingLabel(code: string) {
+  return buildings.value.find((building) => building.code === code)?.name ?? code.replace(/_/g, ' ')
 }
 
-function statusLabel(status: string) {
-  if (status === 'OPEN') return 'Abierto'
-  if (status === 'UPCOMING') return 'Próximamente'
-  return 'Cerrado'
-}
-
-function ownerLabel(ownerName: string | null) {
-  return ownerName ?? 'Sin control'
-}
-
-function worldDateLabel(value: string | null) {
-  if (!value) return 'Sin fecha'
-  return new Intl.DateTimeFormat('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))
+function unitAccent(unit: TroopDefinitionDto) {
+  if (unit.factionColor) return unit.factionColor
+  if (unit.transportType) return 'var(--color-success)'
+  if (unit.attackType === 'INCISIVE') return 'var(--color-danger)'
+  if (unit.attackType === 'MEDIA') return 'var(--color-info)'
+  return 'var(--color-accent)'
 }
 </script>
 
 <template>
   <section v-if="state" class="iberopedia-view">
-    <article class="panel iberopedia-hero">
-      <div>
-        <p class="muted">Archivo de campaña</p>
-        <h2>Iberopedia</h2>
-        <p>
-          Consulta rápida de reglas, catálogos y sistemas activos de Iberia 2084. Elige una categoría arriba y
-          navega sus entradas desde el índice lateral.
-        </p>
-      </div>
-      <dl class="archive-stats">
-        <div>
-          <dt>Mundos</dt>
-          <dd>{{ worlds.length }}</dd>
-        </div>
-        <div>
-          <dt>Partidos</dt>
-          <dd>{{ factions.length }}</dd>
-        </div>
-        <div>
-          <dt>Unidades</dt>
-          <dd>{{ troopDefinitions.length }}</dd>
-        </div>
-        <div>
-          <dt>Provincias</dt>
-          <dd>{{ territories.length }}</dd>
-        </div>
-      </dl>
-    </article>
+    <header class="iberopedia-header">
+      <p>Iberopedia</p>
+      <h2>Manual general de Iberia 2084</h2>
+      <span>
+        Archivo de reglas, catálogos y conceptos. No muestra tu progreso, tus recursos actuales, propietarios de
+        provincias ni eventos vivos de una partida: solo información común para entender el juego.
+      </span>
+    </header>
 
-    <nav class="panel iberopedia-subheader" aria-label="Categorías de Iberopedia">
-      <button
-        v-for="category in categories"
-        :key="category.key"
-        type="button"
-        :class="{ active: activeCategory === category.key }"
-        @click="selectCategory(category)"
-      >
-        <span>{{ category.eyebrow }}</span>
-        <strong>{{ category.label }}</strong>
-      </button>
-    </nav>
-
-    <div class="iberopedia-layout">
-      <aside class="panel topic-sidebar" aria-label="Navegación de categoría">
-        <div class="sidebar-heading">
-          <span>{{ currentCategory.eyebrow }}</span>
-          <strong>{{ currentCategory.label }}</strong>
-        </div>
-        <button
-          v-for="topic in currentTopics"
-          :key="topic.key"
-          type="button"
-          :class="{ active: activeTopic === topic.key }"
-          @click="activeTopic = topic.key"
-        >
-          <span>{{ topic.eyebrow }}</span>
-          <strong>{{ topic.label }}</strong>
-          <em>{{ topicCount(topic.key) }}</em>
-        </button>
+    <section class="iberopedia-shell">
+      <aside class="iberopedia-sidebar" aria-label="Índice de Iberopedia">
+        <strong>Índice</strong>
+        <nav>
+          <button
+            v-for="topic in topics"
+            :key="topic.key"
+            type="button"
+            :class="{ active: activeTopic === topic.key }"
+            @click="activeTopic = topic.key"
+          >
+            <span>{{ topic.eyebrow }}</span>
+            <strong>{{ topic.label }}</strong>
+            <em>{{ topicCount(topic.key) }}</em>
+          </button>
+        </nav>
       </aside>
 
-      <main class="archive-content">
-        <header class="content-title">
-          <span>{{ activeTopicInfo.eyebrow }}</span>
-          <h3>{{ activeTopicInfo.label }}</h3>
-          <p>{{ activeTopicInfo.description }}</p>
+      <main class="iberopedia-content">
+        <header class="topic-header">
+          <span>{{ currentTopic.eyebrow }}</span>
+          <h3>{{ currentTopic.label }}</h3>
+          <p>{{ currentTopic.description }}</p>
         </header>
 
-        <section v-if="activeTopic === 'resumen'" class="summary-grid">
-          <article class="panel feature-card wide">
-            <span>Bucle principal</span>
-            <h4>Provincia, unidades, territorio y riesgo</h4>
-            <p>
-              La provincia produce recursos y desbloquea edificios. Las unidades se entrenan por cola, se despliegan en
-              provincias y sostienen la expansión territorial. Los riesgos ofrecen atajos medibles, nunca gratis.
-            </p>
+        <section v-if="activeTopic === 'resumen'" class="manual-copy">
+          <p>
+            Iberia 2084 se juega provincia a provincia. Cada hueco del mapa representa una capital de provincia y solo
+            puede pertenecer a un jugador dentro de una partida. No se nombran ciudades manualmente porque el mapa ya
+            las define.
+          </p>
+          <p>
+            El bucle principal es sencillo: produces recursos, mejoras edificios, entrenas unidades, te mueves por el
+            mapa y decides cuándo asumir riesgos. Las pantallas de catálogo explican herramientas; las pantallas de
+            partida muestran estado real.
+          </p>
+          <ol class="manual-rules">
+            <li>Construye edificios para desbloquear producción, unidades y planes.</li>
+            <li>Entrena tropas para atacar, ocupar o defender provincias.</li>
+            <li>Usa transportes para mover unidades; el ataque no depende del transporte.</li>
+            <li>Investiga mejoras comunes o especiales de tu partido.</li>
+            <li>Gestiona crisis y corrupción mirando siempre coste, duración, riesgo y consecuencia.</li>
+          </ol>
+        </section>
+
+        <section v-else-if="activeTopic === 'partidas'" class="manual-copy">
+          <p>
+            Una partida es un mundo persistente con velocidad, dificultad y plazas limitadas por provincias. La
+            velocidad se expresa como ratio, por ejemplo x1 o x1,5, y afecta a cómo se sienten colas, acciones y ritmo.
+          </p>
+          <p>
+            La dificultad no es un nivel del jugador: define la dureza de los bots y de la presión del mundo. Una misma
+            cuenta puede estar en dos partidas distintas, pero cada provincia solo admite un propietario.
+          </p>
+          <ul class="manual-rules">
+            <li>Una ciudad equivale a una capital de provincia.</li>
+            <li>Una provincia solo puede pertenecer a un jugador por partida.</li>
+            <li>La invitación a un amigo reserva un hueco libre del mapa, no comparte tus datos privados.</li>
+          </ul>
+        </section>
+
+        <section v-else-if="activeTopic === 'recursos'" class="entry-list">
+          <article v-for="resource in resources" :key="resource.code" class="entry-row resource-entry">
+            <figure class="entry-media square">
+              <img :src="resourceIcon(resource.code)" :alt="resource.name" loading="lazy" />
+            </figure>
+            <header class="entry-copy">
+              <span>{{ resource.code }}</span>
+              <h4>{{ resource.name }}</h4>
+              <p>{{ resource.description }}</p>
+            </header>
+            <dl class="entry-facts">
+              <dt>Uso</dt>
+              <dd>{{ resourcePurpose[resource.code]?.usage ?? 'Recurso común pendiente de afinar.' }}</dd>
+              <dt>Tensión</dt>
+              <dd>{{ resourcePurpose[resource.code]?.tension ?? 'Debe tener una consecuencia clara en partida.' }}</dd>
+            </dl>
           </article>
-          <article class="panel feature-card">
-            <span>Recursos</span>
-            <h4>Tres monedas, tres trabajos</h4>
-            <p>Pesetas para construir, votos para presionar y favores para defensa, pactos y acciones especiales.</p>
-          </article>
-          <article class="panel feature-card">
-            <span>Estado</span>
-            <h4>El apoyo institucional activa ministerios</h4>
-            <p>Los ministerios premian bloques con suficiente soporte político y convierten el poder en producción.</p>
-          </article>
+        </section>
+
+        <section v-else-if="activeTopic === 'unidades'" class="entry-list">
           <article
-            v-for="category in categories"
-            :key="category.key"
-            class="panel category-preview"
-            :class="{ active: category.key === activeCategory }"
-            @click="selectCategory(category)"
+            v-for="unit in combatUnits"
+            :key="unit.code"
+            class="entry-row unit-entry"
+            :style="{ '--entry-accent': unitAccent(unit) }"
           >
-            <span>{{ category.eyebrow }}</span>
-            <strong>{{ category.label }}</strong>
-            <small>{{ category.topics.length }} entradas</small>
-          </article>
-        </section>
-
-        <section v-else-if="activeTopic === 'mundos'" class="card-grid">
-          <article v-for="world in worlds" :key="world.code" class="panel data-card world-card">
-            <div>
-              <span>{{ statusLabel(world.status) }}</span>
-              <h4>{{ world.name }}</h4>
-              <p>{{ world.description }}</p>
-            </div>
-            <dl>
-              <div>
-                <dt>Dificultad</dt>
-                <dd>{{ world.difficultyName }} · nivel {{ world.difficultyLevel }}</dd>
-              </div>
-              <div>
-                <dt>Plazas</dt>
-                <dd>{{ world.currentPlayers }} / {{ world.maxPlayers }}</dd>
-              </div>
-              <div>
-                <dt>Control</dt>
-                <dd>{{ world.controlledTerritories }} / {{ world.totalTerritories || '??' }} provincias</dd>
-              </div>
-              <div v-if="world.status === 'UPCOMING'">
-                <dt>Apertura</dt>
-                <dd>{{ worldDateLabel(world.opensAt) }}</dd>
-              </div>
-            </dl>
-          </article>
-        </section>
-
-        <section v-else-if="activeTopic === 'recursos'" class="card-grid compact">
-          <article v-for="resource in resources" :key="resource.code" class="panel data-card">
-            <span>{{ resource.name }}</span>
-            <h4>{{ resource.amount.toLocaleString('es-ES') }}</h4>
-            <p>{{ resource.description }}</p>
-            <dl>
-              <div>
-                <dt>Uso</dt>
-                <dd>{{ resourcePurpose[resource.code]?.usage ?? 'Pendiente de documentar.' }}</dd>
-              </div>
-              <div>
-                <dt>Presión</dt>
-                <dd>{{ resourcePurpose[resource.code]?.pressure ?? 'Debe tener impacto jugable claro.' }}</dd>
-              </div>
-              <div>
-                <dt>Producción</dt>
-                <dd>+{{ resource.productionPerMinute }}/min</dd>
-              </div>
-            </dl>
-          </article>
-        </section>
-
-        <section v-else-if="activeTopic === 'unidades'" class="unit-list">
-          <article v-for="unit in troopDefinitions" :key="unit.code" class="panel unit-card">
-            <figure class="unit-card-portrait">
+            <figure class="entry-media square">
               <img :src="troopPortrait(unit.imageKey)" :alt="unit.name" loading="lazy" />
             </figure>
-            <div>
-              <span>{{ unit.role }} · Tier {{ unit.tier }}</span>
+            <header class="entry-copy">
+              <span>{{ unit.factionShortName ? `Especial ${unit.factionShortName}` : 'Común' }} · T{{ unit.tier }}</span>
               <h4>{{ unit.name }}</h4>
               <p>{{ unit.description }}</p>
-              <small>Desbloqueo: {{ unit.unlockBuildingCode }} nivel {{ unit.unlockBuildingLevel }}</small>
-            </div>
-            <UnitStatsPanel :unit="unit" dense />
-            <strong>Coste: {{ costLabel(unit.costs) }}</strong>
-          </article>
-        </section>
-
-        <section v-else-if="activeTopic === 'edificios'" class="building-stack">
-          <template v-for="group in buildingGroups" :key="group.category">
-            <div class="group-title">
-              <span>Edificios</span>
-              <h4>{{ group.category }}</h4>
-            </div>
-            <div class="card-grid compact">
-              <article v-for="building in group.buildings" :key="building.code" class="panel data-card">
-                <span>Nivel {{ building.level }} / {{ building.maxLevel }}</span>
-                <h4>{{ building.name }}</h4>
-                <p>{{ building.description }}</p>
-                <small>{{ building.effects.join(' · ') }}</small>
-                <strong>{{ costLabel(building.nextCosts) }}</strong>
-              </article>
-            </div>
-          </template>
-        </section>
-
-        <section v-else-if="activeTopic === 'investigaciones'" class="card-grid">
-          <article v-for="item in research" :key="item.code" class="panel data-card">
-            <span>{{ item.status === 'done' ? 'Investigado' : item.status === 'pending' ? 'En curso' : 'Disponible' }}</span>
-            <h4>{{ item.name }}</h4>
-            <p>{{ item.description }}</p>
-            <dl>
-              <div>
-                <dt>Coste</dt>
-                <dd>
-                  {{ item.costPesetas.toLocaleString('es-ES') }} pesetas ·
-                  {{ item.costVotos.toLocaleString('es-ES') }} votos ·
-                  {{ item.costFavores.toLocaleString('es-ES') }} favores
-                </dd>
-              </div>
-              <div>
-                <dt>Duración</dt>
-                <dd>{{ secondsLabel(item.durationSeconds) }}</dd>
-              </div>
-              <div>
-                <dt>Efecto</dt>
-                <dd>{{ item.effectType }} +{{ item.effectValue }}</dd>
-              </div>
+              <small>Desbloqueo: {{ buildingLabel(unit.unlockBuildingCode) }} nivel {{ unit.unlockBuildingLevel }}</small>
+            </header>
+            <dl class="entry-facts dense">
+              <dt>Ataque {{ unit.attackTypeLabel.toLowerCase() }}</dt>
+              <dd>{{ unit.attack }}</dd>
+              <dt>Plazas</dt>
+              <dd>{{ unit.slots }}</dd>
+              <dt>Tiempo</dt>
+              <dd>{{ secondsLabel(unit.trainingSeconds) }}</dd>
+              <dt>Defensa burocrática</dt>
+              <dd>{{ unit.defenseBureaucratic }}</dd>
+              <dt>Defensa incisiva</dt>
+              <dd>{{ unit.defenseIncisive }}</dd>
+              <dt>Defensa mediática</dt>
+              <dd>{{ unit.defenseMedia }}</dd>
+              <dt>Coste</dt>
+              <dd>{{ costLabel(unit.costs) }}</dd>
             </dl>
           </article>
         </section>
 
-        <section v-else-if="activeTopic === 'partidos'" class="card-grid">
+        <section v-else-if="activeTopic === 'transportes'" class="entry-list">
+          <article
+            v-for="unit in transportUnits"
+            :key="unit.code"
+            class="entry-row unit-entry"
+            :style="{ '--entry-accent': unitAccent(unit) }"
+          >
+            <figure class="entry-media square">
+              <img :src="troopPortrait(unit.imageKey)" :alt="unit.name" loading="lazy" />
+            </figure>
+            <header class="entry-copy">
+              <span>{{ unit.transportTypeLabel ?? 'Transporte' }} · T{{ unit.tier }}</span>
+              <h4>{{ unit.name }}</h4>
+              <p>{{ unit.description }}</p>
+              <small>Desbloqueo: {{ buildingLabel(unit.unlockBuildingCode) }} nivel {{ unit.unlockBuildingLevel }}</small>
+            </header>
+            <dl class="entry-facts dense">
+              <dt>Tipo</dt>
+              <dd>{{ unit.transportTypeLabel ?? 'Transporte' }}</dd>
+              <dt>Plazas</dt>
+              <dd>{{ unit.slots }}</dd>
+              <dt>Tiempo</dt>
+              <dd>{{ secondsLabel(unit.trainingSeconds) }}</dd>
+              <dt>Defensa burocrática</dt>
+              <dd>{{ unit.defenseBureaucratic }}</dd>
+              <dt>Defensa incisiva</dt>
+              <dd>{{ unit.defenseIncisive }}</dd>
+              <dt>Defensa mediática</dt>
+              <dd>{{ unit.defenseMedia }}</dd>
+              <dt>Coste</dt>
+              <dd>{{ costLabel(unit.costs) }}</dd>
+            </dl>
+          </article>
+        </section>
+
+        <section v-else-if="activeTopic === 'edificios'" class="entry-list">
+          <article v-for="building in buildings" :key="building.code" class="entry-row">
+            <figure class="entry-media">
+              <img :src="buildingImage(building.imageKey)" :alt="building.name" loading="lazy" />
+            </figure>
+            <header class="entry-copy">
+              <span>{{ building.category }} · nivel máximo {{ building.maxLevel }}</span>
+              <h4>{{ building.name }}</h4>
+              <p>{{ building.description }}</p>
+              <small>{{ building.effects.join(' · ') }}</small>
+            </header>
+            <dl class="entry-facts">
+              <dt>Coste base</dt>
+              <dd>{{ costLabel(building.costs) }}</dd>
+              <dt>Tiempo base</dt>
+              <dd>{{ secondsLabel(building.durationSeconds) }}</dd>
+            </dl>
+          </article>
+        </section>
+
+        <section v-else-if="activeTopic === 'investigaciones'" class="entry-list">
+          <article
+            v-for="item in researchDefinitions"
+            :key="item.code"
+            class="entry-row"
+            :style="{ '--entry-accent': item.factionColor ?? 'var(--color-accent)' }"
+          >
+            <figure class="entry-media">
+              <img :src="researchImage(item.imageKey)" :alt="item.name" loading="lazy" />
+            </figure>
+            <header class="entry-copy">
+              <span>{{ item.factionShortName ? `Especial ${item.factionShortName}` : 'Común' }} · {{ item.category }}</span>
+              <h4>{{ item.name }}</h4>
+              <p>{{ item.description }}</p>
+            </header>
+            <dl class="entry-facts">
+              <dt>Coste</dt>
+              <dd>{{ researchCostLabel(item) }}</dd>
+              <dt>Duración</dt>
+              <dd>{{ secondsLabel(item.durationSeconds) }}</dd>
+              <dt>Efecto</dt>
+              <dd>{{ item.effectLabel }}</dd>
+            </dl>
+          </article>
+        </section>
+
+        <section v-else-if="activeTopic === 'eventos'" class="entry-list">
+          <article v-for="event in eventDefinitions" :key="event.code" class="entry-row">
+            <figure class="entry-media">
+              <img :src="eventImage(event.imageKey)" :alt="event.name" loading="lazy" />
+            </figure>
+            <header class="entry-copy">
+              <span>{{ event.category }} · severidad {{ event.baseSeverity }}</span>
+              <h4>{{ event.name }}</h4>
+              <p>{{ event.description }}</p>
+            </header>
+            <dl class="entry-facts">
+              <dt>Duración base</dt>
+              <dd>{{ secondsLabel(event.durationSeconds) }}</dd>
+              <dt>Alcance</dt>
+              <dd>{{ event.scopeLabel }}</dd>
+              <dt>Impacto</dt>
+              <dd>{{ event.impactLabel }}</dd>
+              <dt>Respuesta</dt>
+              <dd>{{ event.responseLabel }}</dd>
+            </dl>
+          </article>
+        </section>
+
+        <section v-else-if="activeTopic === 'partidos'" class="entry-list">
           <article
             v-for="faction in factions"
             :key="faction.code"
-            class="panel party-card"
-            :style="{ '--faction': faction.color }"
+            class="entry-row party-entry"
+            :style="{ '--entry-accent': faction.color }"
           >
-            <div class="party-heading">
-              <img v-if="partyLogo(faction.code)" :src="partyLogo(faction.code)" :alt="`Logo de ${faction.name}`" />
-              <div>
-                <span>{{ faction.shortName }}</span>
-                <h4>{{ faction.name }}</h4>
-              </div>
-            </div>
-            <p>{{ faction.satire }}</p>
-            <dl>
-              <div>
-                <dt>Lema</dt>
-                <dd>{{ faction.motto }}</dd>
-              </div>
-              <div>
-                <dt>Inicio</dt>
-                <dd>{{ faction.startingRegion }}</dd>
-              </div>
-              <div>
-                <dt>Afinidad opaca</dt>
-                <dd>{{ faction.corruptionAffinity }}</dd>
-              </div>
+            <figure class="entry-media square">
+              <img v-if="partyLogo(faction.code)" :src="partyLogo(faction.code)" :alt="`Logo de ${faction.name}`" loading="lazy" />
+            </figure>
+            <header class="entry-copy">
+              <span>{{ faction.shortName }}</span>
+              <h4>{{ faction.name }}</h4>
+              <p>{{ faction.satire }}</p>
+            </header>
+            <dl class="entry-facts">
+              <dt>Lema</dt>
+              <dd>{{ faction.motto }}</dd>
+              <dt>Color</dt>
+              <dd><i class="color-swatch"></i>{{ faction.color }}</dd>
             </dl>
           </article>
         </section>
 
-        <section v-else-if="activeTopic === 'ministerios'" class="card-grid">
-          <article v-for="ministry in ministries" :key="ministry.code" class="panel ministry-card">
-            <span :style="{ background: ministry.color }"></span>
-            <div>
-              <small>{{ ministry.controlledByFactionName }}</small>
-              <h4>{{ ministry.name }}</h4>
-              <p>{{ ministry.description }}</p>
-              <strong>{{ ministry.effectLabel }}</strong>
-              <em>{{ ministry.requiredSupport }} apoyo institucional requerido</em>
-            </div>
-          </article>
-        </section>
-
-        <section v-else-if="activeTopic === 'gobiernos'" class="card-grid compact">
-          <article v-for="government in regionalGovernments" :key="government.code" class="panel data-card">
-            <span>{{ government.controlledByFactionName }}</span>
-            <h4>{{ government.name }}</h4>
-            <p>{{ government.provinces.join(', ') }}</p>
-            <dl>
-              <div>
-                <dt>Estabilidad</dt>
-                <dd>{{ government.stability }}</dd>
-              </div>
-              <div>
-                <dt>Soporte</dt>
-                <dd>{{ government.seats }}</dd>
-              </div>
-            </dl>
-          </article>
-        </section>
-
-        <section v-else-if="activeTopic === 'provincias'" class="territory-list">
-          <article v-for="territory in territories" :key="territory.id" class="panel territory-row">
-            <div>
+        <section v-else-if="activeTopic === 'provincias'" class="entry-list province-list">
+          <article v-for="territory in territories" :key="territory.code" class="entry-row no-media">
+            <header class="entry-copy">
               <span>{{ territory.region }}</span>
               <h4>{{ territory.name }}</h4>
               <p>{{ territory.satire }}</p>
-            </div>
-            <dl>
-              <div>
-                <dt>Control</dt>
-                <dd>{{ ownerLabel(territory.ownerName) }}</dd>
-              </div>
-              <div>
-                <dt>Defensa</dt>
-                <dd>{{ territory.defense }}</dd>
-              </div>
-              <div>
-                <dt>Población</dt>
-                <dd>{{ territory.population.toLocaleString('es-ES') }}</dd>
-              </div>
-              <div>
-                <dt>Recurso</dt>
-                <dd>{{ territory.resourceName }}</dd>
-              </div>
+            </header>
+            <dl class="entry-facts dense">
+              <dt>Recurso local</dt>
+              <dd>{{ territory.resourceName }}</dd>
+              <dt>Edificio base</dt>
+              <dd>{{ territory.buildingName }}</dd>
+              <dt>Población</dt>
+              <dd>{{ territory.population.toLocaleString('es-ES') }}</dd>
+              <dt>Voto base</dt>
+              <dd>{{ territory.baseVotes.toLocaleString('es-ES') }}</dd>
             </dl>
           </article>
         </section>
 
-        <section v-else-if="activeTopic === 'corrupcion'" class="card-grid">
-          <article v-for="scheme in corruptionSchemes" :key="scheme.code" class="panel risk-card">
-            <span :class="riskClass(scheme.baseRiskPercent)">{{ scheme.baseRiskPercent }}% riesgo</span>
-            <h4>{{ scheme.name }}</h4>
-            <p>{{ scheme.description }}</p>
-            <small>{{ scheme.rewardLabel }}</small>
-            <em>{{ scheme.caughtLabel }}</em>
-            <strong>{{ costLabel(scheme.costs) }} · {{ secondsLabel(scheme.durationSeconds) }}</strong>
+        <section v-else-if="activeTopic === 'ministerios'" class="entry-list">
+          <article v-for="ministry in ministries" :key="ministry.code" class="entry-row no-media">
+            <header class="entry-copy">
+              <span>{{ ministry.bonusResource }}</span>
+              <h4>{{ ministry.name }}</h4>
+              <p>{{ ministry.description }}</p>
+            </header>
+            <dl class="entry-facts">
+              <dt>Efecto</dt>
+              <dd>{{ ministry.effectLabel }}</dd>
+              <dt>Apoyo requerido</dt>
+              <dd>{{ ministry.requiredSupport }}</dd>
+              <dt>Bono base</dt>
+              <dd>+{{ ministry.bonusAmount }} {{ resourceName(ministry.bonusResource) }}</dd>
+            </dl>
           </article>
         </section>
 
-        <section v-else class="risk-layout">
-          <div class="card-grid">
-            <article v-for="plan in disasterPlans" :key="plan.code" class="panel risk-card">
-              <span>{{ plan.baseSuccessPercent }}% éxito</span>
+        <section v-else class="entry-list">
+          <article v-for="scheme in corruptionSchemes" :key="scheme.code" class="entry-row no-media risk-entry">
+            <header class="entry-copy">
+              <span>Corrupción · {{ scheme.baseRiskPercent }}% riesgo</span>
+              <h4>{{ scheme.name }}</h4>
+              <p>{{ scheme.description }}</p>
+              <small>{{ scheme.rewardLabel }}</small>
+            </header>
+            <dl class="entry-facts">
+              <dt>Coste</dt>
+              <dd>{{ costLabel(scheme.costs) }}</dd>
+              <dt>Duración</dt>
+              <dd>{{ secondsLabel(scheme.durationSeconds) }}</dd>
+              <dt>Si te pillan</dt>
+              <dd>{{ scheme.caughtLabel }}</dd>
+            </dl>
+          </article>
+
+          <article v-for="plan in disasterPlans" :key="plan.code" class="entry-row no-media risk-entry">
+            <header class="entry-copy">
+              <span>Plan de crisis · {{ plan.baseSuccessPercent }}% éxito</span>
               <h4>{{ plan.name }}</h4>
               <p>{{ plan.description }}</p>
               <small>{{ plan.upside }}</small>
-              <em>{{ plan.downside }}</em>
-              <strong>{{ costLabel(plan.costs) }} · {{ secondsLabel(plan.durationSeconds) }}</strong>
-            </article>
-          </div>
-          <div v-if="activeEvents.length" class="card-grid">
-            <article v-for="event in activeEvents" :key="event.id" class="panel risk-card live">
-              <span>Severidad {{ event.severity }}</span>
-              <h4>{{ event.name }}</h4>
-              <p>{{ event.description }}</p>
-              <small>{{ event.territoryName }}</small>
-            </article>
-          </div>
+            </header>
+            <dl class="entry-facts">
+              <dt>Coste</dt>
+              <dd>{{ costLabel(plan.costs) }}</dd>
+              <dt>Duración</dt>
+              <dd>{{ secondsLabel(plan.durationSeconds) }}</dd>
+              <dt>Si falla</dt>
+              <dd>{{ plan.downside }}</dd>
+            </dl>
+          </article>
         </section>
       </main>
-    </div>
+    </section>
   </section>
 </template>
 
 <style scoped>
-.iberopedia-view,
-.archive-content,
-.building-stack,
-.risk-layout {
+.iberopedia-view {
   display: grid;
   gap: var(--compact-gap);
-}
-
-.iberopedia-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(330px, 0.38fr);
-  gap: var(--compact-gap);
-  padding: var(--compact-panel-padding);
-  background: var(--color-surface);
-}
-
-.iberopedia-hero h2,
-.iberopedia-hero p,
-.content-title h3,
-.content-title p,
-.feature-card h4,
-.feature-card p,
-.data-card h4,
-.data-card p,
-.unit-card h4,
-.unit-card p,
-.party-card h4,
-.party-card p,
-.ministry-card h4,
-.ministry-card p,
-.risk-card h4,
-.risk-card p,
-.territory-row h4,
-.territory-row p,
-.group-title h4 {
-  margin: 0;
-}
-
-.iberopedia-hero h2 {
   color: var(--color-text);
-  font-size: clamp(2rem, 4vw, 3.8rem);
-  line-height: 0.95;
 }
 
-.iberopedia-hero p,
-.content-title p,
-.feature-card p,
-.data-card p,
-.unit-card p,
-.party-card p,
-.ministry-card p,
-.risk-card p,
-.territory-row p {
-  color: var(--color-muted);
-  line-height: 1.36;
-}
-
-.archive-stats {
+.iberopedia-header {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--compact-gap-sm);
-  align-self: end;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  padding: 0.72rem 0.86rem;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 55%),
+    var(--color-surface);
+}
+
+.iberopedia-header p,
+.iberopedia-header h2,
+.iberopedia-header span,
+.topic-header h3,
+.topic-header p,
+.entry-copy h4,
+.entry-copy p {
   margin: 0;
 }
 
-.archive-stats div,
-.category-preview,
-.feature-card,
-.data-card,
-.unit-card,
-.party-card,
-.ministry-card,
-.risk-card,
-.territory-row {
-  min-width: 0;
-}
-
-.archive-stats div {
-  border-radius: var(--radius-md);
-  padding: var(--compact-card-padding);
-  background: var(--color-surface-soft);
-}
-
-.archive-stats dt,
-.iberopedia-subheader span,
-.topic-sidebar span,
-.content-title span,
-.feature-card span,
-.category-preview span,
-.data-card span,
-.unit-card span,
-.party-card span,
-.risk-card > span,
-.territory-row span,
-.group-title span {
+.iberopedia-header p,
+.topic-header span,
+.entry-copy span,
+.entry-facts dt {
   color: var(--color-accent);
   font-size: 0.68rem;
   font-weight: 950;
-  letter-spacing: 0;
   text-transform: uppercase;
 }
 
-.archive-stats dd {
-  margin: 0.06rem 0 0;
-  color: var(--color-text);
-  font-size: 1.35rem;
-  font-weight: 950;
+.iberopedia-header h2 {
+  font-size: 2.15rem;
+  line-height: 1;
 }
 
-.iberopedia-subheader {
-  position: sticky;
-  z-index: 30;
-  top: var(--game-header-height);
-  display: grid;
-  grid-template-columns: repeat(5, minmax(120px, 1fr));
-  gap: var(--compact-gap-sm);
-  padding: 0.32rem;
-}
-
-.iberopedia-subheader button,
-.topic-sidebar button,
-.category-preview {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.iberopedia-header span {
+  max-width: 92ch;
   color: var(--color-muted);
-  background: var(--color-surface-soft);
-  text-align: left;
+  line-height: 1.42;
 }
 
-.iberopedia-subheader button {
+.iberopedia-shell {
   display: grid;
-  gap: 0.08rem;
-  padding: 0.38rem 0.52rem;
-}
-
-.iberopedia-subheader button.active,
-.topic-sidebar button.active,
-.category-preview.active,
-.category-preview:hover {
-  color: var(--color-on-accent);
-  background: var(--color-accent);
-}
-
-.iberopedia-subheader button.active span,
-.iberopedia-subheader button.active strong,
-.topic-sidebar button.active span,
-.topic-sidebar button.active strong,
-.topic-sidebar button.active em,
-.category-preview.active span,
-.category-preview.active strong,
-.category-preview.active small,
-.category-preview:hover span,
-.category-preview:hover strong,
-.category-preview:hover small {
-  color: var(--color-on-accent);
-}
-
-.iberopedia-layout {
-  display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-columns: 238px minmax(0, 1fr);
   gap: var(--compact-gap);
   align-items: start;
 }
 
-.topic-sidebar {
+.iberopedia-sidebar {
   position: sticky;
-  top: calc(var(--game-header-height) + 4.25rem);
+  top: calc(var(--game-header-height) + var(--space-page));
   display: grid;
-  gap: var(--compact-gap-sm);
-  padding: var(--compact-card-padding);
+  gap: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-surface);
 }
 
-.sidebar-heading {
-  display: grid;
-  gap: 0.16rem;
+.iberopedia-sidebar > strong {
   border-bottom: 1px solid var(--color-border);
-  padding: 0.12rem 0.18rem 0.42rem;
-}
-
-.sidebar-heading strong {
+  padding: 0 0 var(--space-2);
   color: var(--color-text);
-}
-
-.topic-sidebar button {
-  position: relative;
-  display: grid;
-  gap: 0.04rem;
-  padding: 0.38rem 2.3rem 0.38rem 0.5rem;
-}
-
-.topic-sidebar button em {
-  position: absolute;
-  top: 50%;
-  right: 0.58rem;
-  color: var(--color-success);
-  font-style: normal;
-  font-weight: 950;
-  transform: translateY(-50%);
-}
-
-.content-title {
-  display: grid;
-  gap: var(--space-1);
-  border-left: 3px solid var(--color-accent);
-  padding: 0.12rem 0 0.12rem 0.62rem;
-}
-
-.content-title h3 {
-  color: var(--color-text);
-  font-size: clamp(1.45rem, 3vw, 2.4rem);
-}
-
-.summary-grid,
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--compact-gap);
-}
-
-.card-grid.compact {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.feature-card,
-.data-card,
-.party-card,
-.risk-card {
-  display: grid;
-  gap: var(--compact-gap-sm);
-  padding: var(--compact-panel-padding);
-}
-
-.feature-card.wide {
-  grid-column: span 2;
-}
-
-.feature-card h4,
-.data-card h4,
-.unit-card h4,
-.party-card h4,
-.ministry-card h4,
-.risk-card h4,
-.territory-row h4,
-.group-title h4 {
-  color: var(--color-text);
-}
-
-.category-preview {
-  display: grid;
-  gap: var(--space-1);
-  padding: var(--compact-card-padding);
-  cursor: pointer;
-}
-
-.category-preview small,
-.data-card small,
-.unit-card small,
-.ministry-card small,
-.risk-card small {
-  color: var(--color-muted);
-  font-weight: 850;
-}
-
-.data-card dl,
-.party-card dl,
-.territory-row dl {
-  display: grid;
-  gap: var(--compact-gap-sm);
-  margin: 0;
-}
-
-.data-card dt,
-.party-card dt,
-.territory-row dt {
-  color: var(--color-accent);
-  font-size: 0.68rem;
-  font-weight: 950;
+  font-size: 0.82rem;
   text-transform: uppercase;
 }
 
-.data-card dd,
-.party-card dd,
-.territory-row dd {
-  margin: 0;
+.iberopedia-sidebar nav {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.iberopedia-sidebar button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.04rem 0.45rem;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 0.42rem 0.48rem;
   color: var(--color-muted);
-  line-height: 1.34;
+  background: transparent;
+  text-align: left;
 }
 
-.data-card strong,
-.unit-card strong,
-.ministry-card strong,
-.risk-card strong {
-  color: var(--color-success);
-}
-
-.world-card {
-  align-content: start;
-}
-
-.unit-list,
-.territory-list {
-  display: grid;
-  gap: var(--compact-gap);
-}
-
-.unit-card {
-  display: grid;
-  grid-template-columns: 76px minmax(0, 1fr) minmax(330px, 0.44fr) minmax(190px, 0.22fr);
-  gap: var(--compact-gap);
-  align-items: center;
-  padding: var(--compact-panel-padding);
-}
-
-.unit-card-portrait {
-  width: 76px;
-  aspect-ratio: 1 / 1;
-  margin: 0;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.iberopedia-sidebar button:hover,
+.iberopedia-sidebar button.active {
+  border-left-color: var(--color-accent);
+  color: var(--color-text);
   background: var(--color-surface-soft);
 }
 
-.unit-card-portrait img {
+.iberopedia-sidebar button span {
+  grid-column: 1;
+  color: var(--color-subtle);
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.iberopedia-sidebar button strong {
+  grid-column: 1;
+  overflow: hidden;
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iberopedia-sidebar button em {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--color-success);
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.iberopedia-content {
+  display: grid;
+  min-width: 0;
+  gap: var(--compact-gap);
+}
+
+.topic-header {
+  display: grid;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.1rem 0 var(--space-3);
+}
+
+.topic-header h3 {
+  color: var(--color-text);
+  font-size: 1.62rem;
+  line-height: 1.05;
+}
+
+.topic-header p,
+.manual-copy,
+.entry-copy p,
+.entry-copy small,
+.entry-facts dd {
+  color: var(--color-muted);
+}
+
+.manual-copy {
+  display: grid;
+  max-width: 92ch;
+  gap: var(--space-4);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.manual-copy p,
+.manual-rules {
+  margin: 0;
+}
+
+.manual-rules {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: 1.2rem;
+}
+
+.manual-rules li::marker {
+  color: var(--color-accent);
+  font-weight: 950;
+}
+
+.entry-list {
+  display: grid;
+  min-width: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.entry-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) minmax(260px, 0.42fr);
+  gap: var(--space-4);
+  align-items: start;
+  min-width: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-left: 3px solid var(--entry-accent, transparent);
+  padding: var(--space-4) var(--space-3);
+  background: color-mix(in srgb, var(--entry-accent, var(--color-surface)) 5%, transparent);
+}
+
+.entry-row.no-media {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.42fr);
+}
+
+.entry-row:hover {
+  background: color-mix(in srgb, var(--entry-accent, var(--color-accent)) 9%, var(--color-surface));
+}
+
+.entry-media {
+  width: 96px;
+  aspect-ratio: 1.16;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
+}
+
+.entry-media.square {
+  aspect-ratio: 1;
+}
+
+.entry-media img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.building-stack {
-  gap: var(--compact-gap);
+.resource-entry .entry-media img,
+.party-entry .entry-media img {
+  object-fit: contain;
 }
 
-.group-title {
+.entry-copy {
   display: grid;
-  gap: 0.1rem;
+  min-width: 0;
+  gap: var(--space-2);
 }
 
-.party-card {
-  border-color: var(--color-border);
-  background: var(--color-surface);
+.entry-copy h4 {
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  font-size: 1.02rem;
+  line-height: 1.14;
 }
 
-.party-heading {
+.entry-copy p,
+.entry-copy small {
+  line-height: 1.38;
+}
+
+.entry-copy small {
+  font-weight: 780;
+}
+
+.entry-facts {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: var(--compact-gap);
-  align-items: center;
+  grid-template-columns: minmax(90px, 0.42fr) minmax(0, 1fr);
+  gap: 0.26rem 0.55rem;
+  align-content: start;
+  min-width: 0;
+  margin: 0;
 }
 
-.party-heading img {
-  width: 42px;
-  height: 42px;
+.entry-facts.dense {
+  grid-template-columns: minmax(128px, 0.56fr) minmax(0, 1fr);
+}
+
+.entry-facts dt {
+  color: var(--color-accent);
+  font-size: 0.64rem;
+}
+
+.entry-facts dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.82rem;
+  font-weight: 820;
+  line-height: 1.28;
+}
+
+.unit-entry {
+  --entry-accent: var(--color-accent);
+}
+
+.color-swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-right: 0.34rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  object-fit: cover;
-}
-
-.ministry-card {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--compact-gap);
-  padding: var(--compact-panel-padding);
-}
-
-.ministry-card > span {
-  width: 12px;
-  min-height: 100%;
   border-radius: var(--radius-sm);
+  background: var(--entry-accent);
+  vertical-align: -0.08rem;
 }
 
-.ministry-card div {
-  display: grid;
-  gap: var(--compact-gap-sm);
-}
-
-.ministry-card em,
-.risk-card em {
+.risk-entry .entry-copy span {
   color: var(--color-danger);
-  font-style: normal;
-  font-weight: 850;
 }
 
-.territory-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(420px, 0.62fr);
-  gap: var(--compact-gap);
-  padding: var(--compact-panel-padding);
-}
-
-.territory-row dl {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.risk-card > span {
-  width: fit-content;
-  border-radius: var(--radius-sm);
-  padding: 0.22rem 0.42rem;
-  background: var(--color-surface-soft);
-}
-
-.risk-card > span.medium {
-  background: var(--color-surface-soft);
-}
-
-.risk-card > span.high {
-  color: var(--color-danger);
-  background: var(--color-surface-soft);
-}
-
-.risk-card.live {
-  border-color: var(--color-danger);
-}
-
-@media (max-width: 1180px) {
-  .iberopedia-hero,
-  .iberopedia-layout,
-  .unit-card,
-  .territory-row {
+@media (max-width: 1080px) {
+  .iberopedia-shell,
+  .entry-row,
+  .entry-row.no-media {
     grid-template-columns: 1fr;
   }
 
-  .iberopedia-subheader,
-  .topic-sidebar {
+  .iberopedia-sidebar {
     position: static;
   }
 
-  .topic-sidebar {
+  .iberopedia-sidebar nav {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .sidebar-heading {
+  .entry-row {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+
+  .entry-row.no-media {
+    grid-template-columns: 1fr;
+  }
+
+  .entry-facts {
     grid-column: 1 / -1;
-  }
-
-  .summary-grid,
-  .card-grid,
-  .card-grid.compact {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .feature-card.wide {
-    grid-column: span 1;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
   }
 }
 
-@media (max-width: 700px) {
-  .iberopedia-view {
-    gap: var(--compact-gap);
-  }
-
-  .iberopedia-hero,
-  .iberopedia-subheader,
-  .topic-sidebar {
+@media (max-width: 680px) {
+  .iberopedia-header {
     border-radius: 0;
   }
 
-  .iberopedia-subheader {
-    display: flex;
-    overflow-x: auto;
-    padding: 0.3rem;
-    scrollbar-width: none;
+  .iberopedia-header h2 {
+    font-size: 1.72rem;
   }
 
-  .iberopedia-subheader::-webkit-scrollbar {
-    display: none;
-  }
-
-  .iberopedia-subheader button {
-    flex: 0 0 142px;
-  }
-
-  .archive-stats,
-  .topic-sidebar,
-  .summary-grid,
-  .card-grid,
-  .card-grid.compact,
-  .territory-row dl {
+  .iberopedia-sidebar nav,
+  .entry-row,
+  .entry-facts,
+  .entry-facts.dense {
     grid-template-columns: 1fr;
+  }
+
+  .entry-media {
+    width: min(100%, 180px);
   }
 }
 </style>

@@ -4,6 +4,7 @@ import UnitStatsPanel from '@/components/game/UnitStatsPanel.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import { useSessionStore } from '@/stores/session'
 import type { ResourceCostDto, TroopDefinitionDto } from '@/types/game'
+import { comparePartyCodes } from '@/utils/partyOrder'
 import { troopPortrait } from '@/utils/troopPortraits'
 
 const session = useSessionStore()
@@ -74,7 +75,7 @@ const specialTroopGroups = computed(() => {
     groups.get(code)?.units.push(unit)
   }
 
-  return [...groups.values()]
+  return [...groups.values()].sort((a, b) => comparePartyCodes(a.code, b.code))
 })
 
 function enough(costs: ResourceCostDto[]) {
@@ -111,7 +112,7 @@ function unitStatus(unit: TroopDefinitionDto) {
 }
 
 function isTransportUnit(unit: TroopDefinitionDto) {
-  return unit.role.toLowerCase().startsWith('transporte')
+  return Boolean(unit.transportType || unit.role.toLowerCase().startsWith('transporte'))
 }
 
 function partyGroupStatus(group: TroopGroup) {
@@ -159,7 +160,7 @@ async function deploy(unit: TroopDefinitionDto) {
             <p class="muted">Generación y cola</p>
             <h2>Unidades comunes</h2>
           </div>
-          <button class="app-button secondary" @click="session.refresh">Actualizar</button>
+          <button class="app-button secondary" @click="() => session.refresh()">Actualizar</button>
         </div>
 
         <div class="troop-list">
@@ -439,7 +440,7 @@ input {
 
 .troop-row {
   display: grid;
-  grid-template-columns: 86px minmax(180px, 0.95fr) minmax(260px, 0.9fr) 156px;
+  grid-template-columns: 112px minmax(180px, 0.95fr) minmax(260px, 0.9fr) 156px;
   grid-template-areas: 'portrait main stats actions';
   gap: var(--compact-gap);
   align-items: stretch;
@@ -455,7 +456,7 @@ input {
 .unit-portrait {
   position: relative;
   grid-area: portrait;
-  width: 86px;
+  width: 112px;
   aspect-ratio: 1;
   align-self: center;
   margin: 0;
@@ -593,7 +594,7 @@ input {
   }
 
   .unit-portrait {
-    width: min(100%, 220px);
+    width: min(100%, 260px);
   }
 }
 

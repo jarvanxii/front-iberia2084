@@ -15,7 +15,6 @@ const router = createRouter({
     { path: '/', name: 'access', component: AuthView, meta: { guestOnly: true, shell: 'auth' } },
     { path: '/login', redirect: { name: 'access' } },
     { path: '/inicio', redirect: { name: 'home' } },
-    { path: '/partidas', redirect: { name: 'home' } },
     { path: '/ciudad', redirect: { name: 'home' } },
     { path: '/provincia', redirect: { name: 'home' } },
     { path: '/alianza', redirect: { name: 'home' } },
@@ -25,6 +24,12 @@ const router = createRouter({
     {
       path: '/home',
       name: 'home',
+      component: GameHomeView,
+      meta: { requiresAuth: true, header: 'home', shell: 'home', homeSection: 'inicio' },
+    },
+    {
+      path: '/partidas',
+      name: 'homeGames',
       component: GameHomeView,
       meta: { requiresAuth: true, header: 'home', shell: 'home', homeSection: 'partidas' },
     },
@@ -40,6 +45,24 @@ const router = createRouter({
       name: 'homeTroops',
       component: GameHomeView,
       meta: { requiresAuth: true, header: 'home', shell: 'home', homeSection: 'unidades' },
+    },
+    {
+      path: '/edificios',
+      name: 'homeBuildings',
+      component: GameHomeView,
+      meta: { requiresAuth: true, header: 'home', shell: 'home', homeSection: 'edificios' },
+    },
+    {
+      path: '/eventos',
+      name: 'homeEvents',
+      component: GameHomeView,
+      meta: { requiresAuth: true, header: 'home', shell: 'home', homeSection: 'eventos' },
+    },
+    {
+      path: '/investigaciones',
+      name: 'homeResearch',
+      component: GameHomeView,
+      meta: { requiresAuth: true, header: 'home', shell: 'home', homeSection: 'investigaciones' },
     },
     {
       path: '/mundo/:worldCode',
@@ -67,12 +90,14 @@ router.beforeEach(async (to) => {
     return { name: 'access' }
   }
   if (to.meta.guestOnly && session.isLoggedIn) {
-    return { name: 'home', query: to.query }
+    const hasInvitation = typeof to.query.mundo === 'string' || typeof to.query.provincia === 'string'
+    return { name: hasInvitation ? 'homeGames' : 'home', query: to.query }
   }
 
   if (to.meta.requiresAuth && session.isLoggedIn && !session.state) {
     try {
-      await session.refresh()
+      const worldCode = typeof to.params.worldCode === 'string' ? to.params.worldCode : undefined
+      await session.refresh(worldCode)
     } catch {
       session.logout()
       return { name: 'access' }
@@ -81,6 +106,12 @@ router.beforeEach(async (to) => {
 
   if (to.meta.requiresWorld) {
     const worldCode = typeof to.params.worldCode === 'string' ? to.params.worldCode : ''
+    if (worldCode && session.state?.player) {
+      const currentWorld = session.state.worlds.find((world) => world.id === session.state?.player?.worldId)
+      if (currentWorld?.code !== worldCode) {
+        await session.refresh(worldCode)
+      }
+    }
     const player = session.state?.player ?? null
     const activeWorld = player
       ? session.state?.worlds.find((world) => world.id === player.worldId)

@@ -1,26 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">Logo de Pantomima Popular</title>
-  <desc id="desc">Marca azul institucional con siglas PP y un palco dorado satirico.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="ppTitle ppDesc">
+  <title id="ppTitle">Logo de Pantomima Popular</title>
+  <desc id="ppDesc">Escudo azul con máscaras teatrales, palco institucional y siglas PP.</desc>
   <defs>
-    <linearGradient id="ppBg" x1="76" y1="54" x2="424" y2="456" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#27a8ff"/>
-      <stop offset="0.5" stop-color="#076bd2"/>
-      <stop offset="1" stop-color="#032d8d"/>
+    <linearGradient id="ppBg" x1="86" y1="54" x2="430" y2="452" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3bb3ff"/>
+      <stop offset="0.44" stop-color="#0d67c8"/>
+      <stop offset="1" stop-color="#06235f"/>
     </linearGradient>
-    <linearGradient id="ppGold" x1="144" y1="116" x2="360" y2="404" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#ffeaa1"/>
-      <stop offset="1" stop-color="#d59a22"/>
+    <linearGradient id="ppGold" x1="132" y1="86" x2="384" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff0a6"/>
+      <stop offset="0.52" stop-color="#d8aa3a"/>
+      <stop offset="1" stop-color="#8d5b12"/>
     </linearGradient>
-    <filter id="drop" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#001327" flood-opacity="0.45"/>
+    <filter id="ppShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#001128" flood-opacity="0.42"/>
     </filter>
   </defs>
-  <rect width="512" height="512" rx="86" fill="#06111f"/>
-  <rect x="74" y="74" width="364" height="364" rx="86" fill="url(#ppBg)" filter="url(#drop)"/>
-  <rect x="95" y="95" width="322" height="322" rx="68" fill="none" stroke="url(#ppGold)" stroke-width="12"/>
-  <path d="M142 168c55-43 128-56 219-38-48 13-88 40-119 80 48-25 98-31 150-17-63 22-111 57-145 106-28-53-63-95-105-131Z" fill="#f8fbff"/>
-  <text x="256" y="314" text-anchor="middle" fill="#ffffff" font-family="Arial Black, Arial, sans-serif" font-size="118" font-weight="900" letter-spacing="-11">PP</text>
-  <path d="M149 348h214" stroke="url(#ppGold)" stroke-width="18" stroke-linecap="round"/>
-  <path d="M174 348v39M256 348v39M338 348v39" stroke="#f8d56f" stroke-width="12" stroke-linecap="round"/>
-  <path d="M166 394h180" stroke="#fff0b2" stroke-width="10" stroke-linecap="round"/>
+  <rect width="512" height="512" rx="78" fill="#06101c"/>
+  <path d="M256 54 410 104v128c0 93-59 157-154 226-95-69-154-133-154-226V104L256 54Z" fill="url(#ppBg)" filter="url(#ppShadow)"/>
+  <path d="M256 82 384 124v108c0 78-48 133-128 193-80-60-128-115-128-193V124l128-42Z" fill="none" stroke="url(#ppGold)" stroke-width="12"/>
+  <g transform="translate(0 2)">
+    <path d="M166 151c42-27 89-27 131 0 0 74-25 118-65 128-41-10-66-54-66-128Z" fill="#f8fbff"/>
+    <path d="M215 151c42-27 89-27 131 0 0 74-25 118-65 128-41-10-66-54-66-128Z" fill="#dfeeff"/>
+    <path d="M194 196c17-10 34-10 50 0M262 196c17-10 34-10 50 0" fill="none" stroke="#0a3e7c" stroke-width="12" stroke-linecap="round"/>
+    <path d="M204 238c20 17 40 17 60 0M275 246c15-14 32-18 51-11" fill="none" stroke="#0a3e7c" stroke-width="11" stroke-linecap="round"/>
+    <path d="M153 321h206l26 43H127l26-43Z" fill="url(#ppGold)"/>
+    <path d="M161 366h190" stroke="#fff2b4" stroke-width="14" stroke-linecap="round"/>
+    <path d="M180 321v43M226 321v43M272 321v43M318 321v43" stroke="#f7d56c" stroke-width="10"/>
+  </g>
+  <rect x="154" y="386" width="204" height="62" rx="16" fill="#071d3d" opacity="0.92"/>
+  <text x="256" y="433" text-anchor="middle" fill="#fff8dc" font-family="Arial Black, Arial, sans-serif" font-size="54" font-weight="900">PP</text>
 </svg>

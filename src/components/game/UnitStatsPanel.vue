@@ -1,7 +1,10 @@
 <script setup lang="ts">
 interface UnitStatsSource {
+  role?: string
   attack: number
   attackTypeLabel: string
+  transportType?: string | null
+  transportTypeLabel?: string | null
   defenseBureaucratic: number
   defenseIncisive: number
   defenseMedia: number
@@ -20,71 +23,107 @@ function secondsLabel(seconds: number) {
   const rest = seconds % 60
   return rest ? `${minutes}m ${rest}s` : `${minutes}m`
 }
+
+function lowerLabel(value: string) {
+  return value.toLocaleLowerCase('es-ES')
+}
+
+function isTransportUnit(unit: UnitStatsSource) {
+  return Boolean(unit.transportType || unit.role?.toLocaleLowerCase('es-ES').startsWith('transporte'))
+}
+
+function primaryStatLabel(unit: UnitStatsSource) {
+  return isTransportUnit(unit) ? 'Tipo de transporte' : `Ataque ${lowerLabel(unit.attackTypeLabel)}`
+}
+
+function primaryStatValue(unit: UnitStatsSource) {
+  if (!isTransportUnit(unit)) return unit.attack
+  return lowerLabel(unit.transportTypeLabel ?? unit.transportType ?? 'transporte')
+}
 </script>
 
 <template>
-  <dl class="unit-stats-panel" :class="{ dense }">
-    <div class="stat-column stat-column-main">
-      <div class="stat-item">
-        <dt>Ataque</dt>
-        <dd>
-          <strong>{{ unit.attack }}</strong>
-          <span>{{ unit.attackTypeLabel }}</span>
-        </dd>
-      </div>
-      <div class="stat-item">
-        <dt>Plazas</dt>
-        <dd>
-          <strong>{{ unit.slots }}</strong>
-          <span>ocupación</span>
-        </dd>
-      </div>
-      <div class="stat-item">
-        <dt>Tiempo</dt>
-        <dd>
-          <strong>{{ secondsLabel(unit.trainingSeconds) }}</strong>
-          <span>generación</span>
-        </dd>
-      </div>
-    </div>
+  <section class="unit-stats-panel" :class="{ dense }" aria-label="Estadísticas de unidad">
+    <h5>Estadísticas</h5>
 
-    <div class="stat-column stat-column-defense">
-      <div class="stat-item">
-        <dt>Burocrática</dt>
-        <dd>
-          <strong>{{ unit.defenseBureaucratic }}</strong>
-          <span>defensa</span>
-        </dd>
+    <dl class="stats-grid">
+      <div class="stat-column stat-column-main">
+        <div class="stat-item">
+          <dt>{{ primaryStatLabel(unit) }}</dt>
+          <dd>
+            <strong>{{ primaryStatValue(unit) }}</strong>
+          </dd>
+        </div>
+        <div class="stat-item">
+          <dt>Plazas</dt>
+          <dd>
+            <strong>{{ unit.slots }}</strong>
+          </dd>
+        </div>
+        <div class="stat-item">
+          <dt>Tiempo</dt>
+          <dd>
+            <strong>{{ secondsLabel(unit.trainingSeconds) }}</strong>
+          </dd>
+        </div>
       </div>
-      <div class="stat-item">
-        <dt>Incisiva</dt>
-        <dd>
-          <strong>{{ unit.defenseIncisive }}</strong>
-          <span>defensa</span>
-        </dd>
+
+      <div class="stat-column stat-column-defense">
+        <div class="stat-item">
+          <dt>Defensa burocrática</dt>
+          <dd>
+            <strong>{{ unit.defenseBureaucratic }}</strong>
+          </dd>
+        </div>
+        <div class="stat-item">
+          <dt>Defensa incisiva</dt>
+          <dd>
+            <strong>{{ unit.defenseIncisive }}</strong>
+          </dd>
+        </div>
+        <div class="stat-item">
+          <dt>Defensa mediática</dt>
+          <dd>
+            <strong>{{ unit.defenseMedia }}</strong>
+          </dd>
+        </div>
       </div>
-      <div class="stat-item">
-        <dt>Mediática</dt>
-        <dd>
-          <strong>{{ unit.defenseMedia }}</strong>
-          <span>defensa</span>
-        </dd>
-      </div>
-    </div>
-  </dl>
+    </dl>
+  </section>
 </template>
 
 <style scoped>
 .unit-stats-panel {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.22rem;
+  height: 100%;
+  min-width: 0;
+}
+
+.unit-stats-panel h5 {
+  min-height: 1rem;
+  margin: 0;
+  color: var(--color-accent);
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.stats-grid {
+  display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--compact-gap-sm);
+  height: 100%;
   min-width: 0;
   margin: 0;
 }
 
 .stat-column {
   display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
   gap: 0.1rem;
   min-width: 0;
   border: 1px solid var(--color-border);
@@ -103,11 +142,11 @@ function secondsLabel(seconds: number) {
 
 .stat-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1.25fr) auto;
   gap: 0.24rem;
   align-items: center;
   min-width: 0;
-  min-height: 1.82rem;
+  min-height: 2.06rem;
   border-bottom: 1px solid var(--color-border);
   padding: 0.12rem 0.04rem;
 }
@@ -117,13 +156,11 @@ function secondsLabel(seconds: number) {
 }
 
 dt {
-  overflow: hidden;
   color: var(--color-accent);
   font-size: 0.66rem;
   font-weight: 950;
   letter-spacing: 0;
-  line-height: 1.05;
-  text-overflow: ellipsis;
+  line-height: 1.12;
   text-transform: uppercase;
 }
 
@@ -143,14 +180,8 @@ dd strong {
   font-weight: 950;
 }
 
-dd span {
-  color: var(--color-muted);
-  font-size: 0.62rem;
-  font-weight: 850;
-}
-
 .dense {
-  gap: 0.24rem;
+  gap: 0.2rem;
 }
 
 .dense .stat-column {
@@ -159,11 +190,11 @@ dd span {
 }
 
 .dense .stat-item {
-  min-height: 1.68rem;
+  min-height: 2.06rem;
 }
 
 @media (max-width: 420px) {
-  .unit-stats-panel {
+  .stats-grid {
     gap: 0.38rem;
   }
 
@@ -179,8 +210,5 @@ dd span {
     font-size: 0.9rem;
   }
 
-  dd span {
-    font-size: 0.56rem;
-  }
 }
 </style>

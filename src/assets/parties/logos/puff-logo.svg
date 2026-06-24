@@ -1,30 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">Logo de Partido Unido Feminista Federal</title>
-  <desc id="desc">Marca morada de circulos asamblearios con punio y siglas PUFF.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="puffTitle puffDesc">
+  <title id="puffTitle">Logo de Partido Unido Feminista Federal</title>
+  <desc id="puffDesc">Marca morada con megáfono asambleario, nodos federales y siglas PUFF.</desc>
   <defs>
-    <linearGradient id="puffBg" x1="90" y1="62" x2="424" y2="452" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#c58cff"/>
-      <stop offset="0.5" stop-color="#7b40c9"/>
-      <stop offset="1" stop-color="#40166f"/>
+    <linearGradient id="puffBg" x1="82" y1="58" x2="426" y2="452" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d9a1ff"/>
+      <stop offset="0.5" stop-color="#7e42c8"/>
+      <stop offset="1" stop-color="#38105f"/>
     </linearGradient>
-    <filter id="drop" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#150026" flood-opacity="0.45"/>
+    <linearGradient id="puffGold" x1="144" y1="114" x2="370" y2="390" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff1ad"/>
+      <stop offset="1" stop-color="#d6a241"/>
+    </linearGradient>
+    <filter id="puffShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#130022" flood-opacity="0.44"/>
     </filter>
   </defs>
-  <rect width="512" height="512" rx="86" fill="#13091d"/>
-  <g filter="url(#drop)">
-    <circle cx="181" cy="216" r="92" fill="url(#puffBg)"/>
-    <circle cx="267" cy="165" r="103" fill="url(#puffBg)"/>
-    <circle cx="333" cy="251" r="107" fill="url(#puffBg)"/>
-    <circle cx="217" cy="303" r="92" fill="url(#puffBg)"/>
+  <rect width="512" height="512" rx="78" fill="#12071c"/>
+  <circle cx="256" cy="244" r="184" fill="url(#puffBg)" filter="url(#puffShadow)"/>
+  <circle cx="256" cy="244" r="154" fill="none" stroke="#ffe3a1" stroke-width="10" opacity="0.7"/>
+  <g stroke="#fff2cf" stroke-width="10" stroke-linecap="round" opacity="0.78">
+    <path d="M159 188 256 244 356 184"/>
+    <path d="M158 306 256 244 356 306"/>
+    <path d="M256 128v232"/>
   </g>
-  <path d="M181 216a92 92 0 0 1 86-51 103 103 0 0 1 66 86 107 107 0 0 1-116 52 92 92 0 0 1-36-87Z" fill="none" stroke="#ffe28a" stroke-width="13" opacity="0.95"/>
-  <g transform="translate(260 217)">
-    <rect x="-58" y="-40" width="39" height="91" rx="18" fill="#fff3d5"/>
-    <rect x="-25" y="-66" width="39" height="117" rx="18" fill="#fff3d5"/>
-    <rect x="8" y="-56" width="39" height="107" rx="18" fill="#fff3d5"/>
-    <rect x="41" y="-32" width="37" height="83" rx="18" fill="#fff3d5"/>
-    <path d="M-66 1h136c-3 66-38 102-83 102-35 0-53-34-53-102Z" fill="#fff3d5"/>
+  <g fill="url(#puffGold)">
+    <circle cx="156" cy="188" r="23"/>
+    <circle cx="356" cy="184" r="23"/>
+    <circle cx="158" cy="306" r="23"/>
+    <circle cx="356" cy="306" r="23"/>
   </g>
-  <text x="256" y="396" text-anchor="middle" fill="#fff7df" font-family="Arial Black, Arial, sans-serif" font-size="65" font-weight="900" letter-spacing="-3">PUFF...</text>
+  <g transform="translate(252 238) rotate(-12)">
+    <path d="M-92-30h88l82-46v150L-4 28h-88V-30Z" fill="#fff2d1"/>
+    <path d="M78-76c35 20 55 46 55 76s-20 56-55 76" fill="none" stroke="#fff2d1" stroke-width="17" stroke-linecap="round"/>
+    <path d="M-64 30h44l22 78h-48L-64 30Z" fill="#e3bb68"/>
+    <path d="M-68-2h60" stroke="#7e42c8" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <rect x="123" y="382" width="266" height="58" rx="15" fill="#180d22" opacity="0.92"/>
+  <text x="256" y="423" text-anchor="middle" fill="#fff2d1" font-family="Arial Black, Arial, sans-serif" font-size="43" font-weight="900">PUFF...</text>
 </svg>

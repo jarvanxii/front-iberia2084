@@ -33,8 +33,6 @@ export interface FactionDto {
   color: string
   motto: string
   satire: string
-  startingRegion: string
-  corruptionAffinity: number
 }
 
 export interface AllianceDto {
@@ -80,8 +78,9 @@ export interface TerritoryDto {
   mapY: number
   ownerPlayerId: number | null
   ownerName: string | null
-  flavorFactionName: string
-  color: string
+  ownerFactionCode: string | null
+  ownerFactionShortName: string | null
+  ownerFactionColor: string | null
   defense: number
   population: number
   baseVotes: number
@@ -133,6 +132,19 @@ export interface DisasterPlanDto {
   costs: ResourceCostDto[]
 }
 
+export interface EventDefinitionDto {
+  code: string
+  name: string
+  category: string
+  description: string
+  imageKey: string
+  baseSeverity: number
+  durationSeconds: number
+  scopeLabel: string
+  impactLabel: string
+  responseLabel: string
+}
+
 export interface WorldEventDto {
   id: number
   territoryId: number
@@ -162,6 +174,25 @@ export interface ResearchDto {
   finishesAt: string | null
 }
 
+export interface ResearchDefinitionDto {
+  code: string
+  name: string
+  category: string
+  description: string
+  imageKey: string
+  factionCode: string | null
+  factionName: string | null
+  factionShortName: string | null
+  factionColor: string | null
+  costPesetas: number
+  costVotos: number
+  costFavores: number
+  durationSeconds: number
+  effectType: string
+  effectValue: number
+  effectLabel: string
+}
+
 export interface CityBuildingDto {
   id: number
   code: string
@@ -183,6 +214,22 @@ export interface CityBuildingDto {
   effects: string[]
 }
 
+export interface BuildingDefinitionDto {
+  code: string
+  name: string
+  category: string
+  description: string
+  imageKey: string
+  mapX: number
+  mapY: number
+  width: number
+  height: number
+  maxLevel: number
+  costs: ResourceCostDto[]
+  durationSeconds: number
+  effects: string[]
+}
+
 export interface TroopDefinitionDto {
   code: string
   name: string
@@ -197,6 +244,8 @@ export interface TroopDefinitionDto {
   attack: number
   attackType: string
   attackTypeLabel: string
+  transportType: string | null
+  transportTypeLabel: string | null
   defenseBureaucratic: number
   defenseIncisive: number
   defenseMedia: number
@@ -221,6 +270,8 @@ export interface PlayerTroopDto {
   attack: number
   attackType: string
   attackTypeLabel: string
+  transportType: string | null
+  transportTypeLabel: string | null
   defenseBureaucratic: number
   defenseIncisive: number
   defenseMedia: number
@@ -236,8 +287,6 @@ export interface CityDto {
   region: string
   mapX: number
   mapY: number
-  factionName: string
-  factionColor: string
   defense: number
   population: number
   baseVotes: number
@@ -261,6 +310,8 @@ export interface CityGarrisonDto {
   attack: number
   attackType: string
   attackTypeLabel: string
+  transportType: string | null
+  transportTypeLabel: string | null
   defenseBureaucratic: number
   defenseIncisive: number
   defenseMedia: number
@@ -297,9 +348,6 @@ export interface RegionalGovernmentDto {
   code: string
   name: string
   provinces: string[]
-  controlledByFactionCode: string
-  controlledByFactionName: string
-  color: string
   stability: number
   seats: number
 }
@@ -326,6 +374,7 @@ export interface AllianceScoreDto {
 
 export interface GameStateDto {
   player: PlayerDto | null
+  players: PlayerDto[]
   worlds: WorldDto[]
   factions: FactionDto[]
   resources: ResourceDto[]
@@ -333,9 +382,12 @@ export interface GameStateDto {
   actions: ActionDto[]
   corruptionSchemes: CorruptionSchemeDto[]
   disasterPlans: DisasterPlanDto[]
+  eventDefinitions: EventDefinitionDto[]
   events: WorldEventDto[]
+  researchDefinitions: ResearchDefinitionDto[]
   research: ResearchDto[]
   cities: CityDto[]
+  buildingDefinitions: BuildingDefinitionDto[]
   cityBuildings: CityBuildingDto[]
   troopDefinitions: TroopDefinitionDto[]
   troops: PlayerTroopDto[]
