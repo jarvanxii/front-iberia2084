@@ -147,18 +147,22 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .home-header {
+  --header-blue: #5aa7e8;
+  --header-blue-strong: #9bd6ff;
+  --header-surface: rgba(7, 15, 26, 0.9);
   position: fixed;
   z-index: 1000;
   top: 0;
   right: 0;
   left: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 32%, transparent);
+  border-bottom: 1px solid rgba(125, 190, 255, 0.2);
   background:
-    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--color-accent) 11%, transparent), transparent 18rem),
-    linear-gradient(180deg, #151b18 0%, #0f1512 58%, #080d0b 100%);
+    radial-gradient(circle at 8% 0%, rgba(90, 167, 232, 0.14), transparent 18rem),
+    linear-gradient(180deg, rgba(10, 22, 36, 0.96), var(--header-surface));
+  backdrop-filter: blur(14px);
   box-shadow:
-    0 10px 22px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 241, 190, 0.05);
+    0 10px 26px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055);
 }
 
 .home-header::after {
@@ -171,8 +175,8 @@ onBeforeUnmount(() => {
   background: linear-gradient(
     90deg,
     transparent,
-    color-mix(in srgb, var(--color-accent) 56%, transparent),
-    color-mix(in srgb, var(--color-accent-strong) 76%, transparent),
+    rgba(90, 167, 232, 0.42),
+    rgba(155, 214, 255, 0.62),
     transparent
   );
 }
@@ -180,12 +184,12 @@ onBeforeUnmount(() => {
 .home-header-inner {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.74rem;
+  gap: 0.62rem;
   align-items: center;
   width: 100%;
   min-height: var(--home-header-height);
   margin: 0;
-  padding: 0 0.52rem;
+  padding: 0 0.7rem;
 }
 
 .home-brand,
@@ -197,10 +201,10 @@ onBeforeUnmount(() => {
 .home-brand {
   display: grid;
   grid-template-columns: 38px minmax(0, auto);
-  gap: 0.5rem;
+  gap: 0.44rem;
   align-items: center;
   justify-self: start;
-  color: var(--color-accent-strong);
+  color: var(--header-blue-strong);
   text-decoration: none;
 }
 
@@ -209,11 +213,11 @@ onBeforeUnmount(() => {
   width: 38px;
   height: 38px;
   object-fit: contain;
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-accent) 22%, transparent));
+  filter: drop-shadow(0 0 10px rgba(90, 167, 232, 0.24));
 }
 
 .home-brand strong {
-  font-size: 1.12rem;
+  font-size: 1.02rem;
   font-weight: 950;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -221,25 +225,29 @@ onBeforeUnmount(() => {
 
 .home-section-nav {
   display: flex;
-  gap: 0;
+  gap: 0.18rem;
   justify-content: center;
   min-width: 0;
-  border-left: 1px solid color-mix(in srgb, var(--color-accent) 12%, transparent);
+  padding: 0.18rem;
+  border: 1px solid rgba(125, 190, 255, 0.12);
+  border-radius: var(--radius-lg);
+  background: rgba(3, 10, 18, 0.28);
 }
 
 .home-section-link {
   position: relative;
   display: grid;
-  min-height: var(--home-header-height);
+  min-height: 34px;
   place-items: center;
   border: 0;
-  border-right: 1px solid color-mix(in srgb, var(--color-accent) 12%, transparent);
-  padding: 0.42rem 0.72rem;
-  color: var(--color-muted);
-  font-size: 0.88rem;
+  border-radius: var(--radius-sm);
+  padding: 0.34rem 0.68rem;
+  color: color-mix(in srgb, var(--color-muted) 84%, #b8dfff);
+  font-size: 0.84rem;
   font-weight: 900;
   text-decoration: none;
   transition:
+    background 0.16s ease,
     color 0.16s ease,
     text-shadow 0.16s ease;
 }
@@ -247,20 +255,21 @@ onBeforeUnmount(() => {
 .home-section-link::after {
   content: '';
   position: absolute;
-  right: 16%;
-  bottom: 0;
-  left: 16%;
+  right: 20%;
+  bottom: 5px;
+  left: 20%;
   height: 2px;
   transform: scaleX(0);
-  background: linear-gradient(90deg, transparent, var(--color-accent), var(--color-accent-strong), transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent) 40%, transparent);
+  background: linear-gradient(90deg, transparent, var(--header-blue), var(--header-blue-strong), transparent);
+  box-shadow: 0 0 10px rgba(90, 167, 232, 0.34);
   transition: transform 0.18s ease;
 }
 
 .home-section-link:hover,
 .home-section-link.active {
-  color: var(--color-accent-strong);
-  text-shadow: 0 0 10px color-mix(in srgb, var(--color-accent) 20%, transparent);
+  color: var(--header-blue-strong);
+  background: rgba(90, 167, 232, 0.09);
+  text-shadow: 0 0 10px rgba(90, 167, 232, 0.18);
 }
 
 .home-section-link:hover::after,
@@ -278,11 +287,11 @@ onBeforeUnmount(() => {
   grid-template-columns: 32px minmax(0, max-content);
   gap: 0.44rem;
   align-items: center;
-  border: 0;
-  border-left: 1px solid color-mix(in srgb, var(--color-accent) 18%, transparent);
-  padding: 0.18rem 0 0.18rem 0.64rem;
+  border: 1px solid rgba(125, 190, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 0.18rem 0.44rem 0.18rem 0.22rem;
   color: var(--color-text);
-  background: transparent;
+  background: rgba(3, 10, 18, 0.24);
 }
 
 .home-user-avatar {
@@ -291,10 +300,10 @@ onBeforeUnmount(() => {
   height: 32px;
   place-items: center;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 44%, transparent);
+  border: 1px solid rgba(125, 190, 255, 0.28);
   border-radius: var(--radius-sm);
-  color: var(--color-accent-strong);
-  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  color: var(--header-blue-strong);
+  background: rgba(90, 167, 232, 0.08);
   font-size: 0.78rem;
   font-weight: 900;
 }
@@ -342,9 +351,9 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-md);
   padding: 0.52rem;
   background:
-    radial-gradient(circle at 0 0, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 12rem),
-    var(--color-surface);
-  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.42);
+    radial-gradient(circle at 0 0, rgba(90, 167, 232, 0.12), transparent 12rem),
+    color-mix(in srgb, var(--color-surface) 82%, #071324);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.38);
 }
 
 .menu-user-summary {
@@ -436,8 +445,9 @@ onBeforeUnmount(() => {
   }
 
   .home-section-link {
-    flex: 1 0 0;
+    flex: 0 0 auto;
     min-height: 30px;
+    min-width: 86px;
     padding: 0.26rem 0.4rem;
     text-align: center;
   }
