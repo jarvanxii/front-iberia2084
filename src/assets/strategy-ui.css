@@ -1,19 +1,19 @@
 :root {
-  --color-bg: #0c1110;
-  --color-surface: #151b19;
-  --color-surface-soft: #1b231f;
-  --color-surface-raised: #222b26;
-  --color-border: #39453f;
-  --color-border-strong: #667366;
-  --color-text: #f4f1e8;
-  --color-muted: #afb8af;
-  --color-subtle: #7f887e;
-  --color-accent: #d2ad54;
-  --color-accent-strong: #e5c66d;
-  --color-on-accent: #101411;
-  --color-success: #69b69f;
-  --color-info: #8fa7e8;
-  --color-danger: #c96f5f;
+  --color-bg: #06111f;
+  --color-surface: #0b1726;
+  --color-surface-soft: #102238;
+  --color-surface-raised: #172c43;
+  --color-border: #243d56;
+  --color-border-strong: #557b9e;
+  --color-text: #f4f8fd;
+  --color-muted: #aec1d4;
+  --color-subtle: #758ba2;
+  --color-accent: #367fc6;
+  --color-accent-strong: #8bd0ff;
+  --color-on-accent: #04101d;
+  --color-success: #6fcfff;
+  --color-info: #a9bfff;
+  --color-danger: #d47b70;
   --radius: 4px;
   --radius-sm: 2px;
   --radius-md: 4px;
@@ -21,7 +21,7 @@
   --strategy-shadow: 0 16px 28px rgba(0, 0, 0, 0.24);
   --strategy-shadow-soft: 0 10px 18px rgba(0, 0, 0, 0.18);
   --strategy-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  --strategy-line: rgba(210, 173, 84, 0.28);
+  --strategy-line: rgba(125, 190, 255, 0.2);
   --space-page: 0.7rem;
   --space-1: 0.18rem;
   --space-2: 0.32rem;
@@ -38,10 +38,11 @@ html,
 body {
   color: var(--color-text);
   background:
-    linear-gradient(180deg, rgba(210, 173, 84, 0.05) 0, transparent 220px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    radial-gradient(circle at 14% 0%, rgba(82, 160, 230, 0.09), transparent 22rem),
+    linear-gradient(180deg, rgba(125, 190, 255, 0.035) 0, transparent 220px),
+    linear-gradient(90deg, rgba(175, 205, 232, 0.012) 1px, transparent 1px),
     var(--color-bg);
-  background-size: auto, 48px 48px, auto;
+  background-size: auto, auto, 56px 56px, auto;
 }
 
 ::selection {
@@ -68,7 +69,7 @@ body {
 :where(input, select, textarea):focus {
   border-color: var(--color-accent);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(210, 173, 84, 0.16);
+  box-shadow: 0 0 0 2px rgba(85, 166, 232, 0.18);
 }
 
 .app-button,
@@ -78,11 +79,11 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  border: 1px solid var(--color-accent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 82%, white);
   border-radius: var(--radius-sm);
   padding: 0.46rem 0.68rem;
   color: var(--color-on-accent);
-  background: linear-gradient(180deg, var(--color-accent-strong), var(--color-accent));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-accent-strong) 92%, white), var(--color-accent));
   box-shadow: var(--strategy-inset);
   font-weight: 850;
   text-align: center;
@@ -91,14 +92,14 @@ body {
 .app-button:hover:not(:disabled),
 .strategy-button:hover:not(:disabled) {
   border-color: var(--color-accent-strong);
-  background: linear-gradient(180deg, var(--color-accent-strong), var(--color-accent));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-accent-strong) 92%, white), var(--color-accent));
 }
 
 .app-button.secondary,
 .strategy-button.secondary {
   border-color: var(--color-border-strong);
   color: var(--color-text);
-  background: linear-gradient(180deg, var(--color-surface-raised), var(--color-surface-soft));
+  background: linear-gradient(180deg, rgba(23, 44, 67, 0.88), rgba(16, 34, 56, 0.9));
 }
 
 .app-button.secondary:hover:not(:disabled),
@@ -123,7 +124,8 @@ body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 52px),
+    radial-gradient(circle at 0 0, rgba(85, 166, 232, 0.045), transparent 14rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.024), transparent 52px),
     var(--color-surface);
   box-shadow: var(--strategy-inset);
 }
@@ -180,7 +182,7 @@ body {
   border-left: 3px solid var(--color-accent);
   border-radius: var(--radius-sm);
   padding: var(--compact-card-padding);
-  background: rgba(10, 15, 13, 0.6);
+  background: rgba(5, 14, 26, 0.58);
 }
 
 .strategy-metric span {
@@ -234,7 +236,7 @@ body {
 .strategy-row {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(14, 20, 17, 0.72);
+  background: rgba(7, 17, 30, 0.72);
 }
 
 .strategy-chip {

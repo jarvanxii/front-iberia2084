@@ -374,7 +374,7 @@ async function enterSelectedWorld() {
   border-radius: var(--radius-sm);
   padding: 0.44rem 0.52rem;
   color: var(--color-text);
-  background: rgba(10, 15, 13, 0.62);
+  background: rgba(5, 14, 26, 0.62);
   text-align: left;
 }
 
@@ -477,7 +477,9 @@ async function enterSelectedWorld() {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: var(--compact-panel-padding);
-  background: rgba(10, 15, 13, 0.42);
+  background:
+    radial-gradient(circle at 0 0, rgba(85, 166, 232, 0.045), transparent 14rem),
+    rgba(5, 14, 26, 0.46);
 }
 
 .world-detail-header {

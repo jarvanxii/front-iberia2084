@@ -281,10 +281,10 @@ function activeCosts(costs: ResourceCostDto[]) {
   padding: 0.18rem var(--space-page);
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 9%, transparent), transparent 34rem),
-    linear-gradient(180deg, #111815 0%, #0b1110 100%);
+    linear-gradient(180deg, rgba(10, 22, 36, 0.96), rgba(6, 17, 31, 0.98));
   box-shadow:
     0 10px 18px rgba(0, 0, 0, 0.26),
-    inset 0 1px 0 rgba(255, 241, 190, 0.05);
+    inset 0 1px 0 rgba(255, 255, 255, 0.055);
 }
 
 .troop-tabs button {

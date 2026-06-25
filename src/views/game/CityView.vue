@@ -570,9 +570,9 @@ dt {
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(90deg, rgba(210, 173, 84, 0.16) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(210, 173, 84, 0.1) 1px, transparent 1px),
-    radial-gradient(circle at 50% 50%, transparent 54%, rgba(8, 12, 11, 0.44));
+    linear-gradient(90deg, rgba(125, 190, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(125, 190, 255, 0.075) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, transparent 56%, rgba(4, 12, 22, 0.42));
   background-size: 64px 64px, 64px 64px, auto;
   opacity: 0.18;
   pointer-events: none;
@@ -645,7 +645,7 @@ dt {
   background: linear-gradient(180deg, var(--color-accent-strong), var(--color-accent));
   box-shadow:
     0 10px 18px rgba(0, 0, 0, 0.32),
-    0 0 0 2px rgba(8, 12, 11, 0.74);
+    0 0 0 2px rgba(4, 12, 22, 0.74);
   font-size: 0.72rem;
   font-weight: 950;
   line-height: 1;
@@ -667,7 +667,7 @@ dt {
   border-radius: var(--radius-sm);
   padding: 0.04rem 0.22rem;
   color: var(--color-text);
-  background: rgba(8, 12, 11, 0.82);
+  background: rgba(4, 12, 22, 0.82);
   font-size: 0.58rem;
   font-style: normal;
   font-weight: 950;

@@ -341,11 +341,11 @@ async function submitContact() {
   min-height: 100vh;
   color: var(--color-text);
   background:
-    radial-gradient(circle at 18% 10%, rgba(210, 173, 84, 0.1), transparent 24rem),
-    linear-gradient(180deg, rgba(5, 9, 8, 0.06), rgba(5, 9, 8, 0.38)),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    radial-gradient(circle at 18% 10%, rgba(85, 166, 232, 0.11), transparent 24rem),
+    linear-gradient(180deg, rgba(4, 12, 22, 0.08), rgba(4, 12, 22, 0.42)),
+    linear-gradient(90deg, rgba(175, 205, 232, 0.012) 1px, transparent 1px),
     var(--color-bg);
-  background-size: auto, auto, 48px 48px, auto;
+  background-size: auto, auto, 56px 56px, auto;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -370,7 +370,8 @@ async function submitContact() {
   border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
   border-radius: 6px;
   background:
-    linear-gradient(145deg, rgba(210, 173, 84, 0.04), transparent 34%),
+    radial-gradient(circle at 0 0, rgba(85, 166, 232, 0.06), transparent 18rem),
+    linear-gradient(145deg, rgba(139, 208, 255, 0.035), transparent 34%),
     var(--color-surface);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
@@ -493,7 +494,7 @@ async function submitContact() {
 
 .legal-meta a:hover,
 .legal-contact a:hover {
-  color: #ffe3aa;
+  color: #d8f0ff;
 }
 
 .legal-content {
@@ -610,7 +611,7 @@ async function submitContact() {
 .legal-field input:focus,
 .legal-field textarea:focus {
   border-color: color-mix(in srgb, var(--color-accent) 58%, white);
-  box-shadow: 0 0 0 3px rgba(210, 173, 84, 0.12);
+  box-shadow: 0 0 0 3px rgba(85, 166, 232, 0.16);
 }
 
 .contact-honeypot {
