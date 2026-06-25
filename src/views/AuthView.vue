@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import authArt from '@/assets/iberia-key-art.png'
+import authArtExpanded from '@/assets/iberia-key-art-expanded.png'
 import { useSessionStore } from '@/stores/session'
 import type { AuthProviderDto } from '@/types/game'
 
@@ -264,10 +265,13 @@ function invitationQuery() {
 </script>
 
 <template>
-  <main class="login-page">
+  <main :class="['login-page', `login-page--${authMode}`]">
     <section class="login-layout">
-      <section class="login-visual" aria-label="Mapa estratégico de Iberia 2084">
-        <img class="login-banner" :src="authArt" alt="Mapa estratégico de Iberia 2084" />
+      <section class="login-visual" aria-label="Mapa estratégico de Iberia 2084" :style="{ '--login-art': `url(${authArtExpanded})` }">
+        <picture>
+          <source media="(max-width: 980px)" :srcset="authArtExpanded" />
+          <img class="login-banner" :src="authArt" alt="Mapa estratégico de Iberia 2084" />
+        </picture>
       </section>
 
       <section class="login-card" aria-labelledby="login-title">
@@ -611,21 +615,37 @@ function invitationQuery() {
   background-size: auto, 88px 88px, 88px 88px, auto;
 }
 
+.login-visual::before,
 .login-visual::after {
   position: absolute;
   inset: 0;
-  z-index: 1;
-  background:
-    linear-gradient(90deg, rgba(7, 9, 7, 0.18), transparent 34%, rgba(7, 9, 7, 0.58)),
-    linear-gradient(180deg, rgba(7, 9, 7, 0.18), transparent 45%, rgba(7, 9, 7, 0.58));
   content: '';
   pointer-events: none;
+}
+
+.login-visual::before {
+  z-index: 0;
+  inset: -32px;
+  background:
+    linear-gradient(180deg, rgba(7, 9, 7, 0.28), rgba(7, 9, 7, 0.18)),
+    var(--login-art) center / cover no-repeat;
+  filter: blur(14px) saturate(1.04) brightness(0.58);
+  opacity: 0.88;
+  transform: scale(1.04);
+}
+
+.login-visual::after {
+  z-index: 2;
+  background:
+    radial-gradient(circle at 52% 45%, transparent 0 32%, rgba(7, 9, 7, 0.24) 66%, rgba(7, 9, 7, 0.62) 100%),
+    linear-gradient(90deg, rgba(7, 9, 7, 0.18), transparent 34%, rgba(7, 9, 7, 0.58)),
+    linear-gradient(180deg, rgba(7, 9, 7, 0.18), transparent 45%, rgba(7, 9, 7, 0.5));
 }
 
 .login-banner {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
@@ -636,6 +656,13 @@ function invitationQuery() {
   object-fit: contain;
   object-position: center;
   filter: saturate(1.08) contrast(1.08) brightness(0.94);
+}
+
+.login-visual picture {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
 }
 
 .login-card,
@@ -923,6 +950,9 @@ function invitationQuery() {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  margin-top: clamp(12px, 3.4vh, 32px);
+  padding-top: clamp(10px, 2vh, 16px);
+  border-top: 1px solid color-mix(in srgb, var(--color-accent) 18%, transparent);
   color: #72859a;
   font-size: 0.78rem;
   font-weight: 760;
@@ -935,6 +965,17 @@ function invitationQuery() {
 
 .login-legal-links a:hover {
   color: var(--color-accent-strong);
+}
+
+@media (min-width: 981px) {
+  .login-page--login .login-legal-links,
+  .login-page--recovery .login-legal-links {
+    position: absolute;
+    bottom: clamp(34px, 6vh, 68px);
+    left: 50%;
+    margin-top: 0;
+    transform: translateX(-50%);
+  }
 }
 
 .cookie-modal-backdrop {
@@ -1038,7 +1079,15 @@ function invitationQuery() {
 
 @media (max-width: 980px) {
   .login-page {
-    --login-mobile-visual-height: min(300px, calc(100vw * 0.5628));
+    --login-mobile-visual-height: clamp(300px, 45svh, 390px);
+  }
+
+  .login-page--signup {
+    --login-mobile-visual-height: clamp(214px, 28svh, 238px);
+  }
+
+  .login-page--recovery {
+    --login-mobile-visual-height: clamp(300px, 40svh, 340px);
   }
 
   .login-layout {
@@ -1063,8 +1112,8 @@ function invitationQuery() {
   .login-banner {
     width: 100%;
     height: 100%;
-    object-fit: contain;
-    object-position: top center;
+    object-fit: cover;
+    object-position: center 46%;
   }
 
   .login-card {
@@ -1072,14 +1121,34 @@ function invitationQuery() {
     z-index: 1;
     height: calc(100svh - var(--login-mobile-visual-height));
     min-height: calc(100svh - var(--login-mobile-visual-height));
+    align-content: start;
     justify-items: center;
     gap: 11px;
     padding: clamp(18px, 3.2vw, 28px);
+    padding-top: clamp(22px, 4svh, 38px);
     overflow-x: hidden;
     overflow-y: auto;
     border-top: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-border));
     border-left: 0;
     box-shadow: 0 -16px 42px rgba(5, 9, 8, 0.3);
+  }
+
+  .login-page--recovery .login-card {
+    align-content: center;
+  }
+
+  .login-page--signup .login-card {
+    gap: 8px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .login-page--signup .login-form {
+    gap: 8px;
+  }
+
+  .login-page--signup .login-field {
+    gap: 5px;
   }
 
   .login-card::before {
@@ -1092,12 +1161,25 @@ function invitationQuery() {
 
 @media (max-width: 620px) {
   .login-page {
-    --login-mobile-visual-height: min(288px, calc(100vw * 0.5628));
+    --login-mobile-visual-height: clamp(286px, 43svh, 360px);
+  }
+
+  .login-page--signup {
+    --login-mobile-visual-height: clamp(210px, 28svh, 236px);
+  }
+
+  .login-page--recovery {
+    --login-mobile-visual-height: clamp(284px, 39svh, 328px);
   }
 
   .login-card {
     gap: 9px;
     padding: 16px 18px 18px;
+  }
+
+  .login-legal-links {
+    margin-top: 8px;
+    padding-top: 10px;
   }
 
   .cookie-modal-backdrop {
@@ -1135,7 +1217,15 @@ function invitationQuery() {
 
 @media (max-height: 760px) {
   .login-page {
-    --login-mobile-visual-height: min(250px, calc(100vw * 0.5628));
+    --login-mobile-visual-height: clamp(246px, 38svh, 300px);
+  }
+
+  .login-page--signup {
+    --login-mobile-visual-height: clamp(184px, 26svh, 208px);
+  }
+
+  .login-page--recovery {
+    --login-mobile-visual-height: clamp(238px, 35svh, 276px);
   }
 
   .login-card {
