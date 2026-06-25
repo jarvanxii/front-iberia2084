@@ -10,9 +10,13 @@ Use npm scripts:
 
 ```powershell
 npm run dev
+npm run dev:local
 npm run dev:remoto
 npm run build
+npm run build:local
+npm run build:remoto
 npm run test:unit
+npm run type-check
 npm run lint
 ```
 
@@ -28,6 +32,10 @@ VITE_API_BASE_URL=http://localhost:18081
 ```
 
 Keep real `.env*` files out of git. Commit only `.env.example`, `.env.local.example`, and `.env.remoto.example`.
+
+## Operations
+
+Server paths and deployment steps live in `docs/operaciones.md`. Keep local browser API calls on `http://localhost:18081`; remote builds use `/api` through Nginx.
 
 ## Scope
 

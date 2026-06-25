@@ -79,6 +79,10 @@ También se puede pasar un modo al script general cuando sea necesario:
 npm run build -- --mode remoto
 ```
 
+## Operaciones
+
+La ficha de servidor y despliegue está en `docs/operaciones.md`.
+
 ## Verificación
 
 ```powershell
