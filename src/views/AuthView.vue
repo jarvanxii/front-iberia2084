@@ -1413,4 +1413,74 @@ function invitationQuery() {
     height: 30px;
   }
 }
+
+@media (max-width: 620px) and (max-height: 680px) {
+  .login-page--login {
+    --login-mobile-card-lift: 8px;
+    --login-mobile-visual-height: clamp(122px, 24svh, 156px);
+    overflow: hidden;
+  }
+
+  .login-page--login .login-layout {
+    height: 100svh;
+    min-height: 100svh;
+    padding-top: calc(var(--login-mobile-visual-height) - var(--login-mobile-card-lift));
+    overflow: hidden;
+  }
+
+  .login-page--login .login-card {
+    min-height: calc(100svh - var(--login-mobile-visual-height) + var(--login-mobile-card-lift));
+    gap: 6px;
+    padding: 10px 14px 8px;
+    overflow: clip;
+  }
+
+  .login-page--login .login-card-header {
+    gap: 2px;
+  }
+
+  .login-page--login .section-kicker,
+  .login-page--login .login-field span {
+    font-size: 0.68rem;
+  }
+
+  .login-page--login .login-card-header h1 {
+    font-size: clamp(1.42rem, 7vw, 1.68rem);
+  }
+
+  .login-page--login .auth-mode-switch button {
+    min-height: 32px;
+    font-size: 0.72rem;
+  }
+
+  .login-page--login .social-login-button,
+  .login-page--login .login-submit,
+  .login-page--login .login-field input {
+    min-height: 34px;
+  }
+
+  .login-page--login .login-form {
+    gap: 6px;
+  }
+
+  .login-page--login .login-field {
+    gap: 4px;
+  }
+
+  .login-page--login .login-divider {
+    gap: 7px;
+    font-size: 0.62rem;
+  }
+
+  .login-page--login .recover-link {
+    font-size: 0.76rem;
+  }
+
+  .login-page--login .login-legal-links {
+    margin-top: 2px;
+    padding-top: 7px;
+    gap: 5px;
+    font-size: 0.68rem;
+  }
+}
 </style>
