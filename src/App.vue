@@ -27,5 +27,5 @@ onMounted(async () => {
   <main :class="['app-shell', `app-shell--${shellKind}`]">
     <RouterView />
   </main>
-  <AppFooter v-if="showFooter" :shell="shellKind" />
+  <AppFooter v-if="showFooter" />
 </template>
