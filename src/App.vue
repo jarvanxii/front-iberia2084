@@ -11,6 +11,7 @@ const session = useSessionStore()
 const route = useRoute()
 const headerKind = computed(() => route.meta.header)
 const shellKind = computed(() => (typeof route.meta.shell === 'string' ? route.meta.shell : 'plain'))
+const showFooter = computed(() => shellKind.value !== 'auth')
 
 onMounted(async () => {
   await session.loadBootstrap()
@@ -26,5 +27,5 @@ onMounted(async () => {
   <main :class="['app-shell', `app-shell--${shellKind}`]">
     <RouterView />
   </main>
-  <AppFooter :shell="shellKind" />
+  <AppFooter v-if="showFooter" :shell="shellKind" />
 </template>

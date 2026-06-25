@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AuthView from '@/views/AuthView.vue'
+import LegalView from '@/views/LegalView.vue'
 import AllianceView from '@/views/game/AllianceView.vue'
 import CityView from '@/views/game/CityView.vue'
 import GameHomeView from '@/views/game/GameHomeView.vue'
@@ -14,6 +15,9 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'access', component: AuthView, meta: { guestOnly: true, shell: 'auth' } },
     { path: '/login', redirect: (to) => ({ name: 'access', query: to.query }) },
+    { path: '/privacidad', name: 'privacy', component: LegalView, meta: { shell: 'auth' } },
+    { path: '/terminos', name: 'terms', component: LegalView, meta: { shell: 'auth' } },
+    { path: '/contacto', name: 'contact', component: LegalView, meta: { shell: 'auth' } },
     { path: '/inicio', redirect: { name: 'home' } },
     { path: '/ciudad', redirect: { name: 'home' } },
     { path: '/provincia', redirect: { name: 'home' } },

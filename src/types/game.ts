@@ -412,6 +412,11 @@ export interface AuthMessageResponse {
   expiresAt: string | null
 }
 
+export interface ContactMessageResponse {
+  ok: boolean
+  message: string
+}
+
 export interface AuthProviderDto {
   id: 'google' | 'microsoft' | 'github' | 'apple' | string
   label: string

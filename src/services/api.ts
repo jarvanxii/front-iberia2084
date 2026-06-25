@@ -5,6 +5,7 @@ import type {
   AuthMessageResponse,
   AuthProviderDto,
   AuthResponse,
+  ContactMessageResponse,
   FactionDto,
   GameStateDto,
   ResearchDto,
@@ -57,6 +58,7 @@ function post<T>(path: string, body: JsonBody, token?: string, worldCode?: strin
 export const api = {
   bootstrap: () => request<{ worlds: WorldDto[]; factions: FactionDto[] }>('/api/bootstrap'),
   authProviders: () => request<AuthProviderDto[]>('/api/auth/providers'),
+  contact: (body: JsonBody) => post<ContactMessageResponse>('/api/auth/contact', body),
   signupStart: (body: JsonBody) => post<AuthMessageResponse>('/api/auth/signup/start', body),
   signupConfirm: (body: JsonBody) => post<AuthResponse>('/api/auth/signup/confirm', body),
   login: (body: JsonBody) => post<AuthResponse>('/api/auth/login', body),
