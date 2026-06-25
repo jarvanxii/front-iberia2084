@@ -1,0 +1,29 @@
+{
+  "id": "https://iberia2084.com/",
+  "name": "Iberia 2084",
+  "short_name": "Iberia 2084",
+  "description": "Juego web de estrategia politica satirica.",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "orientation": "any",
+  "categories": ["games", "strategy"],
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
