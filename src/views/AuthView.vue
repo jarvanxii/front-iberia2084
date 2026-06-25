@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import googleIcon from '@/assets/auth/google.svg'
 import authArt from '@/assets/iberia-key-art.png'
 import authArtExpanded from '@/assets/iberia-key-art-expanded.png'
 import { useSessionStore } from '@/stores/session'
@@ -303,7 +304,14 @@ function invitationQuery() {
             :title="providerTitle(provider)"
             @click="startSocialLogin(provider)"
           >
-            <span class="google-mark" aria-hidden="true">G</span>
+            <img
+              v-if="provider.id === 'google'"
+              class="social-provider-icon"
+              :src="googleIcon"
+              alt=""
+              aria-hidden="true"
+            />
+            <span v-else class="provider-initial" aria-hidden="true">{{ provider.label.charAt(0) }}</span>
             <span>{{ provider.label }}</span>
           </button>
         </section>
@@ -778,17 +786,36 @@ function invitationQuery() {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  border: 1px solid rgba(226, 232, 240, 0.12);
-  background: rgba(148, 163, 184, 0.2);
-  color: #9ca8b7;
-  box-shadow: none;
+  border: 1px solid color-mix(in srgb, var(--color-border) 66%, rgba(226, 232, 240, 0.16));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(148, 163, 184, 0.055)),
+    rgba(8, 12, 10, 0.5);
+  color: #8f9cac;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 8px 18px rgba(0, 0, 0, 0.08);
   cursor: not-allowed;
 }
 
-.google-mark {
-  display: grid;
+.social-login-button:disabled {
+  opacity: 1;
+}
+
+.social-provider-icon,
+.provider-initial {
   width: 22px;
   height: 22px;
+  flex: 0 0 auto;
+}
+
+.social-provider-icon {
+  display: block;
+  filter: saturate(0.96) brightness(0.92);
+  opacity: 0.9;
+}
+
+.provider-initial {
+  display: grid;
   place-items: center;
   border-radius: 50%;
   color: #4285f4;
@@ -1079,23 +1106,38 @@ function invitationQuery() {
 
 @media (max-width: 980px) {
   .login-page {
-    --login-mobile-visual-height: clamp(300px, 45svh, 390px);
+    --login-mobile-card-lift: 22px;
+    --login-mobile-visual-height: clamp(270px, 39svh, 340px);
+    height: auto;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background:
+      linear-gradient(180deg, rgba(5, 7, 6, 0.08), rgba(5, 7, 6, 0.62) 46%, rgba(5, 7, 6, 0.96)),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      var(--color-bg);
+    background-size: auto, 42px 42px, auto;
   }
 
   .login-page--signup {
-    --login-mobile-visual-height: clamp(214px, 28svh, 238px);
+    --login-mobile-card-lift: 14px;
+    --login-mobile-visual-height: clamp(198px, 26svh, 232px);
   }
 
   .login-page--recovery {
-    --login-mobile-visual-height: clamp(300px, 40svh, 340px);
+    --login-mobile-card-lift: 20px;
+    --login-mobile-visual-height: clamp(250px, 35svh, 310px);
   }
 
   .login-layout {
     position: relative;
     display: block;
+    height: auto;
     min-height: 100vh;
     min-height: 100svh;
-    padding-top: var(--login-mobile-visual-height);
+    overflow: visible;
+    padding-top: calc(var(--login-mobile-visual-height) - var(--login-mobile-card-lift));
   }
 
   .login-visual {
@@ -1109,32 +1151,101 @@ function invitationQuery() {
     background: #050706;
   }
 
+  .login-visual::before {
+    inset: -20px;
+    filter: blur(8px) saturate(1.05) brightness(0.62);
+    opacity: 0.78;
+    transform: scale(1.03);
+  }
+
+  .login-visual::after {
+    background:
+      radial-gradient(circle at 50% 38%, transparent 0 30%, rgba(7, 9, 7, 0.2) 62%, rgba(7, 9, 7, 0.72) 100%),
+      linear-gradient(180deg, rgba(7, 9, 7, 0.08), transparent 42%, rgba(7, 9, 7, 0.86));
+  }
+
   .login-banner {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center 46%;
+    object-position: center 43%;
+    filter: saturate(1.08) contrast(1.08) brightness(0.9);
   }
 
   .login-card {
     position: relative;
     z-index: 1;
-    height: calc(100svh - var(--login-mobile-visual-height));
-    min-height: calc(100svh - var(--login-mobile-visual-height));
+    width: 100%;
+    height: auto;
+    min-height: calc(100svh - var(--login-mobile-visual-height) + var(--login-mobile-card-lift));
     align-content: start;
     justify-items: center;
-    gap: 11px;
+    gap: 12px;
     padding: clamp(18px, 3.2vw, 28px);
-    padding-top: clamp(22px, 4svh, 38px);
+    padding-top: clamp(20px, 3.6svh, 32px);
     overflow-x: hidden;
-    overflow-y: auto;
-    border-top: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-border));
+    overflow-y: visible;
+    border-top: 1px solid color-mix(in srgb, var(--color-accent) 32%, var(--color-border));
     border-left: 0;
-    box-shadow: 0 -16px 42px rgba(5, 9, 8, 0.3);
+    border-radius: 8px 8px 0 0;
+    background:
+      radial-gradient(circle at 94% 6%, rgba(229, 198, 109, 0.14), transparent 9rem),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.068), transparent 7rem),
+      color-mix(in srgb, var(--color-surface) 94%, black);
+    box-shadow:
+      0 -18px 42px rgba(5, 9, 8, 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .login-card-header,
+  .auth-mode-switch,
+  .social-login-panel,
+  .login-divider,
+  .login-form,
+  .login-feedback,
+  .login-legal-links {
+    width: min(100%, 420px);
+  }
+
+  .login-card-header {
+    justify-self: stretch;
+    text-align: left;
+  }
+
+  .section-kicker {
+    justify-self: start;
+  }
+
+  .login-card-header h1 {
+    font-size: clamp(1.72rem, 7vw, 2.05rem);
+  }
+
+  .auth-mode-switch {
+    gap: 3px;
+    padding: 3px;
+  }
+
+  .auth-mode-switch button {
+    min-height: 38px;
+    font-size: clamp(0.76rem, 3.3vw, 0.8rem);
+  }
+
+  .social-login-button,
+  .login-submit {
+    min-height: 44px;
+  }
+
+  .login-field input {
+    min-height: 44px;
+  }
+
+  .login-legal-links {
+    flex-wrap: wrap;
+    line-height: 1.35;
   }
 
   .login-page--recovery .login-card {
-    align-content: center;
+    align-content: start;
   }
 
   .login-page--signup .login-card {
@@ -1161,25 +1272,30 @@ function invitationQuery() {
 
 @media (max-width: 620px) {
   .login-page {
-    --login-mobile-visual-height: clamp(286px, 43svh, 360px);
+    --login-mobile-card-lift: 20px;
+    --login-mobile-visual-height: clamp(230px, 34svh, 292px);
   }
 
   .login-page--signup {
-    --login-mobile-visual-height: clamp(210px, 28svh, 236px);
+    --login-mobile-card-lift: 12px;
+    --login-mobile-visual-height: clamp(184px, 25svh, 214px);
   }
 
   .login-page--recovery {
-    --login-mobile-visual-height: clamp(284px, 39svh, 328px);
+    --login-mobile-card-lift: 18px;
+    --login-mobile-visual-height: clamp(218px, 32svh, 270px);
   }
 
   .login-card {
-    gap: 9px;
-    padding: 16px 18px 18px;
+    gap: 10px;
+    padding: 18px 16px 22px;
   }
 
   .login-legal-links {
-    margin-top: 8px;
+    margin-top: 6px;
     padding-top: 10px;
+    gap: 6px;
+    font-size: 0.75rem;
   }
 
   .cookie-modal-backdrop {
@@ -1213,25 +1329,36 @@ function invitationQuery() {
   .social-login-panel {
     grid-template-columns: 1fr;
   }
+
+  .auth-mode-switch button {
+    font-size: 0.74rem;
+  }
+
+  .social-login-button {
+    gap: 8px;
+  }
 }
 
 @media (max-height: 760px) {
   .login-page {
-    --login-mobile-visual-height: clamp(246px, 38svh, 300px);
+    --login-mobile-card-lift: 18px;
+    --login-mobile-visual-height: clamp(198px, 31svh, 248px);
   }
 
   .login-page--signup {
-    --login-mobile-visual-height: clamp(184px, 26svh, 208px);
+    --login-mobile-card-lift: 10px;
+    --login-mobile-visual-height: clamp(164px, 23svh, 196px);
   }
 
   .login-page--recovery {
-    --login-mobile-visual-height: clamp(238px, 35svh, 276px);
+    --login-mobile-card-lift: 16px;
+    --login-mobile-visual-height: clamp(190px, 29svh, 236px);
   }
 
   .login-card {
-    gap: 7px;
-    padding-top: 14px;
-    padding-bottom: 14px;
+    gap: 8px;
+    padding-top: 16px;
+    padding-bottom: 18px;
   }
 
   .login-card-header {
@@ -1250,7 +1377,7 @@ function invitationQuery() {
   .login-submit,
   .social-login-button,
   .login-field input {
-    min-height: 36px;
+    min-height: 40px;
   }
 
   .login-form {
