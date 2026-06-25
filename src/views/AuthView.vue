@@ -576,6 +576,20 @@ function invitationQuery() {
 
 <style scoped>
 .login-page {
+  --color-bg: #06111f;
+  --color-surface: #0b1726;
+  --color-surface-soft: #122236;
+  --color-surface-raised: #172c43;
+  --color-border: #2d4a64;
+  --color-border-strong: #5d7f9c;
+  --color-text: #f4f8fd;
+  --color-muted: #aec1d4;
+  --color-subtle: #758ba2;
+  --color-accent: #367fc6;
+  --color-accent-strong: #8bd0ff;
+  --color-on-accent: #04101d;
+  --color-success: #6fcfff;
+  --color-info: #9bc3ff;
   overflow: hidden;
   height: 100vh;
   height: 100svh;
@@ -583,10 +597,13 @@ function invitationQuery() {
   min-height: 100svh;
   color: var(--color-text);
   background:
-    linear-gradient(180deg, rgba(210, 173, 84, 0.05), rgba(12, 17, 16, 0.48)),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    radial-gradient(circle at 18% 12%, rgba(80, 160, 235, 0.16), transparent 23rem),
+    radial-gradient(circle at 88% 74%, rgba(30, 88, 146, 0.24), transparent 24rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.026), transparent 38%),
+    linear-gradient(135deg, rgba(137, 198, 255, 0.024) 1px, transparent 1px),
+    linear-gradient(45deg, rgba(137, 198, 255, 0.018) 1px, transparent 1px),
     var(--color-bg);
-  background-size: auto, 48px 48px, auto;
+  background-size: auto, auto, auto, 54px 54px, 54px 54px, auto;
 }
 
 .login-page,
@@ -616,10 +633,10 @@ function invitationQuery() {
   place-items: center;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 42%, rgba(210, 173, 84, 0.16), transparent 34rem),
-    linear-gradient(90deg, rgba(105, 182, 159, 0.1) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(210, 173, 84, 0.08) 1px, transparent 1px),
-    #070907;
+    radial-gradient(circle at 50% 42%, rgba(89, 168, 235, 0.14), transparent 34rem),
+    linear-gradient(120deg, rgba(127, 197, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(127, 197, 255, 0.052) 1px, transparent 1px),
+    #040b15;
   background-size: auto, 88px 88px, 88px 88px, auto;
 }
 
@@ -635,7 +652,7 @@ function invitationQuery() {
   z-index: 0;
   inset: -32px;
   background:
-    linear-gradient(180deg, rgba(7, 9, 7, 0.28), rgba(7, 9, 7, 0.18)),
+    linear-gradient(180deg, rgba(3, 10, 18, 0.26), rgba(3, 10, 18, 0.2)),
     var(--login-art) center / cover no-repeat;
   filter: blur(14px) saturate(1.04) brightness(0.58);
   opacity: 0.88;
@@ -645,9 +662,9 @@ function invitationQuery() {
 .login-visual::after {
   z-index: 2;
   background:
-    radial-gradient(circle at 52% 45%, transparent 0 32%, rgba(7, 9, 7, 0.24) 66%, rgba(7, 9, 7, 0.62) 100%),
-    linear-gradient(90deg, rgba(7, 9, 7, 0.18), transparent 34%, rgba(7, 9, 7, 0.58)),
-    linear-gradient(180deg, rgba(7, 9, 7, 0.18), transparent 45%, rgba(7, 9, 7, 0.5));
+    radial-gradient(circle at 52% 45%, transparent 0 32%, rgba(4, 12, 22, 0.24) 66%, rgba(4, 12, 22, 0.62) 100%),
+    linear-gradient(90deg, rgba(4, 12, 22, 0.2), transparent 34%, rgba(4, 12, 22, 0.58)),
+    linear-gradient(180deg, rgba(4, 12, 22, 0.18), transparent 45%, rgba(4, 12, 22, 0.5));
 }
 
 .login-banner {
@@ -695,13 +712,15 @@ function invitationQuery() {
   padding-right: clamp(24px, 3vw, 52px);
   border-left: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-border));
   background:
-    radial-gradient(circle at 90% 12%, rgba(229, 198, 109, 0.13), transparent 13rem),
-    linear-gradient(90deg, rgba(210, 173, 84, 0.055) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.055), transparent 8rem),
+    radial-gradient(circle at 90% 12%, rgba(104, 181, 249, 0.15), transparent 13rem),
+    linear-gradient(145deg, rgba(151, 205, 255, 0.075), transparent 36%),
+    linear-gradient(135deg, transparent 0 18px, rgba(125, 190, 255, 0.048) 18px 19px, transparent 19px 52px),
+    linear-gradient(45deg, transparent 0 31px, rgba(125, 190, 255, 0.038) 31px 32px, transparent 32px 64px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.052), transparent 8rem),
     color-mix(in srgb, var(--color-surface) 92%, black);
-  background-size: auto, 44px 44px, auto, auto;
+  background-size: auto, auto, auto, auto, auto, auto;
   box-shadow:
-    -20px 0 54px rgba(5, 9, 8, 0.32),
+    -20px 0 54px rgba(2, 9, 18, 0.38),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
@@ -750,7 +769,7 @@ function invitationQuery() {
   padding: 4px;
   border: 1px solid color-mix(in srgb, var(--color-border) 80%, var(--color-accent));
   border-radius: 4px;
-  background: rgba(8, 12, 10, 0.64);
+  background: rgba(4, 12, 22, 0.72);
 }
 
 .auth-mode-switch button {
@@ -788,8 +807,8 @@ function invitationQuery() {
   gap: 10px;
   border: 1px solid color-mix(in srgb, var(--color-border) 66%, rgba(226, 232, 240, 0.16));
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(148, 163, 184, 0.055)),
-    rgba(8, 12, 10, 0.5);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(111, 171, 230, 0.062)),
+    rgba(5, 14, 26, 0.62);
   color: #8f9cac;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.055),
@@ -865,7 +884,7 @@ function invitationQuery() {
   padding: 0 14px;
   border: 1px solid color-mix(in srgb, var(--color-border) 74%, var(--color-accent));
   border-radius: 4px;
-  background: rgba(8, 12, 10, 0.78);
+  background: rgba(4, 12, 22, 0.82);
   color: var(--color-text);
   outline: none;
 }
@@ -876,7 +895,7 @@ function invitationQuery() {
 
 .login-field input:focus {
   border-color: color-mix(in srgb, var(--color-accent) 78%, white);
-  box-shadow: 0 0 0 3px rgba(210, 173, 84, 0.15);
+  box-shadow: 0 0 0 3px rgba(85, 166, 232, 0.22);
 }
 
 .password-control {
@@ -942,7 +961,7 @@ function invitationQuery() {
 }
 
 .recover-link:hover {
-  color: #f7d98a;
+  color: #d8f0ff;
 }
 
 .recover-link.as-button {
@@ -955,11 +974,11 @@ function invitationQuery() {
   width: min(100%, 380px);
   margin: 0;
   padding: 10px 12px;
-  border: 1px solid rgba(105, 182, 159, 0.28);
+  border: 1px solid rgba(111, 207, 255, 0.3);
   border-left: 3px solid var(--color-success);
   border-radius: 4px;
-  background: rgba(105, 182, 159, 0.1);
-  color: #bff1df;
+  background: rgba(63, 145, 204, 0.13);
+  color: #ccefff;
   font-size: 0.82rem;
   font-weight: 780;
   line-height: 1.35;
@@ -1013,7 +1032,7 @@ function invitationQuery() {
   place-items: center;
   padding: 24px;
   background:
-    linear-gradient(120deg, rgba(210, 173, 84, 0.08), transparent 34%),
+    linear-gradient(120deg, rgba(86, 159, 225, 0.11), transparent 34%),
     rgba(3, 6, 10, 0.74);
   backdrop-filter: blur(10px);
 }
@@ -1025,10 +1044,10 @@ function invitationQuery() {
   border: 1px solid rgba(176, 184, 194, 0.24);
   border-radius: 6px;
   background:
-    linear-gradient(145deg, rgba(210, 173, 84, 0.035), transparent 46%),
+    linear-gradient(145deg, rgba(86, 159, 225, 0.055), transparent 46%),
     var(--color-surface);
   box-shadow:
-    0 18px 48px rgba(5, 9, 8, 0.32),
+    0 18px 48px rgba(2, 9, 18, 0.38),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -1114,10 +1133,12 @@ function invitationQuery() {
     overflow-x: hidden;
     overflow-y: auto;
     background:
-      linear-gradient(180deg, rgba(5, 7, 6, 0.08), rgba(5, 7, 6, 0.62) 46%, rgba(5, 7, 6, 0.96)),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      radial-gradient(circle at 18% 4%, rgba(89, 168, 235, 0.16), transparent 15rem),
+      linear-gradient(180deg, rgba(3, 9, 17, 0.08), rgba(3, 9, 17, 0.68) 46%, rgba(3, 9, 17, 0.98)),
+      linear-gradient(135deg, rgba(137, 198, 255, 0.024) 1px, transparent 1px),
+      linear-gradient(45deg, rgba(137, 198, 255, 0.016) 1px, transparent 1px),
       var(--color-bg);
-    background-size: auto, 42px 42px, auto;
+    background-size: auto, auto, 42px 42px, 42px 42px, auto;
   }
 
   .login-page--signup {
@@ -1148,7 +1169,7 @@ function invitationQuery() {
     z-index: 0;
     height: var(--login-mobile-visual-height);
     min-height: 0;
-    background: #050706;
+    background: #030a14;
   }
 
   .login-visual::before {
@@ -1160,8 +1181,8 @@ function invitationQuery() {
 
   .login-visual::after {
     background:
-      radial-gradient(circle at 50% 38%, transparent 0 30%, rgba(7, 9, 7, 0.2) 62%, rgba(7, 9, 7, 0.72) 100%),
-      linear-gradient(180deg, rgba(7, 9, 7, 0.08), transparent 42%, rgba(7, 9, 7, 0.86));
+      radial-gradient(circle at 50% 38%, transparent 0 30%, rgba(3, 10, 18, 0.22) 62%, rgba(3, 10, 18, 0.76) 100%),
+      linear-gradient(180deg, rgba(3, 10, 18, 0.08), transparent 42%, rgba(3, 10, 18, 0.9));
   }
 
   .login-banner {
@@ -1189,11 +1210,14 @@ function invitationQuery() {
     border-left: 0;
     border-radius: 8px 8px 0 0;
     background:
-      radial-gradient(circle at 94% 6%, rgba(229, 198, 109, 0.14), transparent 9rem),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.068), transparent 7rem),
+      radial-gradient(circle at 94% 6%, rgba(104, 181, 249, 0.16), transparent 9rem),
+      linear-gradient(145deg, rgba(151, 205, 255, 0.07), transparent 35%),
+      linear-gradient(135deg, transparent 0 18px, rgba(125, 190, 255, 0.045) 18px 19px, transparent 19px 52px),
+      linear-gradient(45deg, transparent 0 31px, rgba(125, 190, 255, 0.035) 31px 32px, transparent 32px 64px),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.062), transparent 7rem),
       color-mix(in srgb, var(--color-surface) 94%, black);
     box-shadow:
-      0 -18px 42px rgba(5, 9, 8, 0.42),
+      0 -18px 42px rgba(2, 9, 18, 0.5),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
