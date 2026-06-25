@@ -3,7 +3,6 @@ import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import googleIcon from '@/assets/auth/google.svg'
 import authArt from '@/assets/iberia-key-art.png'
-import authArtExpanded from '@/assets/iberia-key-art-expanded.png'
 import { useSessionStore } from '@/stores/session'
 import type { AuthProviderDto } from '@/types/game'
 
@@ -268,9 +267,9 @@ function invitationQuery() {
 <template>
   <main :class="['login-page', `login-page--${authMode}`]">
     <section class="login-layout">
-      <section class="login-visual" aria-label="Mapa estratégico de Iberia 2084" :style="{ '--login-art': `url(${authArtExpanded})` }">
+      <section class="login-visual" aria-label="Mapa estratégico de Iberia 2084" :style="{ '--login-art': `url(${authArt})` }">
         <picture>
-          <source media="(max-width: 980px)" :srcset="authArtExpanded" />
+          <source media="(max-width: 980px)" :srcset="authArt" />
           <img class="login-banner" :src="authArt" alt="Mapa estratégico de Iberia 2084" />
         </picture>
       </section>
@@ -1126,7 +1125,7 @@ function invitationQuery() {
 @media (max-width: 980px) {
   .login-page {
     --login-mobile-card-lift: 22px;
-    --login-mobile-visual-height: clamp(270px, 39svh, 340px);
+    --login-mobile-visual-height: clamp(190px, 54vw, 330px);
     height: auto;
     min-height: 100vh;
     min-height: 100svh;
@@ -1143,12 +1142,12 @@ function invitationQuery() {
 
   .login-page--signup {
     --login-mobile-card-lift: 14px;
-    --login-mobile-visual-height: clamp(198px, 26svh, 232px);
+    --login-mobile-visual-height: clamp(174px, 48vw, 280px);
   }
 
   .login-page--recovery {
     --login-mobile-card-lift: 20px;
-    --login-mobile-visual-height: clamp(250px, 35svh, 310px);
+    --login-mobile-visual-height: clamp(186px, 52vw, 310px);
   }
 
   .login-layout {
@@ -1158,39 +1157,70 @@ function invitationQuery() {
     min-height: 100vh;
     min-height: 100svh;
     overflow: visible;
-    padding-top: calc(var(--login-mobile-visual-height) - var(--login-mobile-card-lift));
+    padding-top: 0;
   }
 
   .login-visual {
-    position: fixed;
-    top: 0;
-    right: 0;
-    left: 0;
+    position: relative;
+    display: grid;
+    place-items: center;
     z-index: 0;
     height: var(--login-mobile-visual-height);
     min-height: 0;
-    background: #030a14;
+    padding: clamp(14px, 4vw, 24px);
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 16% 0%, rgba(104, 181, 249, 0.22), transparent 12rem),
+      radial-gradient(circle at 88% 18%, rgba(43, 111, 184, 0.2), transparent 11rem),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0)),
+      #030a14;
   }
 
   .login-visual::before {
-    inset: -20px;
-    filter: blur(8px) saturate(1.05) brightness(0.62);
-    opacity: 0.78;
-    transform: scale(1.03);
+    z-index: 0;
+    inset: -26px;
+    display: block;
+    background:
+      linear-gradient(180deg, rgba(3, 10, 18, 0.3), rgba(3, 10, 18, 0.74)),
+      var(--login-art) center / cover no-repeat;
+    filter: blur(18px) saturate(1.08) brightness(0.5);
+    opacity: 0.72;
+    transform: scale(1.08);
   }
 
   .login-visual::after {
+    z-index: 1;
     background:
-      radial-gradient(circle at 50% 38%, transparent 0 30%, rgba(3, 10, 18, 0.22) 62%, rgba(3, 10, 18, 0.76) 100%),
-      linear-gradient(180deg, rgba(3, 10, 18, 0.08), transparent 42%, rgba(3, 10, 18, 0.9));
+      linear-gradient(90deg, rgba(3, 10, 18, 0.68), transparent 18%, transparent 82%, rgba(3, 10, 18, 0.68)),
+      linear-gradient(180deg, rgba(3, 10, 18, 0.08), transparent 48%, rgba(3, 10, 18, 0.78));
   }
 
   .login-banner {
+    position: relative;
+    inset: auto;
+    z-index: 2;
+    display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: center 43%;
-    filter: saturate(1.08) contrast(1.08) brightness(0.9);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 36%, rgba(255, 255, 255, 0.22));
+    border-radius: 7px;
+    background: #050d18;
+    object-fit: contain;
+    object-position: center;
+    box-shadow:
+      0 20px 54px rgba(0, 0, 0, 0.42),
+      0 0 0 1px rgba(255, 255, 255, 0.035),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .login-visual picture {
+    position: relative;
+    z-index: 2;
+    display: block;
+    width: min(100%, 640px);
+    height: 100%;
+    max-height: calc(var(--login-mobile-visual-height) - clamp(28px, 8vw, 48px));
+    aspect-ratio: 1672 / 941;
   }
 
   .login-card {
@@ -1198,14 +1228,13 @@ function invitationQuery() {
     z-index: 1;
     width: 100%;
     height: auto;
-    min-height: calc(100svh - var(--login-mobile-visual-height) + var(--login-mobile-card-lift));
+    min-height: 0;
     align-content: start;
     justify-items: center;
     gap: 12px;
     padding: clamp(18px, 3.2vw, 28px);
     padding-top: clamp(20px, 3.6svh, 32px);
-    overflow-x: hidden;
-    overflow-y: visible;
+    overflow: visible;
     border-top: 1px solid color-mix(in srgb, var(--color-accent) 32%, var(--color-border));
     border-left: 0;
     border-radius: 8px 8px 0 0;
@@ -1297,22 +1326,26 @@ function invitationQuery() {
 @media (max-width: 620px) {
   .login-page {
     --login-mobile-card-lift: 20px;
-    --login-mobile-visual-height: clamp(230px, 34svh, 292px);
+    --login-mobile-visual-height: clamp(174px, 56vw, 246px);
   }
 
   .login-page--signup {
     --login-mobile-card-lift: 12px;
-    --login-mobile-visual-height: clamp(184px, 25svh, 214px);
+    --login-mobile-visual-height: clamp(160px, 51vw, 224px);
   }
 
   .login-page--recovery {
     --login-mobile-card-lift: 18px;
-    --login-mobile-visual-height: clamp(218px, 32svh, 270px);
+    --login-mobile-visual-height: clamp(168px, 54vw, 236px);
   }
 
   .login-card {
     gap: 10px;
     padding: 18px 16px 22px;
+  }
+
+  .login-visual {
+    padding: 12px 14px;
   }
 
   .login-legal-links {
@@ -1366,17 +1399,17 @@ function invitationQuery() {
 @media (max-height: 760px) {
   .login-page {
     --login-mobile-card-lift: 18px;
-    --login-mobile-visual-height: clamp(198px, 31svh, 248px);
+    --login-mobile-visual-height: clamp(152px, 28svh, 202px);
   }
 
   .login-page--signup {
     --login-mobile-card-lift: 10px;
-    --login-mobile-visual-height: clamp(164px, 23svh, 196px);
+    --login-mobile-visual-height: clamp(138px, 25svh, 180px);
   }
 
   .login-page--recovery {
     --login-mobile-card-lift: 16px;
-    --login-mobile-visual-height: clamp(190px, 29svh, 236px);
+    --login-mobile-visual-height: clamp(146px, 27svh, 194px);
   }
 
   .login-card {
@@ -1417,22 +1450,27 @@ function invitationQuery() {
 @media (max-width: 620px) and (max-height: 680px) {
   .login-page--login {
     --login-mobile-card-lift: 8px;
-    --login-mobile-visual-height: clamp(122px, 24svh, 156px);
-    overflow: hidden;
+    --login-mobile-visual-height: clamp(128px, 24svh, 156px);
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .login-page--login .login-layout {
-    height: 100svh;
+    height: auto;
     min-height: 100svh;
-    padding-top: calc(var(--login-mobile-visual-height) - var(--login-mobile-card-lift));
-    overflow: hidden;
+    padding-top: 0;
+    overflow: visible;
   }
 
   .login-page--login .login-card {
-    min-height: calc(100svh - var(--login-mobile-visual-height) + var(--login-mobile-card-lift));
+    min-height: 0;
     gap: 6px;
     padding: 10px 14px 8px;
-    overflow: clip;
+    overflow: visible;
+  }
+
+  .login-page--login .login-visual {
+    padding: 8px 12px;
   }
 
   .login-page--login .login-card-header {
