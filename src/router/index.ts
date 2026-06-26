@@ -90,6 +90,23 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const session = useSessionStore()
+  const oauthHandoff = typeof to.query.handoff === 'string' ? to.query.handoff : ''
+  if (oauthHandoff) {
+    try {
+      await session.completeOAuthHandoff(oauthHandoff)
+      const cleanedQuery = { ...to.query }
+      delete cleanedQuery.handoff
+      delete cleanedQuery.oauth
+      delete cleanedQuery.provider
+      delete cleanedQuery.message
+      const targetName = to.meta.guestOnly || typeof to.name !== 'string' ? 'home' : to.name
+      return { name: targetName, params: to.params, query: cleanedQuery, replace: true }
+    } catch {
+      session.logout()
+      return { name: 'access', query: { oauth: 'error' }, replace: true }
+    }
+  }
+
   if (to.meta.requiresAuth && !session.isLoggedIn) {
     return { name: 'access' }
   }

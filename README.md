@@ -81,7 +81,7 @@ npm run build -- --mode remoto
 
 ## Operaciones
 
-La ficha de servidor y despliegue está en `docs/operaciones.md`.
+La ficha de servidor, despliegue y acceso con Google OAuth está en `docs/operaciones.md`.
 
 ## Verificación
 

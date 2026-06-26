@@ -17,6 +17,13 @@
 - Solo las variables `VITE_` están disponibles en el navegador.
 - Los `.env*` reales no se commitean; solo entran los `.example`.
 
+## Google OAuth
+
+- El botón de Google se activa cuando `GET /api/auth/providers` devuelve `google.configured=true`.
+- El front inicia el acceso con `GET /api/auth/oauth/google?return_to=<origen>/home`.
+- Tras Google, el backend redirige a `/home` con un handoff de un solo uso; el guard de Vue Router lo consume y limpia la URL.
+- El callback que debe existir en Google Cloud es `https://iberia2084.com/login/oauth2/code/google`.
+
 ## Despliegue en Servidor 2
 
 ```bash

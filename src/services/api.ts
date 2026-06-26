@@ -35,7 +35,7 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
   return response.json() as Promise<T>
 }
 
-function apiUrl(path: string): string {
+export function apiUrl(path: string): string {
   if (!API_BASE_URL) return path
   if (API_BASE_URL.endsWith('/api') && path.startsWith('/api/')) {
     return `${API_BASE_URL}${path.slice(4)}`
@@ -58,6 +58,7 @@ function post<T>(path: string, body: JsonBody, token?: string, worldCode?: strin
 export const api = {
   bootstrap: () => request<{ worlds: WorldDto[]; factions: FactionDto[] }>('/api/bootstrap'),
   authProviders: () => request<AuthProviderDto[]>('/api/auth/providers'),
+  oauthHandoff: (handoffId: string) => post<AuthResponse>(`/api/auth/oauth/handoff/${encodeURIComponent(handoffId)}`, {}),
   contact: (body: JsonBody) => post<ContactMessageResponse>('/api/auth/contact', body),
   signupStart: (body: JsonBody) => post<AuthMessageResponse>('/api/auth/signup/start', body),
   signupConfirm: (body: JsonBody) => post<AuthResponse>('/api/auth/signup/confirm', body),

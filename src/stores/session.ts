@@ -79,6 +79,20 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
+  async function completeOAuthHandoff(handoffId: string) {
+    loading.value = true
+    error.value = null
+    try {
+      applyAuth(await api.oauthHandoff(handoffId))
+      await refresh()
+    } catch (unknownError) {
+      error.value = unknownError instanceof Error ? unknownError.message : 'No se pudo completar el acceso con Google.'
+      throw unknownError
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function requestPasswordRecovery(email: string): Promise<AuthMessageResponse> {
     loading.value = true
     error.value = null
@@ -205,6 +219,7 @@ export const useSessionStore = defineStore('session', () => {
     requestSignup,
     confirmSignup,
     login,
+    completeOAuthHandoff,
     requestPasswordRecovery,
     confirmPasswordRecovery,
     refresh,

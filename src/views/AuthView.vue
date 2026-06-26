@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import googleIcon from '@/assets/auth/google.svg'
 import authArt from '@/assets/iberia-key-art-titled.png'
+import { apiUrl } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
 import type { AuthProviderDto } from '@/types/game'
 
@@ -11,7 +12,6 @@ type SignupStep = 'request' | 'confirm'
 type RecoveryStep = 'request' | 'reset'
 
 const COOKIE_NOTICE_KEY = 'iberia2084.cookieConsent.v1'
-const EXTERNAL_OAUTH_ENABLED = false
 
 const router = useRouter()
 const route = useRoute()
@@ -58,7 +58,7 @@ const socialProviders = computed(() =>
     return {
       ...fallback,
       ...remote,
-      configured: EXTERNAL_OAUTH_ENABLED && remote?.configured === true,
+      configured: remote?.configured === true,
       disabledReason: `${fallback.label} estará disponible cuando activemos OAuth`,
     }
   }),
@@ -72,13 +72,17 @@ const pageTitle = computed(() => {
 
 onMounted(async () => {
   applyRecoveryQuery()
+  applyOAuthQuery()
   await session.loadAuthProviders().catch(() => undefined)
   loadCookieNoticeConsent()
 })
 
 watch(
   () => route.query,
-  () => applyRecoveryQuery(),
+  () => {
+    applyRecoveryQuery()
+    applyOAuthQuery()
+  },
 )
 
 function setAuthMode(nextMode: AuthMode) {
@@ -127,6 +131,16 @@ function applyRecoveryQuery() {
   feedbackMessage.value = 'Enlace de recuperación detectado.'
 }
 
+function applyOAuthQuery() {
+  const oauthStatus = queryString('oauth')
+  if (!oauthStatus) return
+
+  authMode.value = 'login'
+  if (oauthStatus === 'error' || oauthStatus === 'provider_not_configured') {
+    formError.value = queryString('message') || 'No se pudo completar el acceso con Google.'
+  }
+}
+
 function hasRecoveryQuery() {
   return Boolean((queryString('resetId') || queryString('reset_id')) && queryString('token') && queryString('email'))
 }
@@ -147,7 +161,14 @@ function providerTitle(provider: AuthProviderDto & { disabledReason?: string }) 
 function startSocialLogin(provider: AuthProviderDto & { disabledReason?: string }) {
   if (!provider.configured) {
     feedbackMessage.value = 'El acceso con Google está pendiente de activar.'
+    return
   }
+
+  formError.value = null
+  feedbackMessage.value = null
+  const returnTo = `${window.location.origin}${router.resolve({ name: 'home' }).href}`
+  const params = new URLSearchParams({ return_to: returnTo })
+  window.location.assign(`${apiUrl(`/api/auth/oauth/${provider.id}`)}?${params.toString()}`)
 }
 
 function validateSignupRequest() {
@@ -296,7 +317,8 @@ function invitationQuery() {
           <button
             v-for="provider in socialProviders"
             :key="provider.id"
-            class="social-login-button is-unavailable"
+            class="social-login-button"
+            :class="{ 'is-unavailable': !provider.configured }"
             type="button"
             :disabled="!provider.configured"
             :aria-label="`Continuar con ${provider.label}`"
@@ -808,15 +830,30 @@ function invitationQuery() {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(111, 171, 230, 0.062)),
     rgba(5, 14, 26, 0.62);
-  color: #8f9cac;
+  color: #dce9f7;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.055),
     0 8px 18px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.social-login-button.is-unavailable {
+  color: #8f9cac;
   cursor: not-allowed;
 }
 
 .social-login-button:disabled {
   opacity: 1;
+}
+
+.social-login-button:not(.is-unavailable):hover {
+  border-color: color-mix(in srgb, var(--color-accent) 70%, white);
+  color: #f7fbff;
+  transform: translateY(-1px);
 }
 
 .social-provider-icon,
