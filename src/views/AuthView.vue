@@ -1229,6 +1229,7 @@ function invitationQuery() {
     gap: 12px;
     padding: clamp(18px, 3.2vw, 28px);
     padding-top: clamp(20px, 3.6svh, 32px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 2px);
     overflow: visible;
     border-top: 1px solid color-mix(in srgb, var(--color-accent) 32%, var(--color-border));
     border-left: 0;
@@ -1298,7 +1299,7 @@ function invitationQuery() {
   .login-page--signup .login-card {
     gap: 8px;
     padding-top: 14px;
-    padding-bottom: 14px;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 2px);
   }
 
   .login-page--signup .login-form {
@@ -1335,7 +1336,7 @@ function invitationQuery() {
 
   .login-card {
     gap: 10px;
-    padding: 18px 16px 22px;
+    padding: 18px 16px calc(env(safe-area-inset-bottom) + 2px);
   }
 
   .login-visual {
@@ -1344,7 +1345,7 @@ function invitationQuery() {
 
   .login-legal-links {
     margin-top: auto;
-    padding-top: 10px;
+    padding-top: 8px;
     gap: 6px;
     font-size: 0.75rem;
   }
@@ -1409,7 +1410,7 @@ function invitationQuery() {
   .login-card {
     gap: 8px;
     padding-top: 16px;
-    padding-bottom: 18px;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 2px);
   }
 
   .login-card-header {
@@ -1464,7 +1465,7 @@ function invitationQuery() {
     flex: 1 1 auto;
     min-height: 0;
     gap: 6px;
-    padding: 10px 14px 8px;
+    padding: 10px 14px calc(env(safe-area-inset-bottom) + 2px);
     overflow: visible;
   }
 
