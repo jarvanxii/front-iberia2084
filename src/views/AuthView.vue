@@ -272,6 +272,7 @@ function invitationQuery() {
           <source media="(max-width: 980px)" :srcset="authArt" />
           <img class="login-banner" :src="authArt" alt="Mapa estratégico de Iberia 2084" />
         </picture>
+        <p class="login-tagline">Juego de estrategia en tiempo real | Sátira política</p>
       </section>
 
       <section class="login-card" aria-labelledby="login-title">
@@ -687,6 +688,30 @@ function invitationQuery() {
   inset: 0;
   z-index: 1;
   display: block;
+}
+
+.login-tagline {
+  position: absolute;
+  left: clamp(28px, 4.3vw, 76px);
+  bottom: clamp(28px, 5.4vh, 64px);
+  z-index: 3;
+  margin: 0;
+  max-width: min(520px, 48vw);
+  padding: 10px 14px;
+  border: 1px solid rgba(139, 208, 255, 0.26);
+  border-radius: 3px;
+  background:
+    linear-gradient(135deg, rgba(9, 20, 34, 0.78), rgba(9, 20, 34, 0.42)),
+    rgba(4, 12, 22, 0.66);
+  color: #eaf6ff;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-size: clamp(0.78rem, 1.05vw, 0.95rem);
+  font-weight: 860;
+  line-height: 1.15;
+  text-transform: uppercase;
+  text-wrap: balance;
 }
 
 .login-card,
@@ -1167,7 +1192,7 @@ function invitationQuery() {
     z-index: 0;
     height: var(--login-mobile-visual-height);
     min-height: 0;
-    padding: clamp(14px, 4vw, 24px);
+    padding: 0;
     overflow: hidden;
     background:
       radial-gradient(circle at 16% 0%, rgba(104, 181, 249, 0.22), transparent 12rem),
@@ -1202,25 +1227,26 @@ function invitationQuery() {
     display: block;
     width: 100%;
     height: 100%;
-    border: 1px solid color-mix(in srgb, var(--color-accent) 36%, rgba(255, 255, 255, 0.22));
-    border-radius: 7px;
-    background: #050d18;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     object-fit: contain;
     object-position: center;
-    box-shadow:
-      0 20px 54px rgba(0, 0, 0, 0.42),
-      0 0 0 1px rgba(255, 255, 255, 0.035),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    box-shadow: none;
   }
 
   .login-visual picture {
     position: relative;
     z-index: 2;
     display: block;
-    width: min(100%, 640px);
+    width: 100%;
     height: 100%;
-    max-height: calc(var(--login-mobile-visual-height) - clamp(28px, 8vw, 48px));
+    max-height: none;
     aspect-ratio: 1672 / 941;
+  }
+
+  .login-tagline {
+    display: none;
   }
 
   .login-card {
@@ -1345,7 +1371,7 @@ function invitationQuery() {
   }
 
   .login-visual {
-    padding: 12px 14px;
+    padding: 0;
   }
 
   .login-legal-links {
