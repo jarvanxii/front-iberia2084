@@ -2,7 +2,7 @@
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import googleIcon from '@/assets/auth/google.svg'
-import authArt from '@/assets/iberia-key-art.png'
+import authArt from '@/assets/iberia-key-art-titled.png'
 import { useSessionStore } from '@/stores/session'
 import type { AuthProviderDto } from '@/types/game'
 
@@ -272,7 +272,6 @@ function invitationQuery() {
           <source media="(max-width: 980px)" :srcset="authArt" />
           <img class="login-banner" :src="authArt" alt="Mapa estratégico de Iberia 2084" />
         </picture>
-        <p class="login-tagline">Juego de estrategia en tiempo real | Sátira política</p>
       </section>
 
       <section class="login-card" aria-labelledby="login-title">
@@ -688,30 +687,6 @@ function invitationQuery() {
   inset: 0;
   z-index: 1;
   display: block;
-}
-
-.login-tagline {
-  position: absolute;
-  left: clamp(28px, 4.3vw, 76px);
-  bottom: clamp(28px, 5.4vh, 64px);
-  z-index: 3;
-  margin: 0;
-  max-width: min(520px, 48vw);
-  padding: 10px 14px;
-  border: 1px solid rgba(139, 208, 255, 0.26);
-  border-radius: 3px;
-  background:
-    linear-gradient(135deg, rgba(9, 20, 34, 0.78), rgba(9, 20, 34, 0.42)),
-    rgba(4, 12, 22, 0.66);
-  color: #eaf6ff;
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  font-size: clamp(0.78rem, 1.05vw, 0.95rem);
-  font-weight: 860;
-  line-height: 1.15;
-  text-transform: uppercase;
-  text-wrap: balance;
 }
 
 .login-card,
@@ -1177,7 +1152,8 @@ function invitationQuery() {
 
   .login-layout {
     position: relative;
-    display: block;
+    display: flex;
+    flex-direction: column;
     height: auto;
     min-height: 100vh;
     min-height: 100svh;
@@ -1187,11 +1163,13 @@ function invitationQuery() {
 
   .login-visual {
     position: relative;
-    display: grid;
-    place-items: center;
+    display: block;
+    flex: 0 0 auto;
     z-index: 0;
-    height: var(--login-mobile-visual-height);
+    width: 100%;
+    height: auto;
     min-height: 0;
+    aspect-ratio: 1672 / 941;
     padding: 0;
     overflow: hidden;
     background:
@@ -1202,27 +1180,18 @@ function invitationQuery() {
   }
 
   .login-visual::before {
-    z-index: 0;
-    inset: -26px;
-    display: block;
-    background:
-      linear-gradient(180deg, rgba(3, 10, 18, 0.3), rgba(3, 10, 18, 0.74)),
-      var(--login-art) center / cover no-repeat;
-    filter: blur(18px) saturate(1.08) brightness(0.5);
-    opacity: 0.72;
-    transform: scale(1.08);
+    display: none;
   }
 
   .login-visual::after {
-    z-index: 1;
+    z-index: 3;
     background:
-      linear-gradient(90deg, rgba(3, 10, 18, 0.68), transparent 18%, transparent 82%, rgba(3, 10, 18, 0.68)),
-      linear-gradient(180deg, rgba(3, 10, 18, 0.08), transparent 48%, rgba(3, 10, 18, 0.78));
+      linear-gradient(180deg, rgba(3, 10, 18, 0.02), transparent 58%, rgba(3, 10, 18, 0.64));
   }
 
   .login-banner {
-    position: relative;
-    inset: auto;
+    position: absolute;
+    inset: 0;
     z-index: 2;
     display: block;
     width: 100%;
@@ -1236,7 +1205,8 @@ function invitationQuery() {
   }
 
   .login-visual picture {
-    position: relative;
+    position: absolute;
+    inset: 0;
     z-index: 2;
     display: block;
     width: 100%;
@@ -1245,13 +1215,12 @@ function invitationQuery() {
     aspect-ratio: 1672 / 941;
   }
 
-  .login-tagline {
-    display: none;
-  }
-
   .login-card {
     position: relative;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
     width: 100%;
     height: auto;
     min-height: 0;
@@ -1263,12 +1232,10 @@ function invitationQuery() {
     overflow: visible;
     border-top: 1px solid color-mix(in srgb, var(--color-accent) 32%, var(--color-border));
     border-left: 0;
-    border-radius: 8px 8px 0 0;
+    border-radius: 0;
     background:
       radial-gradient(circle at 94% 6%, rgba(104, 181, 249, 0.16), transparent 9rem),
       linear-gradient(145deg, rgba(151, 205, 255, 0.07), transparent 35%),
-      linear-gradient(135deg, transparent 0 18px, rgba(125, 190, 255, 0.045) 18px 19px, transparent 19px 52px),
-      linear-gradient(45deg, transparent 0 31px, rgba(125, 190, 255, 0.035) 31px 32px, transparent 32px 64px),
       linear-gradient(180deg, rgba(255, 255, 255, 0.062), transparent 7rem),
       color-mix(in srgb, var(--color-surface) 94%, black);
     box-shadow:
@@ -1319,6 +1286,7 @@ function invitationQuery() {
   }
 
   .login-legal-links {
+    margin-top: auto;
     flex-wrap: wrap;
     line-height: 1.35;
   }
@@ -1375,7 +1343,7 @@ function invitationQuery() {
   }
 
   .login-legal-links {
-    margin-top: 6px;
+    margin-top: auto;
     padding-top: 10px;
     gap: 6px;
     font-size: 0.75rem;
@@ -1482,6 +1450,8 @@ function invitationQuery() {
   }
 
   .login-page--login .login-layout {
+    display: flex;
+    flex-direction: column;
     height: auto;
     min-height: 100svh;
     padding-top: 0;
@@ -1489,6 +1459,9 @@ function invitationQuery() {
   }
 
   .login-page--login .login-card {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
     min-height: 0;
     gap: 6px;
     padding: 10px 14px 8px;
@@ -1496,7 +1469,7 @@ function invitationQuery() {
   }
 
   .login-page--login .login-visual {
-    padding: 8px 12px;
+    padding: 0;
   }
 
   .login-page--login .login-card-header {
@@ -1541,7 +1514,7 @@ function invitationQuery() {
   }
 
   .login-page--login .login-legal-links {
-    margin-top: 2px;
+    margin-top: auto;
     padding-top: 7px;
     gap: 5px;
     font-size: 0.68rem;
