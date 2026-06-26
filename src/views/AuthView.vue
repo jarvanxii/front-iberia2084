@@ -810,7 +810,7 @@ function invitationQuery() {
 
 .social-login-panel {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -826,52 +826,52 @@ function invitationQuery() {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  border: 1px solid color-mix(in srgb, var(--color-border) 66%, rgba(226, 232, 240, 0.16));
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(111, 171, 230, 0.062)),
-    rgba(5, 14, 26, 0.62);
-  color: #dce9f7;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.055),
-    0 8px 18px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.12);
+  background: rgba(248, 250, 252, 0.94);
+  color: #0d141f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   cursor: pointer;
   transition:
     border-color 160ms ease,
-    color 160ms ease,
+    box-shadow 160ms ease,
     transform 160ms ease;
 }
 
+.social-login-button:only-child {
+  grid-column: 1 / -1;
+}
+
 .social-login-button.is-unavailable {
-  color: #8f9cac;
   cursor: not-allowed;
+  background: rgba(148, 163, 184, 0.2);
+  color: #9ca8b7;
+  box-shadow: none;
 }
 
 .social-login-button:disabled {
-  opacity: 1;
+  opacity: 0.68;
 }
 
 .social-login-button:not(.is-unavailable):hover {
-  border-color: color-mix(in srgb, var(--color-accent) 70%, white);
-  color: #f7fbff;
+  border-color: rgba(236, 194, 119, 0.66);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
   transform: translateY(-1px);
-}
-
-.social-provider-icon,
-.provider-initial {
-  width: 22px;
-  height: 22px;
-  flex: 0 0 auto;
 }
 
 .social-provider-icon {
   display: block;
-  filter: saturate(0.96) brightness(0.92);
-  opacity: 0.9;
+  width: 21px;
+  height: 21px;
+  object-fit: contain;
+  flex: 0 0 auto;
 }
 
 .provider-initial {
   display: grid;
   place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
   border-radius: 50%;
   color: #4285f4;
   background: #fff;
