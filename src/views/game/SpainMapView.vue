@@ -342,11 +342,6 @@ function clampNumber(value: number, min: number, max: number) {
 
 <template>
   <section v-if="state && player" class="map-view">
-    <article class="panel intro-panel">
-      <p class="muted">Mapa de España</p>
-      <h2>Propiedad provincial y huecos disponibles</h2>
-    </article>
-
     <section class="map-layout">
       <article class="panel map-panel">
         <div class="map-stage" :style="{ '--map-aspect': MAP_ASPECT_RATIO }">
@@ -638,19 +633,16 @@ function clampNumber(value: number, min: number, max: number) {
   gap: var(--compact-gap);
 }
 
-.intro-panel,
 .map-panel,
 .detail-panel,
 .province-overview {
   padding: var(--compact-panel-padding);
 }
 
-.intro-panel h2,
 .detail-panel h2 {
   margin: 0;
 }
 
-.intro-panel p:last-child,
 .detail-panel p {
   color: var(--color-muted);
   line-height: 1.38;
@@ -1286,7 +1278,6 @@ dd {
 }
 
 @media (max-width: 720px) {
-  .intro-panel,
   .map-panel,
   .detail-panel,
   .province-overview {

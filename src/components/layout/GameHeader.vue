@@ -35,10 +35,11 @@ const coreResources = computed(() =>
 const playerPartyLogo = computed(() => (player.value ? partyLogo(player.value.faction.code) : ''))
 
 const navItems = [
-  { name: 'gameCity', label: 'Provincia' },
+  { name: 'gameCity', label: 'Ciudad' },
   { name: 'gameMap', label: 'Mapa' },
   { name: 'gameTroops', label: 'Tropas' },
   { name: 'gameAttacks', label: 'Ataques' },
+  { name: 'gameEspionage', label: 'Espionaje' },
   { name: 'gameAlliance', label: 'Alianza' },
 ]
 
@@ -83,50 +84,53 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="state && player" class="game-command-bar" :style="{ '--faction': player.faction.color }">
-    <header class="game-header" aria-label="Estado del jugador">
-      <div class="header-primary">
-        <section class="player-block" aria-label="Partida activa">
-          <span class="player-party-logo" aria-hidden="true">
-            <img v-if="playerPartyLogo" :src="playerPartyLogo" :alt="''" />
-            <b v-else>{{ player.faction.shortName.slice(0, 2) }}</b>
+  <header
+    v-if="state && player"
+    class="game-command-bar game-header"
+    :style="{ '--faction': player.faction.color }"
+    aria-label="Estado del jugador"
+  >
+    <div class="header-primary">
+      <section class="player-block" aria-label="Partida activa">
+        <span class="player-party-logo" aria-hidden="true">
+          <img v-if="playerPartyLogo" :src="playerPartyLogo" :alt="''" />
+          <b v-else>{{ player.faction.shortName.slice(0, 2) }}</b>
+        </span>
+        <div class="player-copy">
+          <span class="world-meta">
+            <em>{{ activeWorld?.name ?? 'Partida' }}</em>
+            <em>{{ activeWorld?.difficultyName ?? 'Normal' }}</em>
+            <em>{{ activeWorld ? worldSpeedRatio(activeWorld.tickSeconds) : 'x1' }}</em>
+            <em>{{ statusLabel(activeWorld?.status) }}</em>
           </span>
-          <div class="player-copy">
-            <span class="world-meta">
-              <em>{{ activeWorld?.name ?? 'Partida' }}</em>
-              <em>{{ activeWorld?.difficultyName ?? 'Normal' }}</em>
-              <em>{{ activeWorld ? worldSpeedRatio(activeWorld.tickSeconds) : 'x1' }}</em>
-              <em>{{ statusLabel(activeWorld?.status) }}</em>
-            </span>
-            <strong>{{ player.faction.name }}</strong>
-            <small>{{ player.leaderName }} · {{ player.faction.motto }}</small>
-          </div>
-        </section>
+          <strong>{{ player.faction.name }}</strong>
+          <small>{{ player.leaderName }} · {{ player.faction.motto }}</small>
+        </div>
+      </section>
 
-        <section class="resource-dock" aria-label="Recursos del jugador">
-          <article
-            v-for="resource in coreResources"
-            :key="resource.code"
-            class="resource-pill"
-            :title="`${resource.name}: ${resource.amount.toLocaleString('es-ES')} / +${resource.productionPerMinute}/min`"
-          >
-            <img :src="resourceIcon(resource.code)" :alt="resource.name" />
-            <span>{{ resource.name }}</span>
-            <strong>{{ formatResourceAmount(resource.amount) }}</strong>
-            <em>{{ formatProduction(resource.productionPerMinute) }}</em>
-          </article>
-        </section>
+      <section class="resource-dock" aria-label="Recursos del jugador">
+        <article
+          v-for="resource in coreResources"
+          :key="resource.code"
+          class="resource-pill"
+          :title="`${resource.name}: ${resource.amount.toLocaleString('es-ES')} / +${resource.productionPerMinute}/min`"
+        >
+          <img :src="resourceIcon(resource.code)" :alt="resource.name" />
+          <span>{{ resource.name }}</span>
+          <strong>{{ formatResourceAmount(resource.amount) }}</strong>
+          <em>{{ formatProduction(resource.productionPerMinute) }}</em>
+        </article>
+      </section>
 
-        <UserSocialMenu class="game-user-shell" @logout="logout" />
-      </div>
+      <UserSocialMenu class="game-user-shell" @logout="logout" />
+    </div>
 
-      <nav class="screen-nav" aria-label="Pantallas de Iberia 2084">
-        <RouterLink v-for="item in navItems" :key="item.name" class="screen-nav-link" :to="navRoute(item)">
-          <span>{{ item.label }}</span>
-        </RouterLink>
-      </nav>
-    </header>
-  </div>
+    <nav class="screen-nav" aria-label="Pantallas de Iberia 2084">
+      <RouterLink v-for="item in navItems" :key="item.name" class="screen-nav-link" :to="navRoute(item)">
+        <span>{{ item.label }}</span>
+      </RouterLink>
+    </nav>
+  </header>
 </template>
 
 <style scoped>
@@ -296,42 +300,49 @@ onUnmounted(() => {
 
 .screen-nav {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.18rem;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.24rem;
   min-width: 0;
-  border: 1px solid rgba(125, 190, 255, 0.12);
-  border-radius: var(--radius-lg);
-  padding: 0.18rem;
+  padding: 0.08rem;
   overflow: hidden;
-  background: rgba(3, 10, 18, 0.28);
+  background: transparent;
 }
 
 .screen-nav-link {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 30px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  padding: 0.28rem 0.42rem;
-  color: color-mix(in srgb, var(--color-muted) 86%, #b8dfff);
-  box-shadow: none;
-  font-size: 0.82rem;
-  font-weight: 900;
+  min-height: 34px;
+  border: 1px solid rgba(125, 190, 255, 0.16);
+  border-radius: 6px;
+  padding: 0.34rem 0.5rem;
+  color: color-mix(in srgb, var(--color-muted) 82%, #c9e8ff);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 46%),
+    linear-gradient(180deg, rgba(16, 35, 56, 0.86), rgba(5, 14, 25, 0.72));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28);
+  font-size: 0.8rem;
+  font-weight: 950;
   text-align: center;
   text-decoration: none;
+  text-transform: uppercase;
   transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
     color 0.16s ease,
+    transform 0.16s ease,
     text-shadow 0.16s ease;
 }
 
 .screen-nav-link::after {
   content: '';
   position: absolute;
-  right: 15%;
-  bottom: 4px;
-  left: 15%;
-  height: 2px;
+  right: 12%;
+  bottom: 3px;
+  left: 12%;
+  height: 1px;
   transform: scaleX(0);
   background: linear-gradient(90deg, transparent, var(--header-blue), var(--header-blue-strong), transparent);
   box-shadow: 0 0 10px rgba(90, 167, 232, 0.34);
@@ -340,9 +351,16 @@ onUnmounted(() => {
 
 .screen-nav-link:hover,
 .screen-nav-link.router-link-active {
+  border-color: rgba(155, 214, 255, 0.55);
   color: var(--header-blue-strong);
-  background: rgba(90, 167, 232, 0.09);
+  background:
+    linear-gradient(180deg, rgba(155, 214, 255, 0.16), rgba(90, 167, 232, 0.08)),
+    linear-gradient(180deg, rgba(19, 48, 78, 0.92), rgba(7, 19, 34, 0.82));
   text-shadow: 0 0 10px rgba(90, 167, 232, 0.18);
+}
+
+.screen-nav-link:hover {
+  transform: translateY(-1px);
 }
 
 .screen-nav-link:hover::after,

@@ -9,6 +9,7 @@ import AccountSecurityView from '@/views/account/AccountSecurityView.vue'
 import AttacksView from '@/views/game/AttacksView.vue'
 import AllianceView from '@/views/game/AllianceView.vue'
 import CityView from '@/views/game/CityView.vue'
+import EspionageView from '@/views/game/EspionageView.vue'
 import GameHomeView from '@/views/game/GameHomeView.vue'
 import GameShell from '@/views/game/GameShell.vue'
 import IberopediaView from '@/views/game/IberopediaView.vue'
@@ -113,12 +114,14 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresWorld: true, header: 'game', shell: 'game' },
       children: [
         { path: '', redirect: (to) => ({ name: 'gameCity', params: to.params }) },
-        { path: 'ciudad', redirect: (to) => ({ name: 'gameCity', params: to.params }) },
-        { path: 'provincia', name: 'gameCity', component: CityView },
+        { path: 'provincia', redirect: (to) => ({ name: 'gameCity', params: to.params }) },
+        { path: 'ciudad', name: 'gameCity', component: CityView },
         { path: 'mapa', name: 'gameMap', component: SpainMapView },
         { path: 'unidades', redirect: (to) => ({ name: 'gameTroops', params: to.params }) },
         { path: 'tropas', name: 'gameTroops', component: TroopsView },
         { path: 'ataques', name: 'gameAttacks', component: AttacksView },
+        { path: 'espianaje', redirect: (to) => ({ name: 'gameEspionage', params: to.params }) },
+        { path: 'espionaje', name: 'gameEspionage', component: EspionageView },
         { path: 'alianza', name: 'gameAlliance', component: AllianceView },
         { path: 'iberipedia', redirect: (to) => ({ name: 'gameIberopedia', params: to.params }) },
         { path: 'iberopedia', name: 'gameIberopedia', component: IberopediaView },
