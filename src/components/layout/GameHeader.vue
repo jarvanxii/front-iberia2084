@@ -124,7 +124,12 @@ onUnmounted(() => {
     </div>
 
     <nav class="screen-nav" aria-label="Pantallas de Iberia 2084">
-      <RouterLink v-for="item in navItems" :key="item.name" class="screen-nav-link" :to="navRoute(item)">
+      <RouterLink
+        v-for="item in navItems"
+        :key="item.name"
+        class="screen-nav-link"
+        :to="navRoute(item)"
+      >
         <span>{{ item.label }}</span>
       </RouterLink>
     </nav>
@@ -170,14 +175,14 @@ onUnmounted(() => {
 }
 
 .game-header {
-  --header-gutter: clamp(0.52rem, 1.1vw, 0.95rem);
+  --header-gutter: 5px;
   display: grid;
   grid-template-rows: auto auto;
-  gap: 0.24rem;
+  gap: 0.32rem;
   width: 100%;
   min-height: var(--game-header-height);
   margin: 0;
-  padding: 0.4rem var(--header-gutter) 0.3rem;
+  padding: 0.34rem var(--header-gutter) 0.32rem;
 }
 
 .header-primary {
@@ -300,35 +305,38 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
+  justify-self: stretch;
+  width: 100%;
   min-width: 0;
-  border: 1px solid rgba(125, 190, 255, 0.13);
-  border-radius: var(--radius-lg);
+  border: 1px solid rgba(125, 190, 255, 0.22);
+  border-radius: 0;
   padding: 0;
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 54%),
-    rgba(3, 10, 18, 0.3);
+    linear-gradient(180deg, rgba(155, 214, 255, 0.075), transparent 58%), rgba(3, 10, 18, 0.48);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.035),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.32);
 }
 
 .screen-nav-link {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 33px;
+  min-height: 42px;
   border: 0;
-  border-right: 1px solid rgba(125, 190, 255, 0.09);
+  border-right: 1px solid rgba(125, 190, 255, 0.16);
   border-radius: 0;
-  padding: 0.32rem 0.48rem;
+  padding: 0.46rem 0.74rem;
   color: color-mix(in srgb, var(--color-muted) 82%, #c9e8ff);
   background: transparent;
   box-shadow: none;
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   font-weight: 950;
+  letter-spacing: 0;
   text-align: center;
   text-decoration: none;
+  text-transform: uppercase;
   transition:
     background 0.16s ease,
     color 0.16s ease,
@@ -342,14 +350,20 @@ onUnmounted(() => {
 .screen-nav-link::after {
   content: '';
   position: absolute;
-  right: 14%;
+  right: 0;
   bottom: 0;
-  left: 14%;
-  height: 2px;
-  border-radius: 999px;
+  left: 0;
+  height: 3px;
+  border-radius: 0;
   opacity: 0;
   transform: scaleX(0);
-  background: linear-gradient(90deg, transparent, var(--header-blue), var(--header-blue-strong), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--header-blue),
+    var(--header-blue-strong),
+    transparent
+  );
   box-shadow: 0 0 10px rgba(90, 167, 232, 0.28);
   transition:
     opacity 0.18s ease,
@@ -360,8 +374,8 @@ onUnmounted(() => {
 .screen-nav-link.router-link-active {
   color: var(--header-blue-strong);
   background:
-    radial-gradient(circle at 50% 0%, rgba(155, 214, 255, 0.12), transparent 70%),
-    linear-gradient(180deg, rgba(90, 167, 232, 0.09), rgba(255, 255, 255, 0));
+    radial-gradient(circle at 50% 0%, rgba(155, 214, 255, 0.16), transparent 72%),
+    linear-gradient(180deg, rgba(90, 167, 232, 0.18), rgba(90, 167, 232, 0.045));
   text-shadow: 0 0 10px rgba(90, 167, 232, 0.18);
 }
 
@@ -390,8 +404,7 @@ onUnmounted(() => {
   border-radius: var(--radius-lg);
   padding: 0.3rem 0.44rem;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.032), transparent 80%),
-    rgba(3, 10, 18, 0.26);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), transparent 80%), rgba(3, 10, 18, 0.26);
   box-shadow: none;
 }
 
@@ -437,7 +450,7 @@ onUnmounted(() => {
 
 @media (max-width: 1220px) {
   .game-header {
-    padding: 0.38rem 0.58rem 0.32rem;
+    padding: 0.34rem 5px 0.32rem;
   }
 
   .header-primary {
@@ -508,8 +521,8 @@ onUnmounted(() => {
   }
 
   .screen-nav-link {
-    min-height: 29px;
-    padding: 0.28rem 0.28rem;
+    min-height: 36px;
+    padding: 0.34rem 0.28rem;
     font-size: 0.76rem;
   }
 

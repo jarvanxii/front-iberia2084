@@ -22,7 +22,6 @@ async function logout() {
   session.logout()
   await router.push({ name: 'access' })
 }
-
 </script>
 
 <template>
@@ -127,19 +126,18 @@ async function logout() {
   gap: 0;
   justify-content: center;
   justify-self: center;
-  width: min(520px, 100%);
+  width: min(760px, 100%);
   min-width: 0;
   height: calc(var(--home-header-height) - 0.2rem);
-  border: 1px solid rgba(125, 190, 255, 0.13);
-  border-radius: var(--radius-lg);
+  border: 1px solid rgba(125, 190, 255, 0.22);
+  border-radius: 0;
   padding: 0;
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 54%),
-    rgba(3, 10, 18, 0.28);
+    linear-gradient(180deg, rgba(155, 214, 255, 0.075), transparent 58%), rgba(3, 10, 18, 0.46);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.035),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.32);
 }
 
 .home-section-link {
@@ -148,15 +146,17 @@ async function logout() {
   min-height: 100%;
   place-items: center;
   border: 0;
-  border-right: 1px solid rgba(125, 190, 255, 0.09);
+  border-right: 1px solid rgba(125, 190, 255, 0.16);
   border-radius: 0;
-  padding: 0.34rem 0.72rem;
+  padding: 0.44rem 0.84rem;
   color: color-mix(in srgb, var(--color-muted) 82%, #c9e8ff);
   background: transparent;
   box-shadow: none;
-  font-size: 0.8rem;
+  font-size: 0.86rem;
   font-weight: 950;
+  letter-spacing: 0;
   text-decoration: none;
+  text-transform: uppercase;
   transition:
     background 0.16s ease,
     color 0.16s ease,
@@ -170,14 +170,20 @@ async function logout() {
 .home-section-link::after {
   content: '';
   position: absolute;
-  right: 20%;
+  right: 0;
   bottom: 0;
-  left: 20%;
-  height: 2px;
-  border-radius: 999px;
+  left: 0;
+  height: 3px;
+  border-radius: 0;
   opacity: 0;
   transform: scaleX(0);
-  background: linear-gradient(90deg, transparent, var(--header-blue), var(--header-blue-strong), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--header-blue),
+    var(--header-blue-strong),
+    transparent
+  );
   box-shadow: 0 0 10px rgba(90, 167, 232, 0.34);
   transition:
     opacity 0.18s ease,
@@ -188,8 +194,8 @@ async function logout() {
 .home-section-link.active {
   color: var(--header-blue-strong);
   background:
-    radial-gradient(circle at 50% 0%, rgba(155, 214, 255, 0.12), transparent 70%),
-    linear-gradient(180deg, rgba(90, 167, 232, 0.09), rgba(255, 255, 255, 0));
+    radial-gradient(circle at 50% 0%, rgba(155, 214, 255, 0.16), transparent 72%),
+    linear-gradient(180deg, rgba(90, 167, 232, 0.18), rgba(90, 167, 232, 0.045));
   text-shadow: 0 0 10px rgba(90, 167, 232, 0.18);
 }
 
@@ -246,7 +252,7 @@ async function logout() {
     flex: 0 0 auto;
     min-height: 30px;
     min-width: 86px;
-    padding: 0.26rem 0.4rem;
+    padding: 0.3rem 0.4rem;
     text-align: center;
   }
 }

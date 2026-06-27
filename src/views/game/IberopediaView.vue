@@ -151,10 +151,14 @@ const territories = computed(() =>
     (a, b) => a.region.localeCompare(b.region, 'es') || a.name.localeCompare(b.name, 'es'),
   ),
 )
-const ministries = computed(() => [...(state.value?.ministries ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'es')))
+const ministries = computed(() =>
+  [...(state.value?.ministries ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'es')),
+)
 const corruptionSchemes = computed(() => state.value?.corruptionSchemes ?? [])
 const disasterPlans = computed(() => state.value?.disasterPlans ?? [])
-const currentTopic = computed(() => topics.find((topic) => topic.key === activeTopic.value) ?? topics[0]!)
+const currentTopic = computed(
+  () => topics.find((topic) => topic.key === activeTopic.value) ?? topics[0]!,
+)
 
 const resourcePurpose: Record<string, { usage: string; tension: string }> = {
   pesetas: {
@@ -167,7 +171,8 @@ const resourcePurpose: Record<string, { usage: string; tension: string }> = {
   },
   favores: {
     usage: 'Atajos, pactos, defensa delicada y operaciones con letra pequeña.',
-    tension: 'Son potentes, escasos y peligrosos cuando todo el mundo empieza a pedir explicaciones.',
+    tension:
+      'Son potentes, escasos y peligrosos cuando todo el mundo empieza a pedir explicaciones.',
   },
   influencia: {
     usage: 'Capacidad de condicionar decisiones sin ocupar directamente.',
@@ -211,7 +216,9 @@ function resourceName(code: string) {
 
 function costLabel(costs: ResourceCostDto[]) {
   if (!costs.length) return 'Sin coste'
-  return costs.map((cost) => `${cost.amount.toLocaleString('es-ES')} ${resourceName(cost.code)}`).join(' · ')
+  return costs
+    .map((cost) => `${cost.amount.toLocaleString('es-ES')} ${resourceName(cost.code)}`)
+    .join(' · ')
 }
 
 function researchCostLabel(item: ResearchDefinitionDto) {
@@ -256,15 +263,6 @@ watch(
 
 <template>
   <section v-if="state" class="iberopedia-view">
-    <header class="iberopedia-header">
-      <p>Iberopedia</p>
-      <h2>Manual general de Iberia 2084</h2>
-      <span>
-        Archivo de reglas, catálogos y conceptos. No muestra tu progreso, tus recursos actuales, propietarios de
-        provincias ni eventos vivos de una partida: solo información común para entender el juego.
-      </span>
-    </header>
-
     <section class="iberopedia-shell">
       <aside class="iberopedia-sidebar" aria-label="Índice de Iberopedia">
         <strong>Índice</strong>
@@ -292,42 +290,53 @@ watch(
 
         <section v-if="activeTopic === 'resumen'" class="manual-copy">
           <p>
-            Iberia 2084 se juega provincia a provincia. Cada hueco del mapa representa una capital de provincia y solo
-            puede pertenecer a un jugador dentro de una partida. No se nombran ciudades manualmente porque el mapa ya
-            las define.
+            Iberia 2084 se juega provincia a provincia. Cada hueco del mapa representa una capital
+            de provincia y solo puede pertenecer a un jugador dentro de una partida. No se nombran
+            ciudades manualmente porque el mapa ya las define.
           </p>
           <p>
-            El bucle principal es sencillo: produces recursos, mejoras edificios, entrenas unidades, te mueves por el
-            mapa y decides cuándo asumir riesgos. Las pantallas de catálogo explican herramientas; las pantallas de
-            partida muestran estado real.
+            El bucle principal es sencillo: produces recursos, mejoras edificios, entrenas unidades,
+            te mueves por el mapa y decides cuándo asumir riesgos. Las pantallas de catálogo
+            explican herramientas; las pantallas de partida muestran estado real.
           </p>
           <ol class="manual-rules">
             <li>Construye edificios para desbloquear producción, unidades y planes.</li>
             <li>Entrena tropas para atacar, ocupar o defender provincias.</li>
             <li>Usa transportes para mover unidades; el ataque no depende del transporte.</li>
             <li>Investiga mejoras comunes o especiales de tu partido.</li>
-            <li>Gestiona crisis y corrupción mirando siempre coste, duración, riesgo y consecuencia.</li>
+            <li>
+              Gestiona crisis y corrupción mirando siempre coste, duración, riesgo y consecuencia.
+            </li>
           </ol>
         </section>
 
         <section v-else-if="activeTopic === 'partidas'" class="manual-copy">
           <p>
-            Una partida es un mundo persistente con velocidad, dificultad y plazas limitadas por provincias. La
-            velocidad se expresa como ratio, por ejemplo x1 o x1,5, y afecta a cómo se sienten colas, acciones y ritmo.
+            Una partida es un mundo persistente con velocidad, dificultad y plazas limitadas por
+            provincias. La velocidad se expresa como ratio, por ejemplo x1 o x1,5, y afecta a cómo
+            se sienten colas, acciones y ritmo.
           </p>
           <p>
-            La dificultad no es un nivel del jugador: define la dureza de los bots y de la presión del mundo. Una misma
-            cuenta puede estar en dos partidas distintas, pero cada provincia solo admite un propietario.
+            La dificultad no es un nivel del jugador: define la dureza de los bots y de la presión
+            del mundo. Una misma cuenta puede estar en dos partidas distintas, pero cada provincia
+            solo admite un propietario.
           </p>
           <ul class="manual-rules">
             <li>Una ciudad equivale a una capital de provincia.</li>
             <li>Una provincia solo puede pertenecer a un jugador por partida.</li>
-            <li>La invitación a un amigo reserva un hueco libre del mapa, no comparte tus datos privados.</li>
+            <li>
+              La invitación a un amigo reserva un hueco libre del mapa, no comparte tus datos
+              privados.
+            </li>
           </ul>
         </section>
 
         <section v-else-if="activeTopic === 'recursos'" class="entry-list">
-          <article v-for="resource in resources" :key="resource.code" class="entry-row resource-entry">
+          <article
+            v-for="resource in resources"
+            :key="resource.code"
+            class="entry-row resource-entry"
+          >
             <figure class="entry-media square">
               <img :src="resourceIcon(resource.code)" :alt="resource.name" loading="lazy" />
             </figure>
@@ -338,9 +347,16 @@ watch(
             </header>
             <dl class="entry-facts">
               <dt>Uso</dt>
-              <dd>{{ resourcePurpose[resource.code]?.usage ?? 'Recurso común pendiente de afinar.' }}</dd>
+              <dd>
+                {{ resourcePurpose[resource.code]?.usage ?? 'Recurso común pendiente de afinar.' }}
+              </dd>
               <dt>Tensión</dt>
-              <dd>{{ resourcePurpose[resource.code]?.tension ?? 'Debe tener una consecuencia clara en partida.' }}</dd>
+              <dd>
+                {{
+                  resourcePurpose[resource.code]?.tension ??
+                  'Debe tener una consecuencia clara en partida.'
+                }}
+              </dd>
             </dl>
           </article>
         </section>
@@ -356,10 +372,17 @@ watch(
               <img :src="troopPortrait(unit.imageKey)" :alt="unit.name" loading="lazy" />
             </figure>
             <header class="entry-copy">
-              <span>{{ unit.factionShortName ? `Especial ${unit.factionShortName}` : 'Común' }} · T{{ unit.tier }}</span>
+              <span
+                >{{ unit.factionShortName ? `Especial ${unit.factionShortName}` : 'Común' }} · T{{
+                  unit.tier
+                }}</span
+              >
               <h4>{{ unit.name }}</h4>
               <p>{{ unit.description }}</p>
-              <small>Desbloqueo: {{ buildingLabel(unit.unlockBuildingCode) }} nivel {{ unit.unlockBuildingLevel }}</small>
+              <small
+                >Desbloqueo: {{ buildingLabel(unit.unlockBuildingCode) }} nivel
+                {{ unit.unlockBuildingLevel }}</small
+              >
             </header>
             <dl class="entry-facts dense">
               <dt>Ataque {{ unit.attackTypeLabel.toLowerCase() }}</dt>
@@ -394,7 +417,10 @@ watch(
               <span>{{ unit.transportTypeLabel ?? 'Transporte' }} · T{{ unit.tier }}</span>
               <h4>{{ unit.name }}</h4>
               <p>{{ unit.description }}</p>
-              <small>Desbloqueo: {{ buildingLabel(unit.unlockBuildingCode) }} nivel {{ unit.unlockBuildingLevel }}</small>
+              <small
+                >Desbloqueo: {{ buildingLabel(unit.unlockBuildingCode) }} nivel
+                {{ unit.unlockBuildingLevel }}</small
+              >
             </header>
             <dl class="entry-facts dense">
               <dt>Tipo</dt>
@@ -446,7 +472,10 @@ watch(
               <img :src="researchImage(item.imageKey)" :alt="item.name" loading="lazy" />
             </figure>
             <header class="entry-copy">
-              <span>{{ item.factionShortName ? `Especial ${item.factionShortName}` : 'Común' }} · {{ item.category }}</span>
+              <span
+                >{{ item.factionShortName ? `Especial ${item.factionShortName}` : 'Común' }} ·
+                {{ item.category }}</span
+              >
               <h4>{{ item.name }}</h4>
               <p>{{ item.description }}</p>
             </header>
@@ -492,7 +521,12 @@ watch(
             :style="{ '--entry-accent': faction.color }"
           >
             <figure class="entry-media square">
-              <img v-if="partyLogo(faction.code)" :src="partyLogo(faction.code)" :alt="`Logo de ${faction.name}`" loading="lazy" />
+              <img
+                v-if="partyLogo(faction.code)"
+                :src="partyLogo(faction.code)"
+                :alt="`Logo de ${faction.name}`"
+                loading="lazy"
+              />
             </figure>
             <header class="entry-copy">
               <span>{{ faction.shortName }}</span>
@@ -509,7 +543,11 @@ watch(
         </section>
 
         <section v-else-if="activeTopic === 'provincias'" class="entry-list province-list">
-          <article v-for="territory in territories" :key="territory.code" class="entry-row no-media">
+          <article
+            v-for="territory in territories"
+            :key="territory.code"
+            class="entry-row no-media"
+          >
             <header class="entry-copy">
               <span>{{ territory.region }}</span>
               <h4>{{ territory.name }}</h4>
@@ -547,7 +585,11 @@ watch(
         </section>
 
         <section v-else class="entry-list">
-          <article v-for="scheme in corruptionSchemes" :key="scheme.code" class="entry-row no-media risk-entry">
+          <article
+            v-for="scheme in corruptionSchemes"
+            :key="scheme.code"
+            class="entry-row no-media risk-entry"
+          >
             <header class="entry-copy">
               <span>Corrupción · {{ scheme.baseRiskPercent }}% riesgo</span>
               <h4>{{ scheme.name }}</h4>
@@ -564,7 +606,11 @@ watch(
             </dl>
           </article>
 
-          <article v-for="plan in disasterPlans" :key="plan.code" class="entry-row no-media risk-entry">
+          <article
+            v-for="plan in disasterPlans"
+            :key="plan.code"
+            class="entry-row no-media risk-entry"
+          >
             <header class="entry-copy">
               <span>Plan de crisis · {{ plan.baseSuccessPercent }}% éxito</span>
               <h4>{{ plan.name }}</h4>
@@ -593,21 +639,6 @@ watch(
   color: var(--color-text);
 }
 
-.iberopedia-header {
-  display: grid;
-  gap: var(--space-2);
-  border: 1px solid var(--color-border);
-  border-left: 4px solid var(--color-accent);
-  border-radius: var(--radius-md);
-  padding: 0.72rem 0.86rem;
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 55%),
-    var(--color-surface);
-}
-
-.iberopedia-header p,
-.iberopedia-header h2,
-.iberopedia-header span,
 .topic-header h3,
 .topic-header p,
 .entry-copy h4,
@@ -615,7 +646,6 @@ watch(
   margin: 0;
 }
 
-.iberopedia-header p,
 .topic-header span,
 .entry-copy span,
 .entry-facts dt {
@@ -623,17 +653,6 @@ watch(
   font-size: 0.68rem;
   font-weight: 950;
   text-transform: uppercase;
-}
-
-.iberopedia-header h2 {
-  font-size: 2.15rem;
-  line-height: 1;
-}
-
-.iberopedia-header span {
-  max-width: 92ch;
-  color: var(--color-muted);
-  line-height: 1.42;
 }
 
 .iberopedia-shell {
@@ -914,14 +933,6 @@ watch(
 }
 
 @media (max-width: 680px) {
-  .iberopedia-header {
-    border-radius: 0;
-  }
-
-  .iberopedia-header h2 {
-    font-size: 1.72rem;
-  }
-
   .iberopedia-sidebar nav,
   .entry-row,
   .entry-facts,
