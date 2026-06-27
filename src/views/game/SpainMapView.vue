@@ -433,7 +433,6 @@ function clampNumber(value: number, min: number, max: number) {
                 owned: Boolean(territoryForProvince(province)?.ownerPlayerId),
                 mine: territoryForProvince(province)?.ownerPlayerId === player.id,
                 inset: province.inset,
-                'autonomous-city': province.inset === 'ceuta' || province.inset === 'melilla',
               }"
               :style="{ '--province-color': provinceColor(province) }"
               :transform="provinceTransform(province)"
@@ -795,24 +794,6 @@ function clampNumber(value: number, min: number, max: number) {
   stroke-width: 3.4;
 }
 
-.province-cell.autonomous-city .province-base {
-  opacity: 0.94;
-  stroke: var(--color-bg);
-  stroke-width: 1.05;
-}
-
-.province-cell.autonomous-city.free .province-base {
-  opacity: 0.82;
-  stroke-dasharray: none;
-}
-
-.province-cell.autonomous-city.mine .province-base,
-.province-cell.autonomous-city.selected .province-base,
-.province-cell.autonomous-city:hover .province-base,
-.province-cell.autonomous-city:focus-visible .province-base {
-  stroke-width: 1.7;
-}
-
 .province-mine-stripes {
   fill: url('#province-mine-stripes');
   fill-rule: evenodd;
@@ -833,14 +814,6 @@ function clampNumber(value: number, min: number, max: number) {
 
 .province-cell.inset text {
   font-size: 8.5px;
-}
-
-.province-cell.autonomous-city text {
-  font-size: 10.5px;
-  paint-order: stroke;
-  stroke: color-mix(in srgb, var(--color-bg) 82%, transparent);
-  stroke-linejoin: round;
-  stroke-width: 1.6;
 }
 
 .province-label-leader {
@@ -869,12 +842,6 @@ function clampNumber(value: number, min: number, max: number) {
 
 .province-cell.free .province-label-frame {
   fill: color-mix(in srgb, var(--color-bg) 76%, transparent);
-}
-
-.province-cell.autonomous-city .province-label-frame {
-  fill: color-mix(in srgb, var(--color-bg) 72%, transparent);
-  stroke: color-mix(in srgb, var(--color-text) 42%, var(--color-border-strong));
-  opacity: 0.82;
 }
 
 .province-cell.mine .province-label-frame {
