@@ -20,8 +20,6 @@ describe('router', () => {
     expect(router.resolve({ name: 'gameCity', params }).href).toBe('/mundo/iberia-beta-1/ciudad')
     expect(router.resolve({ name: 'gameMap', params }).href).toBe('/mundo/iberia-beta-1/mapa')
     expect(router.resolve({ name: 'gameTroops', params }).href).toBe('/mundo/iberia-beta-1/tropas')
-    expect(router.resolve({ name: 'gameAttacks', params }).href).toBe('/mundo/iberia-beta-1/ataques')
-    expect(router.resolve({ name: 'gameEspionage', params }).href).toBe('/mundo/iberia-beta-1/espionaje')
     expect(router.resolve({ name: 'gameAlliance', params }).href).toBe('/mundo/iberia-beta-1/alianza')
     expect(router.resolve({ name: 'gameIberopedia', params }).href).toBe('/mundo/iberia-beta-1/iberopedia')
     expect(router.resolve({ name: 'gameAccountChat', params }).href).toBe('/mundo/iberia-beta-1/cuenta/chat')

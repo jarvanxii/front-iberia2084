@@ -6,10 +6,8 @@ import AccountFriendsView from '@/views/account/AccountFriendsView.vue'
 import AccountPaymentsView from '@/views/account/AccountPaymentsView.vue'
 import AccountPreferencesView from '@/views/account/AccountPreferencesView.vue'
 import AccountSecurityView from '@/views/account/AccountSecurityView.vue'
-import AttacksView from '@/views/game/AttacksView.vue'
 import AllianceView from '@/views/game/AllianceView.vue'
 import CityView from '@/views/game/CityView.vue'
-import EspionageView from '@/views/game/EspionageView.vue'
 import GameHomeView from '@/views/game/GameHomeView.vue'
 import GameShell from '@/views/game/GameShell.vue'
 import IberopediaView from '@/views/game/IberopediaView.vue'
@@ -119,9 +117,9 @@ const router = createRouter({
         { path: 'mapa', name: 'gameMap', component: SpainMapView },
         { path: 'unidades', redirect: (to) => ({ name: 'gameTroops', params: to.params }) },
         { path: 'tropas', name: 'gameTroops', component: TroopsView },
-        { path: 'ataques', name: 'gameAttacks', component: AttacksView },
-        { path: 'espianaje', redirect: (to) => ({ name: 'gameEspionage', params: to.params }) },
-        { path: 'espionaje', name: 'gameEspionage', component: EspionageView },
+        { path: 'ataques', redirect: (to) => ({ name: 'gameMap', params: to.params }) },
+        { path: 'espianaje', redirect: (to) => ({ name: 'gameMap', params: to.params }) },
+        { path: 'espionaje', redirect: (to) => ({ name: 'gameMap', params: to.params }) },
         { path: 'alianza', name: 'gameAlliance', component: AllianceView },
         { path: 'iberipedia', redirect: (to) => ({ name: 'gameIberopedia', params: to.params }) },
         { path: 'iberopedia', name: 'gameIberopedia', component: IberopediaView },

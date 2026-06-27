@@ -38,8 +38,6 @@ const navItems = [
   { name: 'gameCity', label: 'Ciudad' },
   { name: 'gameMap', label: 'Mapa' },
   { name: 'gameTroops', label: 'Tropas' },
-  { name: 'gameAttacks', label: 'Ataques' },
-  { name: 'gameEspionage', label: 'Espionaje' },
   { name: 'gameAlliance', label: 'Alianza' },
 ]
 
@@ -300,71 +298,76 @@ onUnmounted(() => {
 
 .screen-nav {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.24rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
   min-width: 0;
-  padding: 0.08rem;
+  border: 1px solid rgba(125, 190, 255, 0.13);
+  border-radius: var(--radius-lg);
+  padding: 0;
   overflow: hidden;
-  background: transparent;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 54%),
+    rgba(3, 10, 18, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.22);
 }
 
 .screen-nav-link {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 34px;
-  border: 1px solid rgba(125, 190, 255, 0.16);
-  border-radius: 6px;
-  padding: 0.34rem 0.5rem;
+  min-height: 33px;
+  border: 0;
+  border-right: 1px solid rgba(125, 190, 255, 0.09);
+  border-radius: 0;
+  padding: 0.32rem 0.48rem;
   color: color-mix(in srgb, var(--color-muted) 82%, #c9e8ff);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 46%),
-    linear-gradient(180deg, rgba(16, 35, 56, 0.86), rgba(5, 14, 25, 0.72));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.28);
+  background: transparent;
+  box-shadow: none;
   font-size: 0.8rem;
   font-weight: 950;
   text-align: center;
   text-decoration: none;
-  text-transform: uppercase;
   transition:
-    border-color 0.16s ease,
     background 0.16s ease,
     color 0.16s ease,
-    transform 0.16s ease,
     text-shadow 0.16s ease;
+}
+
+.screen-nav-link:last-child {
+  border-right: 0;
 }
 
 .screen-nav-link::after {
   content: '';
   position: absolute;
-  right: 12%;
-  bottom: 3px;
-  left: 12%;
-  height: 1px;
+  right: 14%;
+  bottom: 0;
+  left: 14%;
+  height: 2px;
+  border-radius: 999px;
+  opacity: 0;
   transform: scaleX(0);
   background: linear-gradient(90deg, transparent, var(--header-blue), var(--header-blue-strong), transparent);
-  box-shadow: 0 0 10px rgba(90, 167, 232, 0.34);
-  transition: transform 0.2s ease;
+  box-shadow: 0 0 10px rgba(90, 167, 232, 0.28);
+  transition:
+    opacity 0.18s ease,
+    transform 0.2s ease;
 }
 
 .screen-nav-link:hover,
 .screen-nav-link.router-link-active {
-  border-color: rgba(155, 214, 255, 0.55);
   color: var(--header-blue-strong);
   background:
-    linear-gradient(180deg, rgba(155, 214, 255, 0.16), rgba(90, 167, 232, 0.08)),
-    linear-gradient(180deg, rgba(19, 48, 78, 0.92), rgba(7, 19, 34, 0.82));
+    radial-gradient(circle at 50% 0%, rgba(155, 214, 255, 0.12), transparent 70%),
+    linear-gradient(180deg, rgba(90, 167, 232, 0.09), rgba(255, 255, 255, 0));
   text-shadow: 0 0 10px rgba(90, 167, 232, 0.18);
-}
-
-.screen-nav-link:hover {
-  transform: translateY(-1px);
 }
 
 .screen-nav-link:hover::after,
 .screen-nav-link.router-link-active::after {
+  opacity: 1;
   transform: scaleX(1);
 }
 
@@ -501,7 +504,7 @@ onUnmounted(() => {
   }
 
   .screen-nav {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .screen-nav-link {
