@@ -1,39 +1,36 @@
 <template>
   <footer class="app-footer" aria-label="Aviso de ficción">
-    <p>
+    <p class="footer-disclaimer">
       <strong>Iberia 2084</strong>
-      <span>Cualquier parecido con la realidad es una extraña coincidencia.</span>
+      <span aria-hidden="true"></span>
+      <em>Cualquier parecido con la realidad es una extraña coincidencia.</em>
     </p>
-
-    <nav class="footer-links" aria-label="Enlaces legales">
-      <RouterLink :to="{ name: 'privacy' }">Privacidad</RouterLink>
-      <RouterLink :to="{ name: 'terms' }">Términos</RouterLink>
-      <RouterLink :to="{ name: 'contact' }">Contacto</RouterLink>
-    </nav>
   </footer>
 </template>
 
 <style scoped>
 .app-footer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.8rem;
+  display: flex;
   align-items: center;
-  min-height: 34px;
+  justify-content: center;
+  min-height: 30px;
   border-top: 1px solid rgba(125, 190, 255, 0.1);
-  padding: 0.38rem var(--space-page);
+  padding: 0.28rem var(--space-page);
   color: color-mix(in srgb, var(--color-muted) 88%, var(--color-text));
   background: rgba(4, 10, 18, 0.82);
 }
 
-.app-footer p {
+.footer-disclaimer {
   display: flex;
   min-width: 0;
-  gap: 0.45rem;
+  gap: 0.5rem;
   align-items: center;
+  justify-content: center;
   margin: 0;
-  font-size: 0.68rem;
-  line-height: 1.2;
+  color: color-mix(in srgb, var(--color-muted) 86%, var(--color-text));
+  font-size: 0.66rem;
+  line-height: 1.1;
+  text-align: center;
 }
 
 .app-footer strong {
@@ -44,64 +41,41 @@
   text-transform: uppercase;
 }
 
-.app-footer p span {
+.footer-disclaimer span {
+  display: block;
+  width: 1px;
+  height: 0.72rem;
+  flex: 0 0 auto;
+  background: rgba(125, 190, 255, 0.18);
+}
+
+.footer-disclaimer em {
   min-width: 0;
   overflow: hidden;
+  font-style: normal;
   font-weight: 760;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.footer-links {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 0.18rem;
-  align-items: center;
-}
-
-.footer-links a {
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 0.16rem 0.36rem;
-  color: color-mix(in srgb, var(--color-muted) 82%, var(--color-accent));
-  font-size: 0.66rem;
-  font-weight: 850;
-  text-decoration: none;
-  transition:
-    border-color 0.15s ease,
-    color 0.15s ease,
-    background 0.15s ease;
-}
-
-.footer-links a:hover,
-.footer-links a:focus-visible {
-  border-color: rgba(125, 190, 255, 0.18);
-  color: var(--color-text);
-  background: rgba(90, 167, 232, 0.07);
-  outline: none;
-}
-
 @media (max-width: 520px) {
   .app-footer {
-    grid-template-columns: 1fr;
-    gap: 0.24rem;
-    min-height: 44px;
-    padding-top: 0.34rem;
-    padding-bottom: 0.34rem;
+    min-height: 38px;
+    padding-top: 0.32rem;
+    padding-bottom: 0.32rem;
   }
 
-  .app-footer p {
-    justify-content: center;
+  .footer-disclaimer {
+    gap: 0.34rem;
     font-size: 0.64rem;
-    text-align: center;
   }
 
-  .app-footer p span {
+  .footer-disclaimer span {
+    display: none;
+  }
+
+  .footer-disclaimer em {
     white-space: normal;
-  }
-
-  .footer-links {
-    justify-content: center;
   }
 }
 </style>
