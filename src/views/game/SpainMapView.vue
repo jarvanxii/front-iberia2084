@@ -365,6 +365,24 @@ function clampNumber(value: number, min: number, max: number) {
               <rect x="444" y="686" width="184" height="94" rx="12" />
               <text x="536" y="680">Ciudades autónomas</text>
             </g>
+            <g class="africa-context" aria-hidden="true">
+              <path
+                class="africa-land"
+                d="M456,752C466,746.5 476,745.5 484.5,741.2C492,737.5 500.2,738.1 508.8,735C520.2,730.8 530.8,729.7 540,724.4L540,780L456,780Z"
+              />
+              <path
+                class="africa-coastline"
+                d="M456,752C466,746.5 476,745.5 484.5,741.2C492,737.5 500.2,738.1 508.8,735C520.2,730.8 530.8,729.7 540,724.4"
+              />
+              <path
+                class="africa-land"
+                d="M554,754C561.2,746.4 570.4,742.4 579.5,740.1C590.5,737.3 603,742.2 615,748L615,780L554,780Z"
+              />
+              <path
+                class="africa-coastline"
+                d="M554,754C561.2,746.4 570.4,742.4 579.5,740.1C590.5,737.3 603,742.2 615,748"
+              />
+            </g>
 
             <g
               v-for="province in provinceShapes"
@@ -377,6 +395,7 @@ function clampNumber(value: number, min: number, max: number) {
                 owned: Boolean(territoryForProvince(province)?.ownerPlayerId),
                 mine: territoryForProvince(province)?.ownerPlayerId === player.id,
                 inset: province.inset,
+                'autonomous-city': province.inset === 'ceuta' || province.inset === 'melilla',
               }"
               :style="{ '--province-color': provinceColor(province) }"
               role="button"
@@ -390,8 +409,10 @@ function clampNumber(value: number, min: number, max: number) {
                 {{ province.name }} · Jugador: {{ provinceOwner(province) }} · Partido: {{ provinceOwnerParty(province) }} · Estado:
                 {{ provinceStatusLabel(province) }}
               </title>
+              <path v-if="province.hitPath" class="province-hit-area" :d="province.hitPath" />
               <path class="province-base" :d="province.path" />
               <path v-if="isMineProvince(province)" class="province-mine-stripes" :d="province.path" />
+              <path v-if="province.leaderPath" class="province-label-leader" :d="province.leaderPath" />
               <rect
                 class="province-label-frame"
                 :x="provinceLabelBox(province).x"
@@ -636,9 +657,34 @@ function clampNumber(value: number, min: number, max: number) {
   text-transform: uppercase;
 }
 
+.africa-context {
+  pointer-events: none;
+}
+
+.africa-land {
+  fill: color-mix(in srgb, var(--color-border) 24%, var(--color-surface));
+  opacity: 0.5;
+}
+
+.africa-coastline {
+  fill: none;
+  opacity: 0.72;
+  stroke: color-mix(in srgb, var(--color-border-strong) 58%, var(--color-surface));
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.15;
+  vector-effect: non-scaling-stroke;
+}
+
 .province-cell {
   cursor: pointer;
   outline: none;
+}
+
+.province-hit-area {
+  fill: transparent;
+  pointer-events: all;
+  stroke: transparent;
 }
 
 .province-cell .province-base {
@@ -679,6 +725,22 @@ function clampNumber(value: number, min: number, max: number) {
   stroke-width: 3.4;
 }
 
+.province-cell.autonomous-city .province-base {
+  opacity: 0.96;
+  stroke-width: 0.9;
+}
+
+.province-cell.autonomous-city.free .province-base {
+  stroke-dasharray: 1.8 1.2;
+}
+
+.province-cell.autonomous-city.mine .province-base,
+.province-cell.autonomous-city.selected .province-base,
+.province-cell.autonomous-city:hover .province-base,
+.province-cell.autonomous-city:focus-visible .province-base {
+  stroke-width: 1.7;
+}
+
 .province-mine-stripes {
   fill: url('#province-mine-stripes');
   fill-rule: evenodd;
@@ -699,6 +761,16 @@ function clampNumber(value: number, min: number, max: number) {
 
 .province-cell.inset text {
   font-size: 8.5px;
+}
+
+.province-label-leader {
+  fill: none;
+  opacity: 0.84;
+  pointer-events: none;
+  stroke: color-mix(in srgb, var(--color-border-strong) 70%, var(--color-bg));
+  stroke-linecap: round;
+  stroke-width: 0.9;
+  vector-effect: non-scaling-stroke;
 }
 
 .province-label-frame {
