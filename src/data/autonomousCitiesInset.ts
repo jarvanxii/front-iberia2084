@@ -9,8 +9,6 @@ export interface SvgRect {
 export interface AutonomousCityDetail {
   code: 'ceuta' | 'melilla'
   frame: SvgRect
-  terrainPath: string
-  coastPath: string
 }
 
 export interface AutonomousCityPin {
@@ -33,16 +31,10 @@ export const autonomousCitiesInset = {
     {
       code: 'ceuta',
       frame: { x: 420, y: 690, width: 126, height: 74, rx: 2 },
-      terrainPath:
-        'M420,722C433,714 445,710 459,710C474,710 486,715 499,722C512,729 527,728 546,716L546,764L420,764Z',
-      coastPath: 'M420,722C433,714 445,710 459,710C474,710 486,715 499,722C512,729 527,728 546,716',
     },
     {
       code: 'melilla',
       frame: { x: 612, y: 654, width: 120, height: 72, rx: 2 },
-      terrainPath:
-        'M612,674C625,668 638,666 650,668C664,671 678,677 690,684C704,691 718,693 732,690L732,726L612,726Z',
-      coastPath: 'M612,674C625,668 638,666 650,668C664,671 678,677 690,684C704,691 718,693 732,690',
     },
   ],
   pins: [

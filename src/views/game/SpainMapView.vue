@@ -406,8 +406,6 @@ function clampNumber(value: number, min: number, max: number) {
                     :height="detail.frame.height"
                     :rx="detail.frame.rx"
                   />
-                  <path class="autonomous-detail-terrain" :d="detail.terrainPath" />
-                  <path class="autonomous-detail-coast" :d="detail.coastPath" />
                   <rect
                     class="autonomous-detail-frame"
                     :x="detail.frame.x"
@@ -723,21 +721,6 @@ function clampNumber(value: number, min: number, max: number) {
 
 .autonomous-detail-water {
   fill: var(--color-surface);
-}
-
-.autonomous-detail-terrain {
-  fill: color-mix(in srgb, var(--color-border) 32%, var(--color-surface));
-  opacity: 0.82;
-}
-
-.autonomous-detail-coast {
-  fill: none;
-  opacity: 0.72;
-  stroke: color-mix(in srgb, var(--color-border-strong) 78%, var(--color-surface));
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 0.95;
-  vector-effect: non-scaling-stroke;
 }
 
 .autonomous-detail-frame {
