@@ -196,6 +196,11 @@ function isMineProvince(province: ProvinceShape) {
   return territoryForProvince(province)?.ownerPlayerId === player.value?.id
 }
 
+function provinceTransform(province: ProvinceShape) {
+  if (province.inset === 'ceuta' || province.inset === 'melilla') return autonomousCitiesInset.contentTransform
+  return undefined
+}
+
 function provinceLabelBox(province: ProvinceShape) {
   const width = Math.max(17, province.abbr.length * 7.5 + 8)
   const height = province.inset ? 15 : 16
@@ -382,46 +387,40 @@ function clampNumber(value: number, min: number, max: number) {
               <text :x="autonomousCitiesInset.title.x" :y="autonomousCitiesInset.title.y">Ciudades autónomas</text>
             </g>
             <g class="africa-context" :clip-path="`url(#${autonomousCitiesInset.clipId})`" aria-hidden="true">
-              <rect
-                class="autonomous-sea"
-                :x="autonomousCitiesInset.sea.x"
-                :y="autonomousCitiesInset.sea.y"
-                :width="autonomousCitiesInset.sea.width"
-                :height="autonomousCitiesInset.sea.height"
-              />
-              <path
-                v-for="path in autonomousCitiesInset.bathymetryPaths"
-                :key="path"
-                class="bathymetry-line"
-                :d="path"
-              />
-              <path class="spain-coast-context" :d="autonomousCitiesInset.spainCoastPath" />
-              <path class="africa-land" :d="autonomousCitiesInset.africaLandPath" />
-              <path class="africa-shoreline" :d="autonomousCitiesInset.africaCoastPath" />
-              <path class="africa-coastline" :d="autonomousCitiesInset.africaCoastPath" />
-              <g v-for="detail in autonomousCitiesInset.details" :key="detail.code" class="autonomous-detail">
+              <g :transform="autonomousCitiesInset.contentTransform">
                 <rect
-                  class="autonomous-detail-water"
-                  :x="detail.frame.x"
-                  :y="detail.frame.y"
-                  :width="detail.frame.width"
-                  :height="detail.frame.height"
-                  :rx="detail.frame.rx"
+                  class="autonomous-sea"
+                  :x="autonomousCitiesInset.sea.x"
+                  :y="autonomousCitiesInset.sea.y"
+                  :width="autonomousCitiesInset.sea.width"
+                  :height="autonomousCitiesInset.sea.height"
                 />
-                <path class="autonomous-detail-terrain" :d="detail.terrainPath" />
-                <path class="autonomous-detail-coast" :d="detail.coastPath" />
-                <rect
-                  class="autonomous-detail-frame"
-                  :x="detail.frame.x"
-                  :y="detail.frame.y"
-                  :width="detail.frame.width"
-                  :height="detail.frame.height"
-                  :rx="detail.frame.rx"
-                />
-              </g>
-              <g v-for="pin in autonomousCitiesInset.pins" :key="pin.code" class="autonomous-location-pin">
-                <rect :x="pin.x - 3.5" :y="pin.y - 3.5" width="7" height="7" rx="1" />
-                <path :d="`M${pin.x - 6},${pin.y}H${pin.x + 6}M${pin.x},${pin.y - 6}V${pin.y + 6}`" />
+                <path class="africa-land" :d="autonomousCitiesInset.africaLandPath" />
+                <path class="africa-coastline" :d="autonomousCitiesInset.africaCoastPath" />
+                <g v-for="detail in autonomousCitiesInset.details" :key="detail.code" class="autonomous-detail">
+                  <rect
+                    class="autonomous-detail-water"
+                    :x="detail.frame.x"
+                    :y="detail.frame.y"
+                    :width="detail.frame.width"
+                    :height="detail.frame.height"
+                    :rx="detail.frame.rx"
+                  />
+                  <path class="autonomous-detail-terrain" :d="detail.terrainPath" />
+                  <path class="autonomous-detail-coast" :d="detail.coastPath" />
+                  <rect
+                    class="autonomous-detail-frame"
+                    :x="detail.frame.x"
+                    :y="detail.frame.y"
+                    :width="detail.frame.width"
+                    :height="detail.frame.height"
+                    :rx="detail.frame.rx"
+                  />
+                </g>
+                <g v-for="pin in autonomousCitiesInset.pins" :key="pin.code" class="autonomous-location-pin">
+                  <rect :x="pin.x - 3.5" :y="pin.y - 3.5" width="7" height="7" rx="1" />
+                  <path :d="`M${pin.x - 6},${pin.y}H${pin.x + 6}M${pin.x},${pin.y - 6}V${pin.y + 6}`" />
+                </g>
               </g>
             </g>
 
@@ -439,6 +438,7 @@ function clampNumber(value: number, min: number, max: number) {
                 'autonomous-city': province.inset === 'ceuta' || province.inset === 'melilla',
               }"
               :style="{ '--province-color': provinceColor(province) }"
+              :transform="provinceTransform(province)"
               role="button"
               tabindex="0"
               :aria-label="`${province.name}, jugador ${provinceOwner(province)}`"
@@ -703,91 +703,61 @@ function clampNumber(value: number, min: number, max: number) {
 }
 
 .autonomous-sea {
-  fill: color-mix(in srgb, var(--color-bg) 70%, #1f6172);
+  fill: var(--color-surface);
 }
 
-.bathymetry-line {
-  fill: none;
-  opacity: 0.24;
-  stroke: color-mix(in srgb, var(--color-muted) 62%, #70b8c7);
-  stroke-linecap: round;
-  stroke-width: 0.85;
-  vector-effect: non-scaling-stroke;
+.africa-land {
+  fill: color-mix(in srgb, var(--color-border) 34%, var(--color-surface));
+  opacity: 0.72;
 }
 
-.spain-coast-context {
+.africa-coastline {
   fill: none;
-  opacity: 0.2;
-  stroke: color-mix(in srgb, var(--color-muted) 58%, var(--color-surface));
+  opacity: 0.8;
+  stroke: color-mix(in srgb, var(--color-border-strong) 76%, var(--color-surface));
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 
-.africa-land {
-  fill: color-mix(in srgb, var(--color-surface) 70%, #7f8a64);
-  opacity: 0.86;
-}
-
-.africa-shoreline {
-  fill: none;
-  opacity: 0.28;
-  stroke: color-mix(in srgb, var(--color-accent) 55%, #ecdfaa);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 4.2;
-  vector-effect: non-scaling-stroke;
-}
-
-.africa-coastline {
-  fill: none;
-  opacity: 0.92;
-  stroke: color-mix(in srgb, var(--color-border-strong) 72%, #eef0df);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.15;
-  vector-effect: non-scaling-stroke;
-}
-
 .autonomous-detail-water {
-  fill: color-mix(in srgb, var(--color-bg) 64%, #245e70);
-  opacity: 0.98;
+  fill: var(--color-surface);
 }
 
 .autonomous-detail-terrain {
-  fill: color-mix(in srgb, var(--color-surface) 74%, #77815f);
-  opacity: 0.9;
+  fill: color-mix(in srgb, var(--color-border) 32%, var(--color-surface));
+  opacity: 0.82;
 }
 
 .autonomous-detail-coast {
   fill: none;
-  opacity: 0.82;
-  stroke: color-mix(in srgb, var(--color-border-strong) 64%, #f4e8b8);
+  opacity: 0.72;
+  stroke: color-mix(in srgb, var(--color-border-strong) 78%, var(--color-surface));
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 1.05;
+  stroke-width: 0.95;
   vector-effect: non-scaling-stroke;
 }
 
 .autonomous-detail-frame {
   fill: none;
-  stroke: color-mix(in srgb, var(--color-muted) 60%, var(--color-text));
-  stroke-width: 1.15;
+  stroke: var(--color-border);
+  stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 
 .autonomous-location-pin rect {
-  fill: color-mix(in srgb, var(--color-bg) 76%, transparent);
-  stroke: color-mix(in srgb, var(--color-text) 76%, var(--color-accent));
+  fill: color-mix(in srgb, var(--color-bg) 82%, transparent);
+  stroke: var(--color-border-strong);
   stroke-width: 0.9;
   vector-effect: non-scaling-stroke;
 }
 
 .autonomous-location-pin path {
   fill: none;
-  opacity: 0.9;
-  stroke: color-mix(in srgb, var(--color-text) 74%, var(--color-accent));
+  opacity: 0.82;
+  stroke: var(--color-border-strong);
   stroke-linecap: round;
   stroke-width: 0.7;
   vector-effect: non-scaling-stroke;
@@ -844,7 +814,7 @@ function clampNumber(value: number, min: number, max: number) {
 
 .province-cell.autonomous-city .province-base {
   opacity: 0.94;
-  stroke: color-mix(in srgb, var(--color-text) 74%, var(--color-bg));
+  stroke: var(--color-bg);
   stroke-width: 1.05;
 }
 
@@ -892,9 +862,9 @@ function clampNumber(value: number, min: number, max: number) {
 
 .province-label-leader {
   fill: none;
-  opacity: 0.9;
+  opacity: 0.74;
   pointer-events: none;
-  stroke: color-mix(in srgb, var(--color-text) 66%, var(--color-accent));
+  stroke: var(--color-border-strong);
   stroke-linecap: round;
   stroke-width: 0.95;
   vector-effect: non-scaling-stroke;
