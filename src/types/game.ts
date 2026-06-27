@@ -5,6 +5,54 @@ export interface UserDto {
   email: string
 }
 
+export interface UserSettingsDto {
+  avatarKey: string
+}
+
+export interface UserAutocompleteDto {
+  idUsuario: number
+  username: string
+  nombreUsuario: string
+  avatarKey: string
+}
+
+export interface UserRelationDto {
+  idRelacionUsuario: number
+  idUsuarioOrigen: number
+  idUsuarioDestino: number
+  idOtroUsuario: number
+  usernameOtroUsuario: string
+  nombreOtroUsuario: string
+  avatarKeyOtroUsuario: string
+  estado: 'pendiente' | 'aceptada' | 'rechazada' | string
+  pendienteParaMi: boolean
+  solicitadaPorMi: boolean
+  dateTime: string
+  updatedAt: string
+}
+
+export interface ChatConversationDto {
+  idUsuario: number
+  username: string
+  nombreUsuario: string
+  avatarKey: string
+  ultimoMensaje: string | null
+  ultimoMensajeEn: string | null
+  mensajesNoLeidos: number
+  puedeChatear: boolean
+}
+
+export interface ChatMessageDto {
+  idMensaje: number
+  idUsuarioEmisor: number
+  idUsuarioReceptor: number
+  mensaje: string
+  leido: boolean
+  mio: boolean
+  dateTime: string
+  leidoEn: string | null
+}
+
 export interface WorldDto {
   id: number
   code: string

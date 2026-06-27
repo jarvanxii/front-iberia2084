@@ -1,33 +1,13 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import UserSocialMenu from '@/components/layout/UserSocialMenu.vue'
 import { useSessionStore } from '@/stores/session'
-import { partyLogo } from '@/utils/partyLogos'
 
 const router = useRouter()
 const route = useRoute()
 const session = useSessionStore()
-const menuOpen = ref(false)
 const appLogoUrl = '/logo-iberia84.png'
 
-const state = computed(() => session.state)
-const player = computed(() => state.value?.player ?? null)
-const worlds = computed(() => state.value?.worlds ?? session.worlds)
-const activeWorld = computed(() => {
-  if (!player.value) return null
-  return worlds.value.find((world) => world.id === player.value?.worldId) ?? null
-})
-const playerInitials = computed(() => {
-  const source = player.value?.leaderName || 'IB'
-  return source
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
-})
-const userDisplayName = computed(() => player.value?.leaderName ?? 'Sesión activa')
-const userPartyLogo = computed(() => (player.value ? partyLogo(player.value.faction.code) : ''))
 
 const navItems = [
   { to: { name: 'home' }, routeName: 'home', label: 'Inicio' },
@@ -44,47 +24,10 @@ function isActiveRoute(routeName: string) {
 }
 
 async function logout() {
-  menuOpen.value = false
   session.logout()
   await router.push({ name: 'access' })
 }
 
-function closeUserMenu() {
-  menuOpen.value = false
-}
-
-async function leaveToMainMenu() {
-  menuOpen.value = false
-  await router.push({ name: 'home' })
-}
-
-async function openAllianceChat() {
-  menuOpen.value = false
-  if (!activeWorld.value) {
-    await router.push({ name: 'home' })
-    return
-  }
-  await router.push({ name: 'gameAlliance', params: { worldCode: activeWorld.value.code } })
-}
-
-function closeOnOutsideClick(event: MouseEvent) {
-  if (!(event.target instanceof Element)) return
-  if (!event.target.closest('.home-user')) menuOpen.value = false
-}
-
-function closeOnEscape(event: KeyboardEvent) {
-  if (event.key === 'Escape') menuOpen.value = false
-}
-
-onMounted(() => {
-  window.addEventListener('click', closeOnOutsideClick)
-  window.addEventListener('keydown', closeOnEscape)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('click', closeOnOutsideClick)
-  window.removeEventListener('keydown', closeOnEscape)
-})
 </script>
 
 <template>
@@ -107,40 +50,7 @@ onBeforeUnmount(() => {
         </RouterLink>
       </nav>
 
-      <div class="home-user">
-        <button
-          type="button"
-          class="home-user-button"
-          :aria-expanded="menuOpen"
-          aria-label="Abrir menú de usuario"
-          @click.stop="menuOpen = !menuOpen"
-        >
-          <span class="home-user-avatar">
-            <img v-if="userPartyLogo" :src="userPartyLogo" :alt="''" />
-            <b v-else>{{ playerInitials }}</b>
-          </span>
-          <span class="home-user-copy">
-            <strong>{{ userDisplayName }}</strong>
-          </span>
-        </button>
-
-        <section v-if="menuOpen" class="home-user-menu" aria-label="Menú de usuario" @click.stop>
-          <div class="menu-user-summary">
-            <strong>{{ userDisplayName }}</strong>
-            <span>Cuenta de Iberia 2084</span>
-          </div>
-
-          <div class="home-user-actions">
-            <button type="button" class="home-menu-action" @click="closeUserMenu">Preferencias</button>
-            <button type="button" class="home-menu-action" @click="closeUserMenu">Notificaciones</button>
-            <button type="button" class="home-menu-action" @click="closeUserMenu">Cuenta y seguridad</button>
-            <button type="button" class="home-menu-action" @click="openAllianceChat">Chat</button>
-            <button type="button" class="home-menu-action" @click="closeUserMenu">Amigos</button>
-            <button type="button" class="home-menu-action" @click="leaveToMainMenu">Salir al menú principal</button>
-            <button type="button" class="home-menu-action danger" @click="logout">Cerrar sesión</button>
-          </div>
-        </section>
-      </div>
+      <UserSocialMenu class="home-user" context="home" @logout="logout" />
     </div>
   </header>
 </template>

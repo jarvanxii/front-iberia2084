@@ -1,12 +1,30 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '@/services/api'
-import type { AuthMessageResponse, AuthProviderDto, AuthResponse, FactionDto, GameStateDto, WorldDto } from '@/types/game'
+import type {
+  AuthMessageResponse,
+  AuthProviderDto,
+  AuthResponse,
+  FactionDto,
+  GameStateDto,
+  UserDto,
+  WorldDto,
+} from '@/types/game'
 
 const TOKEN_KEY = 'iberia2084.token'
+const USER_KEY = 'iberia2084.user'
+
+function storedUser(): UserDto | null {
+  try {
+    return JSON.parse(localStorage.getItem(USER_KEY) ?? 'null') as UserDto | null
+  } catch {
+    return null
+  }
+}
 
 export const useSessionStore = defineStore('session', () => {
   const token = ref<string | null>(localStorage.getItem(TOKEN_KEY))
+  const user = ref<UserDto | null>(storedUser())
   const state = ref<GameStateDto | null>(null)
   const worlds = ref<WorldDto[]>([])
   const factions = ref<FactionDto[]>([])
@@ -20,7 +38,9 @@ export const useSessionStore = defineStore('session', () => {
 
   function applyAuth(response: AuthResponse) {
     token.value = response.token
+    user.value = response.user
     localStorage.setItem(TOKEN_KEY, response.token)
+    localStorage.setItem(USER_KEY, JSON.stringify(response.user))
   }
 
   async function loadBootstrap() {
@@ -198,13 +218,16 @@ export const useSessionStore = defineStore('session', () => {
 
   function logout() {
     token.value = null
+    user.value = null
     state.value = null
     activeWorldCode.value = ''
     localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(USER_KEY)
   }
 
   return {
     token,
+    user,
     state,
     worlds,
     factions,

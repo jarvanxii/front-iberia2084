@@ -5,10 +5,15 @@ import type {
   AuthMessageResponse,
   AuthProviderDto,
   AuthResponse,
+  ChatConversationDto,
+  ChatMessageDto,
   ContactMessageResponse,
   FactionDto,
   GameStateDto,
   ResearchDto,
+  UserAutocompleteDto,
+  UserRelationDto,
+  UserSettingsDto,
   WorldDto,
 } from '@/types/game'
 
@@ -55,6 +60,29 @@ function post<T>(path: string, body: JsonBody, token?: string, worldCode?: strin
   )
 }
 
+function put<T>(path: string, body: JsonBody, token?: string, worldCode?: string): Promise<T> {
+  return request<T>(
+    path,
+    {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    },
+    token,
+    worldCode,
+  )
+}
+
+function del(path: string, token?: string, worldCode?: string): Promise<void> {
+  return request<void>(
+    path,
+    {
+      method: 'DELETE',
+    },
+    token,
+    worldCode,
+  )
+}
+
 export const api = {
   bootstrap: () => request<{ worlds: WorldDto[]; factions: FactionDto[] }>('/api/bootstrap'),
   authProviders: () => request<AuthProviderDto[]>('/api/auth/providers'),
@@ -66,6 +94,30 @@ export const api = {
   recoveryStart: (body: JsonBody) => post<AuthMessageResponse>('/api/auth/recovery/start', body),
   recoveryConfirm: (body: JsonBody) => post<AuthResponse>('/api/auth/recovery/confirm', body),
   state: (token: string, worldCode?: string) => request<GameStateDto>('/api/game/state', {}, token, worldCode),
+  userSettings: (token: string) => request<UserSettingsDto>('/api/ajustes-usuario/me', {}, token),
+  updateUserSettings: (token: string, body: JsonBody) => put<UserSettingsDto>('/api/ajustes-usuario/me', body, token),
+  userRelations: (token: string) => request<UserRelationDto[]>('/api/relaciones-usuarios/me', {}, token),
+  searchUsers: (token: string, text: string) =>
+    request<UserAutocompleteDto[]>(
+      `/api/relaciones-usuarios/buscar?texto=${encodeURIComponent(text)}`,
+      {},
+      token,
+    ),
+  createUserRelation: (token: string, body: JsonBody) =>
+    post<UserRelationDto>('/api/relaciones-usuarios/solicitudes', body, token),
+  acceptUserRelation: (token: string, relationId: number) =>
+    post<UserRelationDto>(`/api/relaciones-usuarios/${relationId}/aceptar`, {}, token),
+  rejectUserRelation: (token: string, relationId: number) =>
+    post<UserRelationDto>(`/api/relaciones-usuarios/${relationId}/rechazar`, {}, token),
+  deleteUserRelation: (token: string, relationId: number) =>
+    del(`/api/relaciones-usuarios/${relationId}`, token),
+  chatConversations: (token: string) => request<ChatConversationDto[]>('/api/chat/conversaciones', {}, token),
+  markChatConversationsRead: (token: string) =>
+    put<ChatConversationDto[]>('/api/chat/conversaciones/leidas', {}, token),
+  chatMessages: (token: string, userId: number) =>
+    request<ChatMessageDto[]>(`/api/chat/conversaciones/${userId}/mensajes`, {}, token),
+  sendChatMessage: (token: string, userId: number, body: JsonBody) =>
+    post<ChatMessageDto>(`/api/chat/conversaciones/${userId}/mensajes`, body, token),
   joinWorld: (token: string, body: JsonBody) => post<GameStateDto>('/api/worlds/join', body, token),
   collect: (token: string, worldCode?: string) => post<GameStateDto>('/api/game/collect', {}, token, worldCode),
   onboarding: (token: string, body: JsonBody, worldCode?: string) =>

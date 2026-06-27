@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import UserSocialMenu from '@/components/layout/UserSocialMenu.vue'
 import { useSessionStore } from '@/stores/session'
 import { resourceIcon } from '@/utils/resourceIcons'
 import { partyLogo } from '@/utils/partyLogos'
@@ -9,7 +10,6 @@ import { worldSpeedRatio } from '@/utils/worldSpeed'
 const router = useRouter()
 const route = useRoute()
 const session = useSessionStore()
-const userMenuOpen = ref(false)
 const appLogoUrl = '/logo-iberia84.png'
 
 let poller: number | undefined
@@ -33,17 +33,6 @@ const coreResources = computed(() =>
     return resource ? [resource] : []
   }),
 )
-const playerInitials = computed(() => {
-  const source = player.value?.leaderName || player.value?.faction.shortName || 'IB'
-  return source
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
-})
-const playerHandle = computed(() => player.value?.leaderName ?? 'Jugador')
-const playerParty = computed(() => player.value?.faction.shortName ?? 'Partido')
 const playerPartyLogo = computed(() => (player.value ? partyLogo(player.value.faction.code) : ''))
 
 const navItems = [
@@ -71,32 +60,12 @@ function statusLabel(status?: string) {
 }
 
 async function logout() {
-  userMenuOpen.value = false
   session.logout()
   await router.push({ name: 'access' })
 }
 
 async function leaveToMainMenu() {
-  userMenuOpen.value = false
   await router.push({ name: 'home' })
-}
-
-async function openAllianceChat() {
-  userMenuOpen.value = false
-  await router.push(worldRoute('gameAlliance'))
-}
-
-function closeUserMenu() {
-  userMenuOpen.value = false
-}
-
-function closeOnOutsideClick(event: MouseEvent) {
-  if (!(event.target instanceof Element)) return
-  if (!event.target.closest('.game-user-shell')) userMenuOpen.value = false
-}
-
-function closeOnEscape(event: KeyboardEvent) {
-  if (event.key === 'Escape') userMenuOpen.value = false
 }
 
 function worldRoute(name: string) {
@@ -108,8 +77,6 @@ function navRoute(item: (typeof navItems)[number]) {
 }
 
 onMounted(async () => {
-  window.addEventListener('click', closeOnOutsideClick)
-  window.addEventListener('keydown', closeOnEscape)
   if (!state.value) await session.refresh(currentWorldCode.value)
   poller = window.setInterval(() => {
     void session.refresh(currentWorldCode.value)
@@ -117,8 +84,6 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('click', closeOnOutsideClick)
-  window.removeEventListener('keydown', closeOnEscape)
   if (poller) window.clearInterval(poller)
 })
 </script>
@@ -166,41 +131,13 @@ onUnmounted(() => {
           </article>
         </section>
 
-        <div class="game-user-shell">
-          <button
-            type="button"
-            class="avatar-menu-button"
-            :aria-expanded="userMenuOpen"
-            aria-label="Abrir menú de jugador"
-            @click.stop="userMenuOpen = !userMenuOpen"
-          >
-            <span class="avatar-frame" aria-hidden="true">
-              <span class="avatar-head"></span>
-              <span class="avatar-shoulders"></span>
-            </span>
-            <span class="avatar-status" aria-hidden="true"></span>
-          </button>
-
-          <section v-if="userMenuOpen" class="game-user-menu" aria-label="Menú de jugador" @click.stop>
-            <div class="game-user-identity">
-              <span class="identity-avatar">{{ playerInitials }}</span>
-              <div>
-                <strong>{{ playerHandle }}</strong>
-                <span>{{ playerParty }} · {{ activeWorld?.name ?? 'Sin partida activa' }}</span>
-              </div>
-            </div>
-
-            <div class="game-user-actions">
-              <button type="button" class="game-user-action" @click="closeUserMenu">Preferencias</button>
-              <button type="button" class="game-user-action" @click="closeUserMenu">Notificaciones</button>
-              <button type="button" class="game-user-action" @click="closeUserMenu">Cuenta y seguridad</button>
-              <button type="button" class="game-user-action" @click="openAllianceChat">Chat</button>
-              <button type="button" class="game-user-action" @click="closeUserMenu">Amigos</button>
-              <button type="button" class="game-user-action" @click="leaveToMainMenu">Salir al menú principal</button>
-              <button type="button" class="game-user-action danger" @click="logout">Cerrar sesión</button>
-            </div>
-          </section>
-        </div>
+        <UserSocialMenu
+          class="game-user-shell"
+          context="game"
+          show-home-action
+          @logout="logout"
+          @leave-home="leaveToMainMenu"
+        />
       </div>
 
       <nav class="screen-nav" aria-label="Pantallas de Iberia 2084">
