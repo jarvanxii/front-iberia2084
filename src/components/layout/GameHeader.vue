@@ -10,7 +10,6 @@ import { worldSpeedRatio } from '@/utils/worldSpeed'
 const router = useRouter()
 const route = useRoute()
 const session = useSessionStore()
-const appLogoUrl = '/logo-iberia84.png'
 
 let poller: number | undefined
 
@@ -36,12 +35,11 @@ const coreResources = computed(() =>
 const playerPartyLogo = computed(() => (player.value ? partyLogo(player.value.faction.code) : ''))
 
 const navItems = [
-  { name: 'homeGames', label: 'Partidas', worldScoped: false },
-  { name: 'gameCity', label: 'Provincia', worldScoped: true },
-  { name: 'gameTroops', label: 'Unidades', worldScoped: true },
-  { name: 'gameAlliance', label: 'Alianza', worldScoped: true },
-  { name: 'gameMap', label: 'Mapa', worldScoped: true },
-  { name: 'gameIberopedia', label: 'Iberopedia', worldScoped: true },
+  { name: 'gameCity', label: 'Provincia' },
+  { name: 'gameMap', label: 'Mapa' },
+  { name: 'gameTroops', label: 'Tropas' },
+  { name: 'gameAttacks', label: 'Ataques' },
+  { name: 'gameAlliance', label: 'Alianza' },
 ]
 
 function formatResourceAmount(value: number) {
@@ -69,7 +67,7 @@ function worldRoute(name: string) {
 }
 
 function navRoute(item: (typeof navItems)[number]) {
-  return item.worldScoped ? worldRoute(item.name) : { name: item.name }
+  return worldRoute(item.name)
 }
 
 onMounted(async () => {
@@ -88,14 +86,6 @@ onUnmounted(() => {
   <div v-if="state && player" class="game-command-bar" :style="{ '--faction': player.faction.color }">
     <header class="game-header" aria-label="Estado del jugador">
       <div class="header-primary">
-        <RouterLink class="brand-block" :to="{ name: 'home' }" aria-label="Volver a inicio">
-          <img :src="appLogoUrl" alt="" />
-          <span class="brand-copy">
-            <strong>Iberia 2084</strong>
-            <em>Mando provincial</em>
-          </span>
-        </RouterLink>
-
         <section class="player-block" aria-label="Partida activa">
           <span class="player-party-logo" aria-hidden="true">
             <img v-if="playerPartyLogo" :src="playerPartyLogo" :alt="''" />
@@ -190,69 +180,16 @@ onUnmounted(() => {
 
 .header-primary {
   display: grid;
-  grid-template-columns: 164px minmax(270px, 1fr) minmax(360px, 0.72fr) 54px;
+  grid-template-columns: minmax(300px, 1fr) minmax(360px, 0.78fr) 54px;
   gap: 0.62rem;
   align-items: center;
   min-height: 58px;
 }
 
-.brand-block,
 .player-block,
 .screen-nav-link,
 .resource-pill {
   min-width: 0;
-}
-
-.brand-block {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  gap: 0.48rem;
-  align-items: center;
-  width: 164px;
-  min-height: 54px;
-  border: 1px solid rgba(125, 190, 255, 0.12);
-  border-radius: var(--radius-lg);
-  padding: 0.28rem 0.44rem;
-  color: var(--header-blue-strong);
-  background:
-    linear-gradient(135deg, rgba(90, 167, 232, 0.08), transparent 58%),
-    rgba(3, 10, 18, 0.24);
-  text-decoration: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
-}
-
-.brand-block img {
-  display: block;
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 12px rgba(90, 167, 232, 0.2));
-}
-
-.brand-copy {
-  display: grid;
-  min-width: 0;
-  gap: 0.12rem;
-}
-
-.brand-block strong {
-  color: var(--color-text);
-  overflow: hidden;
-  font-size: 0.98rem;
-  line-height: 0.88;
-  letter-spacing: 0;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.brand-block em {
-  color: color-mix(in srgb, var(--header-blue-strong) 82%, var(--color-muted));
-  font-size: 0.64rem;
-  font-style: normal;
-  font-weight: 950;
-  letter-spacing: 0;
-  text-transform: uppercase;
 }
 
 .player-block {
@@ -359,7 +296,7 @@ onUnmounted(() => {
 
 .screen-nav {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.18rem;
   min-width: 0;
   border: 1px solid rgba(125, 190, 255, 0.12);
@@ -483,7 +420,7 @@ onUnmounted(() => {
   }
 
   .header-primary {
-    grid-template-columns: 164px minmax(0, 1fr) 54px;
+    grid-template-columns: minmax(0, 1fr) 54px;
     grid-template-rows: auto auto;
     gap: 0.34rem 0.52rem;
   }
@@ -496,7 +433,7 @@ onUnmounted(() => {
   }
 
   .game-user-shell {
-    grid-column: 3;
+    grid-column: 2;
     grid-row: 1;
   }
 }
@@ -508,31 +445,8 @@ onUnmounted(() => {
   }
 
   .header-primary {
-    grid-template-columns: 118px minmax(0, 1fr) 42px;
+    grid-template-columns: minmax(0, 1fr) 42px;
     gap: 0.28rem;
-  }
-
-  .brand-block {
-    grid-template-columns: 34px minmax(0, 1fr);
-    gap: 0.3rem;
-    width: 118px;
-    min-height: 46px;
-    padding: 0.22rem 0.3rem;
-  }
-
-  .brand-block img {
-    width: 34px;
-    height: 34px;
-  }
-
-  .brand-block strong {
-    font-size: 0.82rem;
-    line-height: 1;
-  }
-
-  .brand-block em {
-    display: block;
-    font-size: 0.54rem;
   }
 
   .player-block {
@@ -609,22 +523,7 @@ onUnmounted(() => {
 
 @media (max-width: 430px) {
   .header-primary {
-    grid-template-columns: 56px minmax(0, 1fr) 42px;
-  }
-
-  .brand-block {
-    grid-template-columns: 1fr;
-    width: 56px;
-    justify-items: center;
-  }
-
-  .brand-block img {
-    width: 36px;
-    height: 36px;
-  }
-
-  .brand-copy {
-    display: none;
+    grid-template-columns: minmax(0, 1fr) 42px;
   }
 
   .player-party-logo,
