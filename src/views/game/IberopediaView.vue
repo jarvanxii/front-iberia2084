@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import type { ResearchDefinitionDto, ResourceCostDto, TroopDefinitionDto } from '@/types/game'
 import { buildingImage } from '@/utils/buildingImages'
@@ -32,7 +33,7 @@ interface TopicDefinition {
 }
 
 const session = useSessionStore()
-const activeTopic = ref<TopicKey>('resumen')
+const route = useRoute()
 
 const topics: TopicDefinition[] = [
   {
@@ -108,6 +109,9 @@ const topics: TopicDefinition[] = [
     description: 'Operaciones arriesgadas y planes de respuesta ante crisis.',
   },
 ]
+
+const topicKeys = topics.map((topic) => topic.key)
+const activeTopic = ref<TopicKey>(topicFromRoute())
 
 const state = computed(() => session.state)
 const resources = computed(() => state.value?.resources ?? [])
@@ -236,6 +240,18 @@ function unitAccent(unit: TroopDefinitionDto) {
   if (unit.attackType === 'MEDIA') return 'var(--color-info)'
   return 'var(--color-accent)'
 }
+
+function topicFromRoute(): TopicKey {
+  const queryTopic = typeof route.query.tema === 'string' ? route.query.tema : ''
+  return topicKeys.includes(queryTopic as TopicKey) ? (queryTopic as TopicKey) : 'resumen'
+}
+
+watch(
+  () => route.query.tema,
+  () => {
+    activeTopic.value = topicFromRoute()
+  },
+)
 </script>
 
 <template>
@@ -629,7 +645,7 @@ function unitAccent(unit: TroopDefinitionDto) {
 
 .iberopedia-sidebar {
   position: sticky;
-  top: calc(var(--game-header-height) + var(--space-page));
+  top: calc(var(--active-header-height, var(--game-header-height)) + var(--space-page));
   display: grid;
   gap: var(--space-3);
   border: 1px solid var(--color-border);

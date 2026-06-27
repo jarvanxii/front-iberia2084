@@ -61,10 +61,12 @@ p {
 }
 
 .app-shell--home {
+  --active-header-height: var(--home-header-height);
   padding-top: var(--home-header-height);
 }
 
 .app-shell--game {
+  --active-header-height: var(--game-header-height);
   padding: calc(var(--game-header-height) + var(--space-page)) var(--space-page) var(--space-page);
 }
 

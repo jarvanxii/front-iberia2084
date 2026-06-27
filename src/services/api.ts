@@ -12,6 +12,7 @@ import type {
   GameStateDto,
   ResearchDto,
   UserAutocompleteDto,
+  UserDto,
   UserRelationDto,
   UserSettingsDto,
   WorldDto,
@@ -96,6 +97,11 @@ export const api = {
   state: (token: string, worldCode?: string) => request<GameStateDto>('/api/game/state', {}, token, worldCode),
   userSettings: (token: string) => request<UserSettingsDto>('/api/ajustes-usuario/me', {}, token),
   updateUserSettings: (token: string, body: JsonBody) => put<UserSettingsDto>('/api/ajustes-usuario/me', body, token),
+  updateAccountProfile: (token: string, body: JsonBody) => put<UserDto>('/api/cuenta/me', body, token),
+  requestEmailChange: (token: string, body: JsonBody) =>
+    post<AuthMessageResponse>('/api/cuenta/email/start', body, token),
+  confirmEmailChange: (token: string, body: JsonBody) => post<UserDto>('/api/cuenta/email/confirm', body, token),
+  changePassword: (token: string, body: JsonBody) => post<AuthMessageResponse>('/api/cuenta/password', body, token),
   userRelations: (token: string) => request<UserRelationDto[]>('/api/relaciones-usuarios/me', {}, token),
   searchUsers: (token: string, text: string) =>
     request<UserAutocompleteDto[]>(

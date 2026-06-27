@@ -1,6 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AuthView from '@/views/AuthView.vue'
 import LegalView from '@/views/LegalView.vue'
+import AccountChatView from '@/views/account/AccountChatView.vue'
+import AccountFriendsView from '@/views/account/AccountFriendsView.vue'
+import AccountPaymentsView from '@/views/account/AccountPaymentsView.vue'
+import AccountPreferencesView from '@/views/account/AccountPreferencesView.vue'
+import AccountSecurityView from '@/views/account/AccountSecurityView.vue'
 import AllianceView from '@/views/game/AllianceView.vue'
 import CityView from '@/views/game/CityView.vue'
 import GameHomeView from '@/views/game/GameHomeView.vue'
@@ -23,8 +28,7 @@ const router = createRouter({
     { path: '/provincia', redirect: { name: 'home' } },
     { path: '/alianza', redirect: { name: 'home' } },
     { path: '/mapa', redirect: { name: 'home' } },
-    { path: '/iberipedia', redirect: { name: 'home' } },
-    { path: '/iberopedia', redirect: { name: 'home' } },
+    { path: '/iberipedia', redirect: { name: 'homeIberopedia' } },
     {
       path: '/home',
       name: 'home',
@@ -38,35 +42,66 @@ const router = createRouter({
       meta: { requiresAuth: true, header: 'home', shell: 'home', homeSection: 'partidas' },
     },
     {
+      path: '/iberopedia',
+      name: 'homeIberopedia',
+      component: IberopediaView,
+      meta: { requiresAuth: true, header: 'home', shell: 'home' },
+    },
+    {
       path: '/partidos',
       name: 'homeParties',
-      component: GameHomeView,
-      meta: { requiresAuth: true, header: 'home', shell: 'home', homeSection: 'partidos' },
+      redirect: { name: 'homeIberopedia', query: { tema: 'partidos' } },
     },
-    { path: '/tropas', redirect: { name: 'homeTroops' } },
+    { path: '/tropas', redirect: { name: 'homeIberopedia', query: { tema: 'unidades' } } },
     {
       path: '/unidades',
       name: 'homeTroops',
-      component: GameHomeView,
-      meta: { requiresAuth: true, header: 'home', shell: 'home', homeSection: 'unidades' },
+      redirect: { name: 'homeIberopedia', query: { tema: 'unidades' } },
     },
     {
       path: '/edificios',
       name: 'homeBuildings',
-      component: GameHomeView,
-      meta: { requiresAuth: true, header: 'home', shell: 'home', homeSection: 'edificios' },
+      redirect: { name: 'homeIberopedia', query: { tema: 'edificios' } },
     },
     {
       path: '/eventos',
       name: 'homeEvents',
-      component: GameHomeView,
-      meta: { requiresAuth: true, header: 'home', shell: 'home', homeSection: 'eventos' },
+      redirect: { name: 'homeIberopedia', query: { tema: 'eventos' } },
     },
     {
       path: '/investigaciones',
       name: 'homeResearch',
-      component: GameHomeView,
-      meta: { requiresAuth: true, header: 'home', shell: 'home', homeSection: 'investigaciones' },
+      redirect: { name: 'homeIberopedia', query: { tema: 'investigaciones' } },
+    },
+    {
+      path: '/chat',
+      name: 'accountChat',
+      component: AccountChatView,
+      meta: { requiresAuth: true, header: 'home', shell: 'home' },
+    },
+    {
+      path: '/amigos',
+      name: 'accountFriends',
+      component: AccountFriendsView,
+      meta: { requiresAuth: true, header: 'home', shell: 'home' },
+    },
+    {
+      path: '/preferencias',
+      name: 'accountPreferences',
+      component: AccountPreferencesView,
+      meta: { requiresAuth: true, header: 'home', shell: 'home' },
+    },
+    {
+      path: '/cuenta-seguridad',
+      name: 'accountSecurity',
+      component: AccountSecurityView,
+      meta: { requiresAuth: true, header: 'home', shell: 'home' },
+    },
+    {
+      path: '/pagos-domiciliaciones',
+      name: 'accountPayments',
+      component: AccountPaymentsView,
+      meta: { requiresAuth: true, header: 'home', shell: 'home' },
     },
     {
       path: '/mundo/:worldCode',
@@ -82,6 +117,11 @@ const router = createRouter({
         { path: 'mapa', name: 'gameMap', component: SpainMapView },
         { path: 'iberipedia', redirect: (to) => ({ name: 'gameIberopedia', params: to.params }) },
         { path: 'iberopedia', name: 'gameIberopedia', component: IberopediaView },
+        { path: 'cuenta/chat', name: 'gameAccountChat', component: AccountChatView },
+        { path: 'cuenta/amigos', name: 'gameAccountFriends', component: AccountFriendsView },
+        { path: 'cuenta/preferencias', name: 'gameAccountPreferences', component: AccountPreferencesView },
+        { path: 'cuenta/seguridad', name: 'gameAccountSecurity', component: AccountSecurityView },
+        { path: 'cuenta/pagos', name: 'gameAccountPayments', component: AccountPaymentsView },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: { name: 'home' } },

@@ -64,10 +64,6 @@ async function logout() {
   await router.push({ name: 'access' })
 }
 
-async function leaveToMainMenu() {
-  await router.push({ name: 'home' })
-}
-
 function worldRoute(name: string) {
   return { name, params: { worldCode: currentWorldCode.value } }
 }
@@ -131,13 +127,7 @@ onUnmounted(() => {
           </article>
         </section>
 
-        <UserSocialMenu
-          class="game-user-shell"
-          context="game"
-          show-home-action
-          @logout="logout"
-          @leave-home="leaveToMainMenu"
-        />
+        <UserSocialMenu class="game-user-shell" @logout="logout" />
       </div>
 
       <nav class="screen-nav" aria-label="Pantallas de Iberia 2084">
@@ -200,7 +190,7 @@ onUnmounted(() => {
 
 .header-primary {
   display: grid;
-  grid-template-columns: 164px minmax(270px, 1fr) minmax(360px, 0.72fr) 50px;
+  grid-template-columns: 164px minmax(270px, 1fr) minmax(360px, 0.72fr) 54px;
   gap: 0.62rem;
   align-items: center;
   min-height: 58px;
@@ -487,187 +477,13 @@ onUnmounted(() => {
   justify-self: end;
 }
 
-.avatar-menu-button {
-  position: relative;
-  display: grid;
-  width: 50px;
-  height: 50px;
-  place-items: center;
-  border: 1px solid rgba(125, 190, 255, 0.12);
-  border-radius: var(--radius-lg);
-  padding: 0;
-  background: rgba(3, 10, 18, 0.26);
-  transition:
-    border-color 0.16s ease,
-    filter 0.16s ease;
-}
-
-.avatar-frame,
-.identity-avatar {
-  display: grid;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--faction) 48%, var(--color-accent));
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  background:
-    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--faction) 24%, transparent), transparent 58%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.16)),
-    color-mix(in srgb, var(--color-surface-soft) 84%, black);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 18px color-mix(in srgb, var(--faction) 13%, transparent);
-  font-weight: 950;
-}
-
-.avatar-frame {
-  width: 38px;
-  height: 38px;
-}
-
-.avatar-head {
-  width: 10px;
-  height: 10px;
-  border: 1px solid color-mix(in srgb, var(--color-accent-strong) 72%, white);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--faction) 42%, var(--color-accent-strong));
-  box-shadow: 0 0 10px color-mix(in srgb, var(--faction) 28%, transparent);
-}
-
-.avatar-shoulders {
-  width: 18px;
-  height: 9px;
-  margin-top: -1px;
-  border: 1px solid color-mix(in srgb, var(--color-accent-strong) 48%, transparent);
-  border-radius: 9px 9px 3px 3px;
-  background: color-mix(in srgb, var(--faction) 28%, var(--color-surface-soft));
-}
-
-.avatar-status {
-  position: absolute;
-  right: -1px;
-  bottom: 4px;
-  width: 9px;
-  height: 9px;
-  border: 1px solid #05101f;
-  border-radius: 999px;
-  background: var(--color-success);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--color-success) 48%, transparent);
-}
-
-.avatar-menu-button:hover,
-.avatar-menu-button[aria-expanded='true'] {
-  border-color: color-mix(in srgb, var(--faction) 46%, var(--color-accent));
-  filter: brightness(1.08);
-}
-
-.game-user-menu {
-  position: absolute;
-  top: calc(100% + 0.52rem);
-  right: 0;
-  z-index: 1002;
-  display: grid;
-  width: min(292px, calc(100vw - 1rem));
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--faction) 28%, var(--color-border));
-  border-radius: var(--radius-md);
-  background:
-    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--faction) 12%, transparent), transparent 9rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 90%, #071324), #050f1d);
-  box-shadow:
-    0 18px 42px rgba(0, 0, 0, 0.46),
-    inset 0 1px 0 rgba(255, 255, 255, 0.055);
-}
-
-.game-user-identity {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: 0.62rem;
-  align-items: center;
-  border-bottom: 1px solid color-mix(in srgb, var(--faction) 18%, transparent);
-  padding: 0.68rem;
-}
-
-.identity-avatar {
-  width: 42px;
-  height: 42px;
-  color: var(--color-accent-strong);
-  font-size: 0.82rem;
-}
-
-.game-user-identity div {
-  display: grid;
-  gap: 0.08rem;
-  min-width: 0;
-}
-
-.game-user-identity strong,
-.game-user-identity span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.game-user-identity strong {
-  color: var(--color-text);
-  font-size: 0.92rem;
-  font-weight: 950;
-}
-
-.game-user-identity span {
-  color: var(--color-muted);
-  font-size: 0.68rem;
-  font-weight: 850;
-}
-
-.game-user-actions {
-  display: grid;
-}
-
-.game-user-action {
-  display: block;
-  width: 100%;
-  min-height: 34px;
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--faction) 10%, transparent);
-  padding: 0.48rem 0.72rem;
-  color: color-mix(in srgb, var(--color-accent-strong) 72%, var(--color-muted));
-  background: transparent;
-  font-size: 0.78rem;
-  font-weight: 900;
-  text-align: left;
-  text-decoration: none;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    padding-left 0.15s ease;
-}
-
-.game-user-action:hover,
-.game-user-action:focus-visible {
-  color: var(--color-text);
-  background: color-mix(in srgb, var(--faction) 10%, transparent);
-  outline: none;
-  padding-left: 0.92rem;
-}
-
-.game-user-action.danger {
-  border-bottom: 0;
-  color: color-mix(in srgb, var(--color-danger) 58%, var(--color-text));
-}
-
-.game-user-action.danger:hover,
-.game-user-action.danger:focus-visible {
-  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
-  color: color-mix(in srgb, var(--color-danger) 28%, var(--color-text));
-}
-
 @media (max-width: 1220px) {
   .game-header {
     padding: 0.38rem 0.58rem 0.32rem;
   }
 
   .header-primary {
-    grid-template-columns: 164px minmax(0, 1fr) 50px;
+    grid-template-columns: 164px minmax(0, 1fr) 54px;
     grid-template-rows: auto auto;
     gap: 0.34rem 0.52rem;
   }
@@ -692,7 +508,7 @@ onUnmounted(() => {
   }
 
   .header-primary {
-    grid-template-columns: 118px minmax(0, 1fr) 40px;
+    grid-template-columns: 118px minmax(0, 1fr) 42px;
     gap: 0.28rem;
   }
 
@@ -752,34 +568,6 @@ onUnmounted(() => {
     display: none;
   }
 
-  .avatar-menu-button {
-    width: 40px;
-    height: 40px;
-  }
-
-  .avatar-frame {
-    width: 30px;
-    height: 30px;
-  }
-
-  .avatar-head {
-    width: 9px;
-    height: 9px;
-  }
-
-  .avatar-shoulders {
-    width: 16px;
-    height: 8px;
-  }
-
-  .game-user-menu {
-    position: fixed;
-    top: calc(var(--game-header-height) + 0.42rem);
-    right: 0.5rem;
-    left: 0.5rem;
-    width: auto;
-  }
-
   .screen-nav {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -821,7 +609,7 @@ onUnmounted(() => {
 
 @media (max-width: 430px) {
   .header-primary {
-    grid-template-columns: 56px minmax(0, 1fr) 40px;
+    grid-template-columns: 56px minmax(0, 1fr) 42px;
   }
 
   .brand-block {

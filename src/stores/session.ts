@@ -43,6 +43,11 @@ export const useSessionStore = defineStore('session', () => {
     localStorage.setItem(USER_KEY, JSON.stringify(response.user))
   }
 
+  function updateUser(nextUser: UserDto) {
+    user.value = nextUser
+    localStorage.setItem(USER_KEY, JSON.stringify(nextUser))
+  }
+
   async function loadBootstrap() {
     const bootstrap = await api.bootstrap()
     worlds.value = bootstrap.worlds
@@ -243,6 +248,7 @@ export const useSessionStore = defineStore('session', () => {
     confirmSignup,
     login,
     completeOAuthHandoff,
+    updateUser,
     requestPasswordRecovery,
     confirmPasswordRecovery,
     refresh,
