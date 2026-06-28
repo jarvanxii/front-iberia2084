@@ -1,20 +1,15 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import { chronologyEvents, chronologyPeriods, type ChronologyEvent, type ChronologyPeriod } from '@/data/iberiaChronology'
-import {
-  assignTimelineLanes,
-  formatTimelineRange,
-  formatTimelineYear,
-  timelineRange,
-} from '@/utils/chronology'
+import { assignTimelineLanes, formatTimelineRange, formatTimelineYear, timelineRange } from '@/utils/chronology'
+
+type TimelineSelection = { kind: 'period'; id: string } | { kind: 'event'; index: number }
 
 const futureStartYear = 2026
-const gameStartYear = 2078
-const zoomSteps = [1, 2.2, 4.1, 7.2, 12, 18] as const
-const canvasBaseWidth = 3200
-const selectedPeriodId = ref('iberia-2084')
-const selectedEventIndex = ref(chronologyEvents.length - 1)
-const zoomIndex = ref(0)
+const canvasWidth = 2480
+const trackInsetPercent = 2.8
+const selectedSelection = ref<TimelineSelection>({ kind: 'period', id: chronologyPeriods[0]?.id ?? 'hispania-romana' })
+const hoveredSelection = ref<TimelineSelection | null>(null)
 const viewport = ref<HTMLElement | null>(null)
 const canvas = ref<HTMLElement | null>(null)
 const dragState = ref<{ pointerId: number; startX: number; scrollLeft: number } | null>(null)
@@ -48,9 +43,20 @@ const periodPalette: Record<string, { hue: string; ink: string }> = {
   'iberia-2084': { hue: '204 92% 67%', ink: '#e3f5ff' },
 }
 
+const tonePalette: Record<ChronologyEvent['tone'], { hue: string; ink: string; label: string }> = {
+  historical: { hue: '206 58% 62%', ink: '#e7f4ff', label: 'Histórico' },
+  transition: { hue: '34 72% 58%', ink: '#fff0dc', label: 'Transición' },
+  satirical: { hue: '36 72% 58%', ink: '#fff0dc', label: 'Sátira jugable' },
+  game: { hue: '204 92% 67%', ink: '#e3f5ff', label: 'Iberia 2084' },
+}
+
 const range = timelineRange(chronologyPeriods)
 const periodLanes = assignTimelineLanes(chronologyPeriods)
 const laneCount = Math.max(...periodLanes.map((item) => item.lane)) + 1
+const activeSelection = computed(() => hoveredSelection.value ?? selectedSelection.value)
+const firstYear = computed(() => formatTimelineYear(range.startYear))
+const lastYear = computed(() => formatTimelineYear(range.endYear))
+
 const displayYears = [
   ...new Set([
     ...chronologyPeriods.flatMap((period) => [period.startYear, period.endYear]),
@@ -66,34 +72,17 @@ const displayYears = [
     range.endYear,
   ]),
 ].sort((a, b) => a - b)
+
 const displayScaleSegments = displayYears.slice(0, -1).map((startYear, index) => {
   const endYear = displayYears[index + 1] ?? startYear
   const span = Math.max(1, endYear - startYear)
   return {
     startYear,
     endYear,
-    weight: Math.max(4.6, Math.pow(span, 0.56)),
+    weight: Math.max(4.8, Math.pow(span, 0.56)),
   }
 })
 const displayTotalWeight = displayScaleSegments.reduce((total, segment) => total + segment.weight, 0)
-const zoom = computed(() => zoomSteps[zoomIndex.value] ?? 1)
-const isOverview = computed(() => zoomIndex.value === 0)
-const canvasWidth = computed(() => Math.round(canvasBaseWidth * zoom.value))
-const canvasWidthStyle = computed(() => (isOverview.value ? '100%' : `${canvasWidth.value}px`))
-const selectedPeriod = computed(
-  () => chronologyPeriods.find((period) => period.id === selectedPeriodId.value) ?? chronologyPeriods[0],
-)
-const selectedPeriodIndex = computed(() =>
-  Math.max(
-    0,
-    chronologyPeriods.findIndex((period) => period.id === selectedPeriod.value?.id),
-  ),
-)
-const selectedPeriodNumber = computed(() => selectedPeriodIndex.value + 1)
-const selectedEvent = computed(() => chronologyEvents[selectedEventIndex.value] ?? chronologyEvents[chronologyEvents.length - 1] ?? null)
-const selectedEventNumber = computed(() => selectedEventIndex.value + 1)
-const firstYear = computed(() => formatTimelineYear(range.startYear))
-const lastYear = computed(() => formatTimelineYear(range.endYear))
 
 const periodSegments = computed(() =>
   periodLanes.map(({ period, lane }) => ({
@@ -110,18 +99,8 @@ const eventMarkers = computed(() =>
     index,
     left: displayPosition(event.year),
     isFuture: event.year >= futureStartYear,
-    isGame: event.year >= gameStartYear,
+    isGame: event.tone === 'game',
   })),
-)
-
-const futureEventCards = computed(() =>
-  chronologyEvents
-    .map((event, index) => ({
-      event,
-      index,
-      period: chronologyPeriods.find((period) => event.year >= period.startYear && event.year <= period.endYear),
-    }))
-    .filter((item) => item.event.year >= futureStartYear),
 )
 
 const scaleTicks = computed(() =>
@@ -131,9 +110,36 @@ const scaleTicks = computed(() =>
   })),
 )
 
+const activePeriod = computed(() => {
+  const selection = activeSelection.value
+  if (selection.kind !== 'period') return null
+  return chronologyPeriods.find((period) => period.id === selection.id) ?? chronologyPeriods[0]
+})
+const activeEvent = computed(() => {
+  const selection = activeSelection.value
+  if (selection.kind !== 'event') return null
+  return chronologyEvents[selection.index] ?? chronologyEvents[0]
+})
+const activeKindLabel = computed(() => (activeSelection.value.kind === 'period' ? 'Periodo' : 'Evento'))
+const activeTitle = computed(() => activePeriod.value?.title ?? activeEvent.value?.title ?? '')
+const activePeriodIndex = computed(() => {
+  if (!activePeriod.value) return -1
+  return chronologyPeriods.findIndex((period) => period.id === activePeriod.value?.id)
+})
+const activeEventIndex = computed(() => (activeSelection.value.kind === 'event' ? activeSelection.value.index : -1))
+const activeToneLabel = computed(() => {
+  if (activePeriod.value) return activePeriod.value.tone === 'game' ? 'Iberia 2084' : 'Periodo histórico'
+  if (activeEvent.value) return tonePalette[activeEvent.value.tone]?.label ?? 'Evento'
+  return ''
+})
+const activeColorVars = computed(() => {
+  if (activePeriod.value) return periodColorVars(activePeriod.value)
+  return eventColorVars(activeEvent.value)
+})
+
 function displayPosition(year: number) {
-  if (year <= range.startYear) return 0
-  if (year >= range.endYear) return 100
+  if (year <= range.startYear) return trackInsetPercent
+  if (year >= range.endYear) return 100 - trackInsetPercent
 
   let accumulatedWeight = 0
   for (const segment of displayScaleSegments) {
@@ -143,78 +149,87 @@ function displayPosition(year: number) {
     }
     if (year >= segment.startYear) {
       const span = Math.max(1, segment.endYear - segment.startYear)
-      const ratio = (year - segment.startYear) / span
-      accumulatedWeight += segment.weight * ratio
+      accumulatedWeight += segment.weight * ((year - segment.startYear) / span)
       break
     }
   }
 
-  return displayTotalWeight > 0 ? (accumulatedWeight / displayTotalWeight) * 100 : 0
+  const rawPosition = displayTotalWeight > 0 ? (accumulatedWeight / displayTotalWeight) * 100 : 0
+  return trackInsetPercent + rawPosition * ((100 - trackInsetPercent * 2) / 100)
 }
 
 function displayWidth(startYear: number, endYear: number) {
   return Math.max(0, displayPosition(endYear) - displayPosition(startYear))
 }
 
-function periodColorVars(period?: ChronologyPeriod) {
+function periodColorVars(period?: ChronologyPeriod | null) {
   const palette = period ? periodPalette[period.id] : null
   return {
-    '--period-hue': palette?.hue ?? '204 72% 58%',
-    '--period-ink': palette?.ink ?? '#e6f4ff',
+    '--timeline-hue': palette?.hue ?? '204 72% 58%',
+    '--timeline-ink': palette?.ink ?? '#e6f4ff',
   }
 }
 
-function periodSegmentStyle(segment: { period: ChronologyPeriod; lane: number; left: number; width: number }) {
+function eventColorVars(event?: ChronologyEvent | null) {
+  const palette = event ? tonePalette[event.tone] : null
+  return {
+    '--timeline-hue': palette?.hue ?? '204 72% 58%',
+    '--timeline-ink': palette?.ink ?? '#e6f4ff',
+  }
+}
+
+function periodStyle(segment: { period: ChronologyPeriod; lane: number; left: number; width: number }) {
   return {
     left: `${segment.left}%`,
     width: `${segment.width}%`,
-    top: `${segment.lane * 48}px`,
+    top: `${segment.lane * 46}px`,
     ...periodColorVars(segment.period),
   }
 }
 
-function eventMarkerStyle(marker: { left: number }) {
-  return {
-    left: `${marker.left}%`,
+function selectPeriod(period: ChronologyPeriod, focus = false) {
+  selectedSelection.value = { kind: 'period', id: period.id }
+  hoveredSelection.value = null
+  if (focus) focusYear(Math.round((period.startYear + period.endYear) / 2))
+}
+
+function selectEvent(event: ChronologyEvent, index: number, focus = false) {
+  selectedSelection.value = { kind: 'event', index }
+  hoveredSelection.value = null
+  if (focus) focusYear(event.year)
+}
+
+function previewPeriod(period: ChronologyPeriod) {
+  hoveredSelection.value = { kind: 'period', id: period.id }
+}
+
+function previewEvent(index: number) {
+  hoveredSelection.value = { kind: 'event', index }
+}
+
+function clearPreview() {
+  hoveredSelection.value = null
+}
+
+function moveActive(offset: 1 | -1) {
+  const active = activeSelection.value
+  hoveredSelection.value = null
+  if (active.kind === 'period') {
+    const currentIndex = Math.max(0, chronologyPeriods.findIndex((period) => period.id === active.id))
+    const nextPeriod = chronologyPeriods[Math.min(Math.max(0, currentIndex + offset), chronologyPeriods.length - 1)]
+    if (nextPeriod) selectPeriod(nextPeriod, true)
+    return
   }
-}
 
-function selectPeriod(period: ChronologyPeriod) {
-  selectedPeriodId.value = period.id
-}
-
-function selectPeriodByOffset(offset: 1 | -1) {
-  const currentIndex = Math.max(
-    0,
-    chronologyPeriods.findIndex((period) => period.id === selectedPeriod.value?.id),
-  )
-  const nextIndex = Math.min(Math.max(0, currentIndex + offset), chronologyPeriods.length - 1)
-  const nextPeriod = chronologyPeriods[nextIndex]
-  if (!nextPeriod) return
-  selectPeriod(nextPeriod)
-  focusYearAtZoom(Math.round((nextPeriod.startYear + nextPeriod.endYear) / 2), 2)
-}
-
-function selectEvent(_event: ChronologyEvent, index: number) {
-  selectedEventIndex.value = index
-}
-
-function selectEventAndFocus(event: ChronologyEvent, index: number, minimumZoom = 0) {
-  selectEvent(event, index)
-  if (minimumZoom > 0) focusYearAtZoom(event.year, minimumZoom)
-}
-
-function selectEventByOffset(offset: 1 | -1) {
-  const nextIndex = Math.min(Math.max(0, selectedEventIndex.value + offset), chronologyEvents.length - 1)
+  const nextIndex = Math.min(Math.max(0, active.index + offset), chronologyEvents.length - 1)
   const nextEvent = chronologyEvents[nextIndex]
-  if (!nextEvent) return
-  selectEventAndFocus(nextEvent, nextIndex, 2)
+  if (nextEvent) selectEvent(nextEvent, nextIndex, true)
 }
 
 function scrollByDirection(direction: 1 | -1) {
   const element = viewport.value
   if (!element) return
-  element.scrollBy({ left: direction * Math.max(420, element.clientWidth * 0.74), behavior: 'smooth' })
+  element.scrollBy({ left: direction * Math.max(340, element.clientWidth * 0.72), behavior: 'smooth' })
 }
 
 function focusYear(year: number, behavior: ScrollBehavior = 'smooth') {
@@ -223,57 +238,7 @@ function focusYear(year: number, behavior: ScrollBehavior = 'smooth') {
   if (!element || !content) return
   const target = (displayPosition(year) / 100) * content.scrollWidth - element.clientWidth / 2
   const maxScroll = Math.max(0, content.scrollWidth - element.clientWidth)
-  element.scrollTo({ left: Math.min(Math.max(0, target), maxScroll), behavior })
-}
-
-function focusYearAtZoom(year: number, minimumZoom = 2) {
-  zoomIndex.value = Math.max(zoomIndex.value, minimumZoom)
-  void nextTick(() => focusYear(year))
-}
-
-function resetView() {
-  zoomIndex.value = 0
-  void nextTick(() => viewport.value?.scrollTo({ left: 0, behavior: 'smooth' }))
-}
-
-function focusFutureStart() {
-  focusYearAtZoom(futureStartYear, 3)
-}
-
-function focusGameEra() {
-  focusYearAtZoom(2084, 4)
-}
-
-function setZoomIndex(nextIndex: number, anchorClientX?: number) {
-  const nextZoomIndex = Math.min(Math.max(0, nextIndex), zoomSteps.length - 1)
-  if (nextZoomIndex === zoomIndex.value) return
-
-  const element = viewport.value
-  const content = canvas.value
-  const bounds = element?.getBoundingClientRect()
-  const anchorOffset = bounds ? (anchorClientX ?? bounds.left + bounds.width / 2) - bounds.left : 0
-  const anchorRatio =
-    element && content && bounds && content.scrollWidth > 0 ? (element.scrollLeft + anchorOffset) / content.scrollWidth : null
-
-  zoomIndex.value = nextZoomIndex
-
-  void nextTick(() => {
-    const nextElement = viewport.value
-    const nextContent = canvas.value
-    if (!nextElement || !nextContent || anchorRatio === null) return
-    const maxScroll = Math.max(0, nextContent.scrollWidth - nextElement.clientWidth)
-    const nextScroll = anchorRatio * nextContent.scrollWidth - anchorOffset
-    nextElement.scrollTo({ left: Math.min(Math.max(0, nextScroll), maxScroll), behavior: 'auto' })
-  })
-}
-
-function changeZoom(direction: 1 | -1) {
-  setZoomIndex(zoomIndex.value + direction)
-}
-
-function onWheelZoom(event: WheelEvent) {
-  if (Math.abs(event.deltaY) < 2) return
-  setZoomIndex(zoomIndex.value + (event.deltaY < 0 ? 1 : -1), event.clientX)
+  void nextTick(() => element.scrollTo({ left: Math.min(Math.max(0, target), maxScroll), behavior }))
 }
 
 function onPointerDown(event: PointerEvent) {
@@ -302,238 +267,214 @@ function onPointerUp(event: PointerEvent) {
 </script>
 
 <template>
-  <section class="panel chronology-panel" aria-labelledby="chronology-title">
-    <header class="chronology-heading">
-      <div class="chronology-title-block">
-        <p class="chronology-kicker">Eje cronológico</p>
-        <h1 id="chronology-title">Historia de España e Iberia 2084</h1>
-      </div>
+  <section class="chronology-shell" aria-labelledby="chronology-title">
+    <section class="panel chronology-board">
+      <header class="chronology-heading">
+        <div class="chronology-title-block">
+          <p class="chronology-kicker">Cronología</p>
+          <h1 id="chronology-title">Historia de España e Iberia 2084</h1>
+        </div>
 
-      <div class="timeline-controls" aria-label="Controles del cronograma">
-        <button type="button" class="timeline-control" aria-label="Reducir zoom" @click="changeZoom(-1)">−</button>
-        <span class="zoom-meter" aria-label="Nivel de zoom">x{{ zoom.toFixed(1) }}</span>
-        <button type="button" class="timeline-control" aria-label="Aumentar zoom" @click="changeZoom(1)">+</button>
-        <button type="button" class="timeline-chip" @click="resetView">Completo</button>
-        <button type="button" class="timeline-chip" @click="focusFutureStart">2026</button>
-        <button type="button" class="timeline-chip is-strong" @click="focusGameEra">2084</button>
-      </div>
-    </header>
+        <div class="timeline-controls" aria-label="Navegación del eje cronológico">
+          <button type="button" class="timeline-chip" @click="focusYear(range.startYear)">{{ firstYear }}</button>
+          <button type="button" class="timeline-chip" @click="focusYear(futureStartYear)">2026</button>
+          <button type="button" class="timeline-chip is-strong" @click="focusYear(range.endYear)">2084</button>
+        </div>
+      </header>
 
-    <div class="timeline-stage">
-      <button
-        type="button"
-        class="timeline-side-control timeline-side-control--left"
-        aria-label="Mover hacia atrás"
-        @click="scrollByDirection(-1)"
-      >
-        ‹
-      </button>
-
-      <div
-        ref="viewport"
-        class="timeline-viewport"
-        :class="{ dragging: dragState }"
-        tabindex="0"
-        aria-label="Cronograma desplazable"
-        @wheel.prevent="onWheelZoom"
-        @pointerdown="onPointerDown"
-        @pointermove="onPointerMove"
-        @pointerup="onPointerUp"
-        @pointercancel="onPointerUp"
-      >
-        <div
-          ref="canvas"
-          class="timeline-canvas"
-          :class="{ 'is-overview': isOverview }"
-          :style="{
-            width: canvasWidthStyle,
-            '--period-lanes': laneCount,
-          }"
+      <div class="timeline-stage">
+        <button
+          type="button"
+          class="timeline-side-control timeline-side-control--left"
+          aria-label="Mover hacia atrás"
+          @click="scrollByDirection(-1)"
         >
-          <div class="timeline-scale" aria-hidden="true">
-            <span
-              v-for="tick in scaleTicks"
-              :key="tick.year"
-              :class="{ first: tick.year === range.startYear, last: tick.year === range.endYear }"
-              :style="{ left: `${tick.left}%` }"
-            >
-              {{ tick.year === range.startYear ? firstYear : tick.year === range.endYear ? lastYear : tick.year }}
-            </span>
-          </div>
+          ‹
+        </button>
 
-          <div class="period-layer" aria-label="Periodos históricos">
-            <button
-              v-for="segment in periodSegments"
-              :key="segment.period.id"
-              type="button"
-              class="period-segment"
-              :class="[`tone-${segment.period.tone}`, { selected: segment.period.id === selectedPeriod?.id }]"
-              :style="periodSegmentStyle(segment)"
-              :aria-pressed="segment.period.id === selectedPeriod?.id"
-              @click="selectPeriod(segment.period)"
-            >
-              <span>{{ formatTimelineRange(segment.period.startYear, segment.period.endYear) }}</span>
-              <strong>{{ segment.period.title }}</strong>
-            </button>
-          </div>
+        <div
+          ref="viewport"
+          class="timeline-viewport"
+          :class="{ dragging: dragState }"
+          tabindex="0"
+          aria-label="Cronología horizontal"
+          @pointerdown="onPointerDown"
+          @pointermove="onPointerMove"
+          @pointerup="onPointerUp"
+          @pointercancel="onPointerUp"
+          @mouseleave="clearPreview"
+        >
+          <div ref="canvas" class="timeline-canvas" :style="{ width: `${canvasWidth}px`, '--period-lanes': laneCount }">
+            <div class="timeline-scale" aria-hidden="true">
+              <span
+                v-for="tick in scaleTicks"
+                :key="tick.year"
+                :class="{ first: tick.year === range.startYear, last: tick.year === range.endYear }"
+                :style="{ left: `${tick.left}%` }"
+              >
+                {{ tick.year === range.startYear ? firstYear : tick.year === range.endYear ? lastYear : tick.year }}
+              </span>
+            </div>
 
-          <div class="event-layer" aria-label="Eventos">
-            <span class="event-spine" aria-hidden="true"></span>
-            <button
-              v-for="marker in eventMarkers"
-              :key="`${marker.event.year}-${marker.index}`"
-              type="button"
-              class="event-marker"
-              :class="[
-                `tone-${marker.event.tone}`,
-                {
-                  selected: marker.index === selectedEventIndex,
-                  'future-event': marker.isFuture,
-                  'game-event': marker.isGame,
-                },
-              ]"
-              :style="eventMarkerStyle(marker)"
-              :aria-label="`${formatTimelineYear(marker.event.year)}. ${marker.event.title}`"
-              :title="`${formatTimelineYear(marker.event.year)}. ${marker.event.title}`"
-              @click="selectEvent(marker.event, marker.index)"
-            >
-              <span class="event-pin" aria-hidden="true"></span>
-              <span class="event-year">{{ formatTimelineYear(marker.event.year) }}</span>
-            </button>
+            <div class="period-layer" aria-label="Periodos">
+              <button
+                v-for="segment in periodSegments"
+                :key="segment.period.id"
+                type="button"
+                class="period-segment"
+                :class="{ active: activeSelection.kind === 'period' && activePeriod?.id === segment.period.id }"
+                :style="periodStyle(segment)"
+                :aria-label="`${segment.period.title}. ${formatTimelineRange(segment.period.startYear, segment.period.endYear)}`"
+                @mouseenter="previewPeriod(segment.period)"
+                @focus="previewPeriod(segment.period)"
+                @click="selectPeriod(segment.period)"
+              >
+                <span>{{ formatTimelineRange(segment.period.startYear, segment.period.endYear) }}</span>
+                <strong>{{ segment.period.title }}</strong>
+              </button>
+            </div>
+
+            <div class="event-layer" aria-label="Eventos">
+              <span class="event-line" aria-hidden="true"></span>
+              <button
+                v-for="marker in eventMarkers"
+                :key="`${marker.event.year}-${marker.index}`"
+                type="button"
+                class="event-marker"
+                :class="[
+                  `tone-${marker.event.tone}`,
+                  {
+                    active: activeSelection.kind === 'event' && activeEventIndex === marker.index,
+                    'future-event': marker.isFuture,
+                    'game-event': marker.isGame,
+                  },
+                ]"
+                :style="{ left: `${marker.left}%`, ...eventColorVars(marker.event) }"
+                :aria-label="`${formatTimelineYear(marker.event.year)}. ${marker.event.title}`"
+                @mouseenter="previewEvent(marker.index)"
+                @focus="previewEvent(marker.index)"
+                @click="selectEvent(marker.event, marker.index)"
+              >
+                <span class="event-pin" aria-hidden="true"></span>
+                <span class="event-year">{{ formatTimelineYear(marker.event.year) }}</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <button
-        type="button"
-        class="timeline-side-control timeline-side-control--right"
-        aria-label="Mover hacia delante"
-        @click="scrollByDirection(1)"
-      >
-        ›
-      </button>
-    </div>
-
-    <section class="future-briefing" aria-label="Eventos futuros destacados">
-      <header>
-        <span>2026-2084</span>
-        <strong>Futuro jugable</strong>
-      </header>
-      <div class="future-event-row">
         <button
-          v-for="item in futureEventCards"
-          :key="`future-${item.event.year}-${item.index}`"
           type="button"
-          class="future-card"
-          :class="{ selected: item.index === selectedEventIndex, 'game-card': item.event.year >= gameStartYear }"
-          :style="periodColorVars(item.period)"
-          @click="selectEventAndFocus(item.event, item.index, 3)"
+          class="timeline-side-control timeline-side-control--right"
+          aria-label="Mover hacia delante"
+          @click="scrollByDirection(1)"
         >
-          <span>{{ formatTimelineYear(item.event.year) }}</span>
-          <strong>{{ item.event.title }}</strong>
+          ›
         </button>
       </div>
     </section>
 
-    <section v-if="selectedPeriod" class="chronology-detail" aria-label="Detalle separado de periodo y evento">
-      <article class="period-detail" :class="`tone-${selectedPeriod.tone}`" :style="periodColorVars(selectedPeriod)">
-        <header class="detail-heading">
-          <span>Periodo {{ selectedPeriodNumber }} / {{ chronologyPeriods.length }}</span>
-          <span class="detail-nav" aria-label="Navegación de periodos">
-            <button
-              type="button"
-              aria-label="Periodo anterior"
-              :disabled="selectedPeriodIndex === 0"
-              @click="selectPeriodByOffset(-1)"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              aria-label="Periodo siguiente"
-              :disabled="selectedPeriodIndex === chronologyPeriods.length - 1"
-              @click="selectPeriodByOffset(1)"
-            >
-              ›
-            </button>
-          </span>
-        </header>
-        <h2>{{ selectedPeriod.title }}</h2>
-        <dl>
-          <div>
-            <dt>Inicio</dt>
-            <dd>{{ formatTimelineYear(selectedPeriod.startYear) }}</dd>
-          </div>
-          <div>
-            <dt>Final</dt>
-            <dd>{{ formatTimelineYear(selectedPeriod.endYear) }}</dd>
-          </div>
-          <div>
-            <dt>Duración</dt>
-            <dd>{{ selectedPeriod.endYear - selectedPeriod.startYear }} años</dd>
-          </div>
-        </dl>
-      </article>
+    <section class="panel chronology-detail" :style="activeColorVars" aria-live="polite">
+      <header class="detail-heading">
+        <div class="detail-kicker">
+          <span>{{ activeKindLabel }}</span>
+          <strong>{{ activeToneLabel }}</strong>
+        </div>
+        <div class="detail-nav" aria-label="Navegar detalle">
+          <button
+            type="button"
+            aria-label="Elemento anterior"
+            :disabled="
+              activeSelection.kind === 'period'
+                ? activePeriodIndex <= 0
+                : activeSelection.kind === 'event' && activeEventIndex <= 0
+            "
+            @click="moveActive(-1)"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            aria-label="Elemento siguiente"
+            :disabled="
+              activeSelection.kind === 'period'
+                ? activePeriodIndex >= chronologyPeriods.length - 1
+                : activeSelection.kind === 'event' && activeEventIndex >= chronologyEvents.length - 1
+            "
+            @click="moveActive(1)"
+          >
+            ›
+          </button>
+        </div>
+      </header>
 
-      <article v-if="selectedEvent" class="event-detail" :class="`tone-${selectedEvent.tone}`">
-        <header class="detail-heading">
-          <span>Evento {{ selectedEventNumber }} / {{ chronologyEvents.length }}</span>
-          <span class="detail-nav" aria-label="Navegación de eventos">
-            <button
-              type="button"
-              aria-label="Evento anterior"
-              :disabled="selectedEventIndex === 0"
-              @click="selectEventByOffset(-1)"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              aria-label="Evento siguiente"
-              :disabled="selectedEventIndex === chronologyEvents.length - 1"
-              @click="selectEventByOffset(1)"
-            >
-              ›
-            </button>
-          </span>
-        </header>
-        <span>{{ formatTimelineYear(selectedEvent.year) }}</span>
-        <strong>{{ selectedEvent.title }}</strong>
-      </article>
+      <h2>{{ activeTitle }}</h2>
+
+      <dl v-if="activePeriod" class="detail-facts">
+        <div>
+          <dt>Inicio</dt>
+          <dd>{{ formatTimelineYear(activePeriod.startYear) }}</dd>
+        </div>
+        <div>
+          <dt>Final</dt>
+          <dd>{{ formatTimelineYear(activePeriod.endYear) }}</dd>
+        </div>
+        <div>
+          <dt>Duración</dt>
+          <dd>{{ activePeriod.endYear - activePeriod.startYear }} años</dd>
+        </div>
+      </dl>
+
+      <dl v-else-if="activeEvent" class="detail-facts detail-facts--event">
+        <div>
+          <dt>Año</dt>
+          <dd>{{ formatTimelineYear(activeEvent.year) }}</dd>
+        </div>
+        <div>
+          <dt>Tipo</dt>
+          <dd>{{ activeToneLabel }}</dd>
+        </div>
+      </dl>
     </section>
   </section>
 </template>
 
 <style scoped>
-.chronology-panel {
+.chronology-shell {
   display: grid;
-  gap: 0.82rem;
+  gap: 0.72rem;
+}
+
+.chronology-board,
+.chronology-detail {
   overflow: hidden;
-  padding: clamp(0.82rem, 1.5vw, 1.15rem);
+  padding: clamp(0.78rem, 1.4vw, 1rem);
+}
+
+.chronology-board {
+  display: grid;
+  gap: 0.7rem;
   background:
-    radial-gradient(circle at 88% 8%, rgba(155, 214, 255, 0.11), transparent 23rem),
-    radial-gradient(circle at 10% 18%, rgba(216, 174, 103, 0.07), transparent 18rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.026), transparent 88px),
-    var(--color-surface);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.026), transparent 86px),
+    rgba(11, 23, 38, 0.98);
 }
 
 .chronology-heading {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.8rem;
+  gap: 0.75rem;
   align-items: end;
 }
 
 .chronology-title-block {
   display: grid;
   min-width: 0;
-  gap: 0.18rem;
+  gap: 0.16rem;
 }
 
 .chronology-kicker {
   margin: 0;
   color: var(--color-accent);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 950;
   letter-spacing: 0.08em;
   line-height: 1;
@@ -543,7 +484,7 @@ function onPointerUp(event: PointerEvent) {
 .chronology-title-block h1 {
   margin: 0;
   color: var(--color-text);
-  font-size: clamp(1.25rem, 2vw, 1.85rem);
+  font-size: clamp(1.22rem, 2vw, 1.72rem);
   font-weight: 950;
   letter-spacing: 0;
   line-height: 1.05;
@@ -554,47 +495,28 @@ function onPointerUp(event: PointerEvent) {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.32rem;
-  min-width: 0;
 }
 
-.timeline-control,
-.timeline-chip,
-.zoom-meter {
+.timeline-chip {
   display: inline-grid;
   min-height: 32px;
   place-items: center;
   border: 1px solid rgba(125, 190, 255, 0.16);
   border-radius: 4px;
-  padding: 0 0.58rem;
+  padding: 0 0.62rem;
   color: #dceeff;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 56%),
-    rgba(4, 13, 24, 0.58);
+  background: rgba(4, 13, 24, 0.58);
   font-size: 0.78rem;
   font-weight: 950;
   line-height: 1;
   box-shadow: var(--strategy-inset);
 }
 
-.timeline-control {
-  width: 34px;
-  padding: 0;
-  font-size: 1.1rem;
-}
-
-.timeline-chip.is-strong,
-.timeline-control:hover,
-.timeline-chip:hover {
-  border-color: rgba(155, 214, 255, 0.42);
+.timeline-chip:hover,
+.timeline-chip.is-strong {
+  border-color: rgba(155, 214, 255, 0.38);
   color: #ffffff;
-  background:
-    linear-gradient(180deg, rgba(155, 214, 255, 0.14), rgba(90, 167, 232, 0.08)),
-    rgba(4, 13, 24, 0.64);
-}
-
-.zoom-meter {
-  min-width: 54px;
-  color: #9bd6ff;
+  background: rgba(90, 167, 232, 0.12);
 }
 
 .timeline-stage {
@@ -608,19 +530,19 @@ function onPointerUp(event: PointerEvent) {
   z-index: 2;
   top: 1px;
   bottom: 1px;
-  width: 72px;
+  width: 60px;
   pointer-events: none;
   content: '';
 }
 
 .timeline-stage::before {
   left: 1px;
-  background: linear-gradient(90deg, rgba(5, 14, 26, 0.94), transparent);
+  background: linear-gradient(90deg, rgba(5, 14, 26, 0.95), transparent);
 }
 
 .timeline-stage::after {
   right: 1px;
-  background: linear-gradient(270deg, rgba(5, 14, 26, 0.94), transparent);
+  background: linear-gradient(270deg, rgba(5, 14, 26, 0.95), transparent);
 }
 
 .timeline-side-control {
@@ -628,19 +550,17 @@ function onPointerUp(event: PointerEvent) {
   z-index: 3;
   top: 50%;
   display: grid;
-  width: 38px;
-  height: 76px;
+  width: 36px;
+  height: 70px;
   place-items: center;
   border: 1px solid rgba(155, 214, 255, 0.2);
   border-radius: 4px;
   color: #e6f4ff;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 56%),
-    rgba(4, 13, 24, 0.82);
+  background: rgba(4, 13, 24, 0.82);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 12px 22px rgba(0, 0, 0, 0.24);
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 950;
   transform: translateY(-50%);
 }
@@ -651,26 +571,25 @@ function onPointerUp(event: PointerEvent) {
 }
 
 .timeline-side-control--left {
-  left: 0.44rem;
+  left: 0.38rem;
 }
 
 .timeline-side-control--right {
-  right: 0.44rem;
+  right: 0.38rem;
 }
 
 .timeline-viewport {
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid rgba(125, 190, 255, 0.2);
+  border: 1px solid rgba(125, 190, 255, 0.18);
   border-radius: 6px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.032), transparent 42%),
-    radial-gradient(circle at 96% 12%, rgba(90, 167, 232, 0.12), transparent 18rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.028), transparent 44%),
     rgba(3, 10, 18, 0.36);
   cursor: grab;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 -20px 42px rgba(0, 0, 0, 0.18);
+    inset 0 -18px 36px rgba(0, 0, 0, 0.14);
   scrollbar-width: thin;
   scrollbar-color: rgba(155, 214, 255, 0.38) transparent;
 }
@@ -682,8 +601,8 @@ function onPointerUp(event: PointerEvent) {
 .timeline-canvas {
   position: relative;
   min-width: 100%;
-  height: calc(168px + var(--period-lanes) * 48px);
-  min-height: 294px;
+  height: calc(168px + var(--period-lanes) * 46px);
+  min-height: 302px;
   user-select: none;
 }
 
@@ -692,7 +611,7 @@ function onPointerUp(event: PointerEvent) {
   top: 0;
   right: 0;
   left: 0;
-  height: 36px;
+  height: 34px;
   border-bottom: 1px solid rgba(125, 190, 255, 0.1);
   color: #8da9c4;
   font-size: 0.68rem;
@@ -725,34 +644,31 @@ function onPointerUp(event: PointerEvent) {
 
 .period-layer {
   position: absolute;
-  top: 50px;
+  top: 48px;
   right: 0;
   left: 0;
-  height: calc(var(--period-lanes) * 48px);
+  height: calc(var(--period-lanes) * 46px);
 }
 
 .period-segment {
-  --period-hue: 204 72% 58%;
-  --period-ink: #e6f4ff;
+  --timeline-hue: 204 72% 58%;
+  --timeline-ink: #e6f4ff;
   position: absolute;
   display: grid;
-  min-width: 5px;
-  height: 38px;
+  min-width: 8px;
+  height: 36px;
   align-content: center;
   gap: 0.04rem;
   overflow: hidden;
-  border: 1px solid hsl(var(--period-hue) / 0.34);
+  border: 1px solid hsl(var(--timeline-hue) / 0.32);
   border-radius: 4px;
-  padding: 0.28rem 0.45rem;
-  color: var(--period-ink);
+  padding: 0.27rem 0.44rem;
+  color: var(--timeline-ink);
   background:
-    linear-gradient(180deg, hsl(var(--period-hue) / 0.32), hsl(var(--period-hue) / 0.1) 64%),
-    linear-gradient(90deg, hsl(var(--period-hue) / 0.22), rgba(3, 10, 18, 0.24));
+    linear-gradient(180deg, hsl(var(--timeline-hue) / 0.3), hsl(var(--timeline-hue) / 0.1) 68%),
+    rgba(3, 10, 18, 0.28);
   text-align: left;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-    0 8px 18px hsl(var(--period-hue) / 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.075);
 }
 
 .period-segment::before {
@@ -762,79 +678,69 @@ function onPointerUp(event: PointerEvent) {
   left: 5px;
   width: 3px;
   border-radius: 999px;
-  background: hsl(var(--period-hue) / 0.92);
-  box-shadow: 0 0 12px hsl(var(--period-hue) / 0.38);
+  background: hsl(var(--timeline-hue) / 0.85);
   content: '';
 }
 
 .period-segment:hover,
-.period-segment.selected {
-  border-color: hsl(var(--period-hue) / 0.64);
+.period-segment:focus-visible,
+.period-segment.active {
+  border-color: hsl(var(--timeline-hue) / 0.68);
   color: #ffffff;
   filter: brightness(1.08);
-  background:
-    linear-gradient(180deg, hsl(var(--period-hue) / 0.44), hsl(var(--period-hue) / 0.14) 66%),
-    linear-gradient(90deg, hsl(var(--period-hue) / 0.3), rgba(5, 16, 30, 0.2));
-}
-
-.period-segment.selected {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 0 0 1px hsl(var(--period-hue) / 0.28),
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 10px 24px hsl(var(--period-hue) / 0.17);
 }
 
 .period-segment span,
 .period-segment strong {
   min-width: 0;
   overflow: hidden;
+  padding-left: 0.34rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .period-segment span {
-  padding-left: 0.34rem;
-  color: color-mix(in srgb, var(--period-ink) 72%, #8da9c4);
-  font-size: 0.58rem;
+  color: color-mix(in srgb, var(--timeline-ink) 72%, #8da9c4);
+  font-size: 0.56rem;
   font-weight: 950;
 }
 
 .period-segment strong {
-  padding-left: 0.34rem;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 950;
-  line-height: 1.05;
+  line-height: 1.04;
 }
 
 .event-layer {
   position: absolute;
-  top: calc(72px + var(--period-lanes) * 48px);
+  top: calc(68px + var(--period-lanes) * 46px);
   right: 0;
   left: 0;
   height: 86px;
   border-top: 1px solid rgba(125, 190, 255, 0.12);
 }
 
-.event-spine {
+.event-line {
   position: absolute;
-  top: 30px;
+  top: 32px;
   right: 0;
   left: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(155, 214, 255, 0.32), rgba(216, 174, 103, 0.18), transparent);
+  background: linear-gradient(90deg, transparent, rgba(155, 214, 255, 0.3), rgba(216, 174, 103, 0.2), transparent);
 }
 
 .event-marker {
+  --timeline-hue: 204 72% 58%;
   position: absolute;
-  top: 21px;
+  top: 17px;
   display: grid;
-  min-width: 28px;
+  width: 34px;
+  height: 36px;
+  align-content: start;
   justify-items: center;
-  gap: 0.18rem;
   transform: translateX(-50%);
   border: 0;
-  padding: 0;
+  padding: 6px 0 0;
   color: #a7c3dc;
   background: transparent;
 }
@@ -845,52 +751,39 @@ function onPointerUp(event: PointerEvent) {
   height: 8px;
   border: 1px solid rgba(230, 244, 255, 0.22);
   border-radius: 999px;
-  background: #6faee8;
-  box-shadow: 0 0 0 4px rgba(111, 174, 232, 0.1);
-}
-
-.event-marker.tone-satirical .event-pin {
-  background: #d8ae67;
-  box-shadow: 0 0 0 4px rgba(216, 174, 103, 0.11);
-}
-
-.event-marker.tone-game .event-pin,
-.event-marker.game-event .event-pin {
-  background: #9bd6ff;
-  box-shadow:
-    0 0 0 4px rgba(155, 214, 255, 0.13),
-    0 0 20px rgba(155, 214, 255, 0.22);
+  background: hsl(var(--timeline-hue) / 0.86);
+  box-shadow: 0 0 0 4px hsl(var(--timeline-hue) / 0.1);
 }
 
 .event-marker.future-event .event-pin {
-  width: 12px;
-  height: 12px;
-  border-color: rgba(255, 247, 215, 0.34);
+  width: 11px;
+  height: 11px;
 }
 
-.event-marker.selected .event-pin,
-.event-marker:hover .event-pin {
-  filter: brightness(1.22);
-  transform: scale(1.18);
+.event-marker.game-event .event-pin {
+  box-shadow:
+    0 0 0 4px hsl(var(--timeline-hue) / 0.12),
+    0 0 20px hsl(var(--timeline-hue) / 0.22);
 }
 
-.event-marker.selected .event-year,
-.event-marker:hover .event-year {
-  border-color: rgba(155, 214, 255, 0.35);
-  color: #ffffff;
+.event-marker:hover .event-pin,
+.event-marker:focus-visible .event-pin,
+.event-marker.active .event-pin {
+  filter: brightness(1.2);
+  transform: scale(1.22);
 }
 
 .event-year {
   position: absolute;
-  top: 18px;
+  top: 24px;
   left: 50%;
-  max-width: 72px;
+  max-width: 76px;
   overflow: hidden;
-  border: 1px solid rgba(125, 190, 255, 0.12);
+  border: 1px solid rgba(125, 190, 255, 0.14);
   border-radius: 3px;
-  padding: 0.08rem 0.28rem;
-  background: rgba(3, 10, 18, 0.78);
-  color: currentColor;
+  padding: 0.08rem 0.3rem;
+  background: rgba(3, 10, 18, 0.84);
+  color: var(--timeline-ink, #e6f4ff);
   font-size: 0.6rem;
   font-weight: 950;
   opacity: 0;
@@ -900,182 +793,62 @@ function onPointerUp(event: PointerEvent) {
   white-space: nowrap;
 }
 
-.event-marker.selected .event-year,
-.event-marker:hover .event-year {
+.event-marker:hover .event-year,
+.event-marker:focus-visible .event-year,
+.event-marker.active .event-year {
   opacity: 1;
 }
 
-.timeline-canvas.is-overview .event-marker.selected .event-pin,
-.timeline-canvas.is-overview .event-marker:hover .event-pin {
-  transform: scale(1.28);
-}
-
-.future-briefing {
-  --period-hue: 204 72% 58%;
-  display: grid;
-  grid-template-columns: minmax(130px, 0.16fr) minmax(0, 1fr);
-  gap: 0.58rem;
-  align-items: stretch;
-  border: 1px solid rgba(125, 190, 255, 0.14);
-  border-radius: 6px;
-  padding: 0.58rem;
-  background:
-    linear-gradient(90deg, rgba(216, 174, 103, 0.08), transparent 40%),
-    rgba(3, 10, 18, 0.28);
-}
-
-.future-briefing header {
-  display: grid;
-  align-content: center;
-  gap: 0.18rem;
-  border-right: 1px solid rgba(125, 190, 255, 0.12);
-  padding-right: 0.62rem;
-}
-
-.future-briefing header span {
-  color: #d8ae67;
-  font-size: 0.68rem;
-  font-weight: 950;
-  letter-spacing: 0.06em;
-}
-
-.future-briefing header strong {
-  color: #f6fbff;
-  font-size: 0.96rem;
-  font-weight: 950;
-  line-height: 1.05;
-}
-
-.future-event-row {
-  display: flex;
-  gap: 0.44rem;
-  overflow-x: auto;
-  padding-bottom: 0.18rem;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(216, 174, 103, 0.42) transparent;
-}
-
-.future-card {
-  --period-hue: 204 72% 58%;
-  --period-ink: #e6f4ff;
-  display: grid;
-  flex: 0 0 clamp(168px, 18vw, 238px);
-  min-height: 92px;
-  align-content: start;
-  gap: 0.34rem;
-  border: 1px solid hsl(var(--period-hue) / 0.22);
-  border-radius: 5px;
-  padding: 0.62rem;
-  color: var(--period-ink);
-  background:
-    linear-gradient(180deg, hsl(var(--period-hue) / 0.16), hsl(var(--period-hue) / 0.055)),
-    rgba(4, 13, 24, 0.66);
-  text-align: left;
-  box-shadow: var(--strategy-inset);
-}
-
-.future-card:hover,
-.future-card.selected {
-  border-color: hsl(var(--period-hue) / 0.48);
-  background:
-    linear-gradient(180deg, hsl(var(--period-hue) / 0.22), hsl(var(--period-hue) / 0.07)),
-    rgba(4, 13, 24, 0.72);
-}
-
-.future-card.game-card {
-  flex-basis: clamp(190px, 20vw, 270px);
-  min-height: 108px;
-}
-
-.future-card span {
-  color: hsl(var(--period-hue) / 0.96);
-  font-size: 0.72rem;
-  font-weight: 950;
-  letter-spacing: 0.04em;
-}
-
-.future-card strong {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  color: currentColor;
-  font-size: 0.82rem;
-  font-weight: 900;
-  line-height: 1.22;
-}
-
 .chronology-detail {
+  --timeline-hue: 204 72% 58%;
+  --timeline-ink: #e6f4ff;
   display: grid;
-  grid-template-columns: minmax(220px, 0.74fr) minmax(240px, 1fr);
-  gap: 0.7rem;
-  align-items: stretch;
-}
-
-.period-detail,
-.event-detail {
-  border: 1px solid rgba(125, 190, 255, 0.12);
-  border-radius: 6px;
-  background: rgba(3, 10, 18, 0.24);
-}
-
-.period-detail {
-  --period-hue: 204 72% 58%;
-  --period-ink: #e6f4ff;
-  display: grid;
-  align-content: start;
-  gap: 0.45rem;
-  border-color: hsl(var(--period-hue) / 0.22);
-  padding: 0.72rem;
+  gap: 0.62rem;
+  border-color: hsl(var(--timeline-hue) / 0.24);
   background:
-    linear-gradient(135deg, hsl(var(--period-hue) / 0.14), transparent 58%),
-    rgba(3, 10, 18, 0.26);
-}
-
-.event-detail {
-  --period-hue: 204 72% 58%;
-}
-
-.event-detail.tone-transition {
-  --period-hue: 27 62% 55%;
-}
-
-.event-detail.tone-satirical {
-  --period-hue: 36 66% 57%;
-}
-
-.event-detail.tone-game {
-  --period-hue: 204 92% 67%;
+    linear-gradient(135deg, hsl(var(--timeline-hue) / 0.12), transparent 62%),
+    rgba(11, 23, 38, 0.98);
 }
 
 .detail-heading {
   display: flex;
-  gap: 0.5rem;
-  align-items: center;
+  gap: 0.65rem;
+  align-items: start;
   justify-content: space-between;
   min-width: 0;
 }
 
-.detail-heading > span:first-child,
-.event-detail > span {
-  margin: 0;
-  color: hsl(var(--period-hue) / 0.92);
-  font-size: 0.7rem;
+.detail-kicker {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+}
+
+.detail-kicker span {
+  color: hsl(var(--timeline-hue) / 0.95);
+  font-size: 0.68rem;
   font-weight: 950;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  line-height: 1;
   text-transform: uppercase;
+}
+
+.detail-kicker strong {
+  color: #9fb6ce;
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1.1;
 }
 
 .detail-nav {
   display: inline-flex;
   gap: 0.24rem;
-  align-items: center;
 }
 
 .detail-nav button {
   display: grid;
-  width: 28px;
-  height: 26px;
+  width: 30px;
+  height: 28px;
   place-items: center;
   border: 1px solid rgba(125, 190, 255, 0.14);
   border-radius: 4px;
@@ -1096,84 +869,65 @@ function onPointerUp(event: PointerEvent) {
   opacity: 0.38;
 }
 
-.period-detail h2 {
+.chronology-detail h2 {
+  max-width: 70rem;
   margin: 0;
-  color: var(--period-ink);
-  font-size: 1rem;
-  line-height: 1.12;
+  color: var(--timeline-ink);
+  font-size: clamp(1rem, 1.35vw, 1.28rem);
+  font-weight: 950;
+  line-height: 1.16;
 }
 
-.period-detail dl {
+.detail-facts {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.4rem;
+  gap: 0.46rem;
   margin: 0;
 }
 
-.period-detail div {
-  display: grid;
-  gap: 0.12rem;
-  border-top: 1px solid hsl(var(--period-hue) / 0.16);
-  padding-top: 0.4rem;
+.detail-facts--event {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.period-detail dt {
+.detail-facts div {
+  display: grid;
+  gap: 0.12rem;
+  border-top: 1px solid hsl(var(--timeline-hue) / 0.18);
+  padding-top: 0.42rem;
+}
+
+.detail-facts dt {
   color: #8da9c4;
   font-size: 0.66rem;
   font-weight: 900;
   text-transform: uppercase;
 }
 
-.period-detail dd {
+.detail-facts dd {
   margin: 0;
-  color: var(--period-ink);
+  color: #f6fbff;
   font-weight: 950;
 }
 
-.event-detail {
-  display: grid;
-  align-content: start;
-  gap: 0.35rem;
-  padding: 0.72rem;
-  border-color: hsl(var(--period-hue) / 0.2);
-  background:
-    linear-gradient(135deg, hsl(var(--period-hue) / 0.1), transparent 58%),
-    rgba(3, 10, 18, 0.24);
-}
-
-.event-detail strong {
-  color: #f6fbff;
-  font-size: 0.94rem;
-  line-height: 1.28;
-}
-
 @media (max-width: 960px) {
-  .chronology-heading,
-  .chronology-detail,
-  .future-briefing {
+  .chronology-heading {
     grid-template-columns: 1fr;
   }
 
   .timeline-controls {
     justify-content: flex-start;
   }
-
-  .future-briefing header {
-    border-right: 0;
-    border-bottom: 1px solid rgba(125, 190, 255, 0.12);
-    padding-right: 0;
-    padding-bottom: 0.48rem;
-  }
 }
 
 @media (max-width: 760px) {
-  .chronology-panel {
+  .chronology-board,
+  .chronology-detail {
     padding: 0.7rem;
   }
 
   .timeline-stage::before,
   .timeline-stage::after {
-    width: 42px;
+    width: 38px;
   }
 
   .timeline-side-control {
@@ -1183,23 +937,24 @@ function onPointerUp(event: PointerEvent) {
   }
 
   .timeline-side-control--left {
-    left: 0.26rem;
+    left: 0.24rem;
   }
 
   .timeline-side-control--right {
-    right: 0.26rem;
+    right: 0.24rem;
   }
 
   .timeline-canvas {
     min-height: 330px;
   }
 
-  .period-detail dl {
-    grid-template-columns: 1fr;
+  .detail-heading {
+    align-items: center;
   }
 
-  .future-card {
-    flex-basis: min(74vw, 250px);
+  .detail-facts,
+  .detail-facts--event {
+    grid-template-columns: 1fr;
   }
 }
 </style>
