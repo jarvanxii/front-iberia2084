@@ -19,6 +19,35 @@ const viewport = ref<HTMLElement | null>(null)
 const canvas = ref<HTMLElement | null>(null)
 const dragState = ref<{ pointerId: number; startX: number; scrollLeft: number } | null>(null)
 
+const periodPalette: Record<string, { hue: string; ink: string }> = {
+  'hispania-romana': { hue: '35 83% 56%', ink: '#fff2d7' },
+  'reino-visigodo': { hue: '264 48% 62%', ink: '#f1e8ff' },
+  'alandalus-reinos-cristianos': { hue: '149 54% 48%', ink: '#e6fff0' },
+  'reyes-catolicos': { hue: '2 68% 58%', ink: '#ffe8e6' },
+  'monarquia-austrias': { hue: '331 53% 52%', ink: '#ffe7f1' },
+  'reformismo-borbonico': { hue: '213 72% 58%', ink: '#e6f1ff' },
+  'crisis-antiguo-regimen': { hue: '27 62% 55%', ink: '#fff0e3' },
+  'estado-liberal-pronunciamientos': { hue: '181 48% 50%', ink: '#e5ffff' },
+  'restauracion-borbonica': { hue: '46 76% 54%', ink: '#fff7d7' },
+  'dictadura-primo-rivera': { hue: '220 31% 63%', ink: '#eef3ff' },
+  'segunda-republica': { hue: '287 55% 60%', ink: '#f8e7ff' },
+  'guerra-civil': { hue: '8 72% 55%', ink: '#ffe6df' },
+  franquismo: { hue: '199 30% 53%', ink: '#e6f4fb' },
+  transicion: { hue: '94 42% 55%', ink: '#efffe4' },
+  'bipartidismo-democratico': { hue: '206 56% 55%', ink: '#e7f4ff' },
+  'multipartidismo-coaliciones': { hue: '32 72% 58%', ink: '#fff0dc' },
+  'decada-meme-institucional': { hue: '320 67% 61%', ink: '#ffe5f6' },
+  'ministerios-absurdos': { hue: '171 58% 50%', ink: '#e2fff9' },
+  'reconquista-tierras-catalanas': { hue: '52 78% 57%', ink: '#fff8d8' },
+  'reina-mopongo': { hue: '272 72% 66%', ink: '#f5e8ff' },
+  'invasion-alienigena-administrativa': { hue: '112 60% 54%', ink: '#ebffe5' },
+  'segunda-venida-jesus': { hue: '188 72% 62%', ink: '#e0fbff' },
+  'guerra-algoritmos': { hue: '356 72% 61%', ink: '#ffe6e8' },
+  'restauracion-humana': { hue: '136 43% 58%', ink: '#eaffef' },
+  'confederacion-reinos-raros': { hue: '26 83% 61%', ink: '#fff0df' },
+  'iberia-2084': { hue: '204 92% 67%', ink: '#e3f5ff' },
+}
+
 const range = timelineRange(chronologyPeriods)
 const periodLanes = assignTimelineLanes(chronologyPeriods)
 const laneCount = Math.max(...periodLanes.map((item) => item.lane)) + 1
@@ -59,6 +88,23 @@ const scaleTicks = computed(() =>
     left: timelinePosition(year, range),
   })),
 )
+
+function periodColorVars(period?: ChronologyPeriod) {
+  const palette = period ? periodPalette[period.id] : null
+  return {
+    '--period-hue': palette?.hue ?? '204 72% 58%',
+    '--period-ink': palette?.ink ?? '#e6f4ff',
+  }
+}
+
+function periodSegmentStyle(segment: { period: ChronologyPeriod; lane: number; left: number; width: number }) {
+  return {
+    left: `${segment.left}%`,
+    width: `${segment.width}%`,
+    top: `${segment.lane * 48}px`,
+    ...periodColorVars(segment.period),
+  }
+}
 
 function periodEventCount(period: ChronologyPeriod) {
   return chronologyEvents.filter((event) => event.year >= period.startYear && event.year <= period.endYear).length
@@ -193,11 +239,7 @@ onMounted(() => {
             type="button"
             class="period-segment"
             :class="[`tone-${segment.period.tone}`, { selected: segment.period.id === selectedPeriod?.id }]"
-            :style="{
-              left: `${segment.left}%`,
-              width: `${segment.width}%`,
-              top: `${segment.lane * 48}px`,
-            }"
+            :style="periodSegmentStyle(segment)"
             :aria-pressed="segment.period.id === selectedPeriod?.id"
             @click="selectPeriod(segment.period)"
           >
@@ -225,7 +267,7 @@ onMounted(() => {
     </div>
 
     <section v-if="selectedPeriod" class="chronology-detail" aria-label="Detalle del periodo seleccionado">
-      <article class="period-detail" :class="`tone-${selectedPeriod.tone}`">
+      <article class="period-detail" :class="`tone-${selectedPeriod.tone}`" :style="periodColorVars(selectedPeriod)">
         <p>{{ formatTimelineRange(selectedPeriod.startYear, selectedPeriod.endYear) }}</p>
         <h2>{{ selectedPeriod.title }}</h2>
         <dl>
@@ -350,13 +392,17 @@ onMounted(() => {
 .timeline-viewport {
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid rgba(125, 190, 255, 0.14);
+  border: 1px solid rgba(125, 190, 255, 0.18);
   border-radius: 6px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.022), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), transparent 42%),
     radial-gradient(circle at 92% 12%, rgba(90, 167, 232, 0.1), transparent 19rem),
+    repeating-linear-gradient(90deg, rgba(125, 190, 255, 0.045) 0 1px, transparent 1px 120px),
     rgba(3, 10, 18, 0.34);
   cursor: grab;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -20px 42px rgba(0, 0, 0, 0.16);
   scrollbar-width: thin;
   scrollbar-color: rgba(155, 214, 255, 0.38) transparent;
 }
@@ -417,6 +463,8 @@ onMounted(() => {
 }
 
 .period-segment {
+  --period-hue: 204 72% 58%;
+  --period-ink: #e6f4ff;
   position: absolute;
   display: grid;
   min-width: 4px;
@@ -424,41 +472,48 @@ onMounted(() => {
   align-content: center;
   gap: 0.04rem;
   overflow: hidden;
-  border: 1px solid rgba(125, 190, 255, 0.13);
+  border: 1px solid hsl(var(--period-hue) / 0.34);
   border-radius: 4px;
   padding: 0.28rem 0.45rem;
-  color: #dceeff;
+  color: var(--period-ink);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 58%),
-    rgba(19, 43, 68, 0.78);
+    linear-gradient(180deg, hsl(var(--period-hue) / 0.3), hsl(var(--period-hue) / 0.1) 64%),
+    linear-gradient(90deg, hsl(var(--period-hue) / 0.2), rgba(3, 10, 18, 0.24));
   text-align: left;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.075),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+    0 8px 18px hsl(var(--period-hue) / 0.07);
 }
 
-.period-segment.tone-transition {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 58%),
-    rgba(57, 52, 78, 0.78);
-}
-
-.period-segment.tone-satirical {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 58%),
-    rgba(72, 56, 32, 0.78);
-}
-
-.period-segment.tone-game {
-  border-color: rgba(155, 214, 255, 0.34);
-  background:
-    linear-gradient(180deg, rgba(155, 214, 255, 0.16), transparent 58%),
-    rgba(32, 70, 104, 0.86);
+.period-segment::before {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: 3px;
+  border-radius: 999px;
+  background: hsl(var(--period-hue) / 0.92);
+  box-shadow: 0 0 12px hsl(var(--period-hue) / 0.38);
+  content: '';
 }
 
 .period-segment:hover,
 .period-segment.selected {
-  border-color: rgba(155, 214, 255, 0.46);
+  border-color: hsl(var(--period-hue) / 0.64);
   color: #ffffff;
   filter: brightness(1.08);
+  background:
+    linear-gradient(180deg, hsl(var(--period-hue) / 0.42), hsl(var(--period-hue) / 0.14) 66%),
+    linear-gradient(90deg, hsl(var(--period-hue) / 0.3), rgba(5, 16, 30, 0.2));
+}
+
+.period-segment.selected {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    inset 0 0 0 1px hsl(var(--period-hue) / 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.035),
+    0 10px 24px hsl(var(--period-hue) / 0.17);
 }
 
 .period-segment span,
@@ -470,12 +525,14 @@ onMounted(() => {
 }
 
 .period-segment span {
-  color: #9fb7ce;
+  padding-left: 0.34rem;
+  color: color-mix(in srgb, var(--period-ink) 72%, #8da9c4);
   font-size: 0.58rem;
   font-weight: 950;
 }
 
 .period-segment strong {
+  padding-left: 0.34rem;
   font-size: 0.74rem;
   font-weight: 950;
   line-height: 1.05;
@@ -558,16 +615,22 @@ onMounted(() => {
 }
 
 .period-detail {
+  --period-hue: 204 72% 58%;
+  --period-ink: #e6f4ff;
   display: grid;
   align-content: start;
   gap: 0.45rem;
+  border-color: hsl(var(--period-hue) / 0.22);
   padding: 0.72rem;
+  background:
+    linear-gradient(135deg, hsl(var(--period-hue) / 0.14), transparent 58%),
+    rgba(3, 10, 18, 0.26);
 }
 
 .period-detail p,
 .event-detail span {
   margin: 0;
-  color: #9bd6ff;
+  color: hsl(var(--period-hue) / 0.92);
   font-size: 0.7rem;
   font-weight: 950;
   letter-spacing: 0.04em;
@@ -576,7 +639,7 @@ onMounted(() => {
 
 .period-detail h2 {
   margin: 0;
-  color: #f6fbff;
+  color: var(--period-ink);
   font-size: 1rem;
   line-height: 1.12;
 }
@@ -591,7 +654,7 @@ onMounted(() => {
 .period-detail div {
   display: grid;
   gap: 0.12rem;
-  border-top: 1px solid rgba(125, 190, 255, 0.1);
+  border-top: 1px solid hsl(var(--period-hue) / 0.16);
   padding-top: 0.4rem;
 }
 
@@ -604,7 +667,7 @@ onMounted(() => {
 
 .period-detail dd {
   margin: 0;
-  color: #dceeff;
+  color: var(--period-ink);
   font-weight: 950;
 }
 
