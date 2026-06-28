@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import HomeBuildingsInfo from '@/components/home/HomeBuildingsInfo.vue'
+import HomeChronologyTimeline from '@/components/home/HomeChronologyTimeline.vue'
 import HomeEventsInfo from '@/components/home/HomeEventsInfo.vue'
 import HomeIntroInfo from '@/components/home/HomeIntroInfo.vue'
 import HomeOpenGames from '@/components/home/HomeOpenGames.vue'
@@ -47,7 +48,10 @@ const activeSection = computed<HomeSection>(() => {
 
 <template>
   <section v-if="state" class="home-view" :class="{ 'home-view--units': activeSection === 'unidades' }">
-    <HomeIntroInfo v-if="activeSection === 'inicio'" id="inicio" />
+    <template v-if="activeSection === 'inicio'">
+      <HomeChronologyTimeline id="cronologia" />
+      <HomeIntroInfo id="inicio" />
+    </template>
     <HomeOpenGames
       v-else-if="activeSection === 'partidas'"
       id="partidas-abiertas"
