@@ -9,7 +9,7 @@ import HomeOpenGames from '@/components/home/HomeOpenGames.vue'
 import HomePartiesInfo from '@/components/home/HomePartiesInfo.vue'
 import HomeResearchInfo from '@/components/home/HomeResearchInfo.vue'
 import HomeTroopsInfo from '@/components/home/HomeTroopsInfo.vue'
-import homeBannerUrl from '@/assets/banner-iberia.png'
+import homeBannerUrl from '@/assets/iberia-banner.png'
 import { useSessionStore } from '@/stores/session'
 
 type HomeSection = 'inicio' | 'partidas' | 'partidos' | 'unidades' | 'edificios' | 'eventos' | 'investigaciones'

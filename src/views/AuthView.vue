@@ -2,7 +2,7 @@
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import googleIcon from '@/assets/auth/google.svg'
-import authArt from '@/assets/banner-iberia.png'
+import authArt from '@/assets/iberia-portada.png'
 import { apiUrl } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
 import type { AuthProviderDto } from '@/types/game'
@@ -288,10 +288,10 @@ function invitationQuery() {
 <template>
   <main :class="['login-page', `login-page--${authMode}`]">
     <section class="login-layout">
-      <section class="login-visual" aria-label="Banner de Iberia 2084" :style="{ '--login-art': `url(${authArt})` }">
+      <section class="login-visual" aria-label="Portada de Iberia 2084" :style="{ '--login-art': `url(${authArt})` }">
         <picture>
           <source media="(max-width: 980px)" :srcset="authArt" />
-          <img class="login-banner" :src="authArt" alt="Banner de Iberia 2084" />
+          <img class="login-banner" :src="authArt" alt="Portada de Iberia 2084" />
         </picture>
       </section>
 
@@ -1206,7 +1206,7 @@ function invitationQuery() {
     width: 100%;
     height: auto;
     min-height: 0;
-    aspect-ratio: 1774 / 887;
+    aspect-ratio: 3 / 2;
     padding: 0;
     overflow: hidden;
     background:
@@ -1249,7 +1249,7 @@ function invitationQuery() {
     width: 100%;
     height: 100%;
     max-height: none;
-    aspect-ratio: 1774 / 887;
+    aspect-ratio: 3 / 2;
   }
 
   .login-card {
