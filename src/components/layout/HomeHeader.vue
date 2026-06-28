@@ -60,8 +60,9 @@ async function logout() {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.62rem;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
+  height: var(--home-header-height);
   min-height: var(--home-header-height);
   border-bottom: 1px solid rgba(125, 190, 255, 0.2);
   padding: 0 0.7rem;
@@ -100,6 +101,7 @@ async function logout() {
   grid-template-columns: 38px minmax(0, auto);
   gap: 0.44rem;
   align-items: center;
+  align-self: center;
   justify-self: start;
   color: var(--header-blue-strong);
   text-decoration: none;
@@ -126,10 +128,13 @@ async function logout() {
   gap: 0;
   justify-content: center;
   justify-self: center;
+  align-self: stretch;
   width: min(760px, 100%);
   min-width: 0;
-  height: calc(var(--home-header-height) - 0.2rem);
-  border: 1px solid rgba(125, 190, 255, 0.22);
+  height: 100%;
+  border: 0;
+  border-right: 1px solid rgba(125, 190, 255, 0.18);
+  border-left: 1px solid rgba(125, 190, 255, 0.18);
   border-radius: 0;
   padding: 0;
   overflow: hidden;
@@ -143,12 +148,13 @@ async function logout() {
 .home-section-link {
   position: relative;
   display: grid;
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
   place-items: center;
   border: 0;
   border-right: 1px solid rgba(125, 190, 255, 0.16);
   border-radius: 0;
-  padding: 0.44rem 0.84rem;
+  padding: 0 0.76rem;
   color: color-mix(in srgb, var(--color-muted) 82%, #c9e8ff);
   background: transparent;
   box-shadow: none;
@@ -207,6 +213,7 @@ async function logout() {
 
 .home-user {
   position: relative;
+  align-self: center;
   justify-self: end;
 }
 
@@ -224,8 +231,12 @@ async function logout() {
 @media (max-width: 760px) {
   .home-header {
     grid-template-columns: auto 1fr auto;
+    grid-template-rows: minmax(0, 1fr) 32px;
+    gap: 0;
+    align-items: stretch;
+    height: var(--home-header-height);
     min-height: var(--home-header-height);
-    padding: 0.38rem;
+    padding: 0 0.38rem;
   }
 
   .home-brand strong {
@@ -245,14 +256,15 @@ async function logout() {
   .home-section-nav {
     grid-column: 1 / -1;
     grid-row: 2;
+    align-self: stretch;
     height: 32px;
   }
 
   .home-section-link {
     flex: 0 0 auto;
-    min-height: 30px;
+    min-height: 0;
     min-width: 86px;
-    padding: 0.3rem 0.4rem;
+    padding: 0 0.4rem;
     text-align: center;
   }
 }

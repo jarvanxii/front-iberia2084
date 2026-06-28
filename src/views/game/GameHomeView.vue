@@ -51,7 +51,7 @@ const activeSection = computed<HomeSection>(() => {
   <section v-if="state" class="home-view" :class="{ 'home-view--units': activeSection === 'unidades' }">
     <template v-if="activeSection === 'inicio'">
       <figure class="home-banner" aria-label="Banner de Iberia 2084">
-        <img :src="homeBannerUrl" alt="Iberia 2084" />
+        <img :src="homeBannerUrl" alt="Iberia 2084" draggable="false" />
       </figure>
       <HomeChronologyTimeline id="cronologia" />
       <HomeIntroInfo id="inicio" />
@@ -98,6 +98,7 @@ const activeSection = computed<HomeSection>(() => {
 
 .home-banner {
   overflow: hidden;
+  user-select: none;
   width: calc(100% + var(--space-page) + var(--space-page));
   max-width: none;
   margin: calc(0px - var(--space-page)) calc(0px - var(--space-page)) 0;
@@ -110,8 +111,11 @@ const activeSection = computed<HomeSection>(() => {
 
 .home-banner img {
   display: block;
+  user-select: none;
   width: 100%;
   height: auto;
+  pointer-events: none;
+  -webkit-user-drag: none;
 }
 
 .loading-panel {
