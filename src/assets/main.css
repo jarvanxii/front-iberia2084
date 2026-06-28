@@ -1,6 +1,6 @@
 :root {
   --game-header-height: 112px;
-  --home-header-height: 54px;
+  --home-header-height: 55px;
   --space-page: 0.7rem;
   color: var(--color-text);
   background: var(--color-bg);
@@ -73,14 +73,14 @@ p {
 @media (max-width: 1220px) {
   :root {
     --game-header-height: 180px;
-    --home-header-height: 58px;
+    --home-header-height: 59px;
   }
 }
 
 @media (max-width: 760px) {
   :root {
     --game-header-height: 184px;
-    --home-header-height: 86px;
+    --home-header-height: 97px;
     --space-page: 0.55rem;
   }
 

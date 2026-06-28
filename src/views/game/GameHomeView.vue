@@ -98,13 +98,14 @@ const activeSection = computed<HomeSection>(() => {
 
 .home-banner {
   overflow: hidden;
-  margin: 0;
-  border: 1px solid rgba(125, 190, 255, 0.2);
-  border-radius: 5px;
-  background: rgba(3, 10, 18, 0.82);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 16px 42px rgba(0, 0, 0, 0.22);
+  width: calc(100% + var(--space-page) + var(--space-page));
+  max-width: none;
+  margin: calc(0px - var(--space-page)) calc(0px - var(--space-page)) 0;
+  border: 0;
+  border-bottom: 1px solid rgba(125, 190, 255, 0.22);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .home-banner img {
@@ -134,7 +135,7 @@ const activeSection = computed<HomeSection>(() => {
   }
 
   .home-banner {
-    border-radius: 4px;
+    border-radius: 0;
   }
 }
 </style>
