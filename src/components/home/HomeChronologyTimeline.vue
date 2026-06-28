@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { chronologyEvents, chronologyPeriods, type ChronologyEvent, type ChronologyPeriod } from '@/data/iberiaChronology'
-import { assignTimelineLanes, formatTimelineRange, formatTimelineYear, timelineRange } from '@/utils/chronology'
+import { formatTimelineRange, formatTimelineYear, timelineRange } from '@/utils/chronology'
 
 type TimelineMode = 'modern' | 'complete'
 type TimelineSelection = { kind: 'period'; id: string } | { kind: 'event'; index: number }
@@ -17,6 +17,11 @@ const hoveredSelection = ref<TimelineSelection | null>(null)
 const viewport = ref<HTMLElement | null>(null)
 const canvas = ref<HTMLElement | null>(null)
 const dragState = ref<{ pointerId: number; startX: number; scrollLeft: number } | null>(null)
+const hasTimelineOverflow = ref(false)
+const canScrollBackward = ref(false)
+const canScrollForward = ref(false)
+const scrollEdgeTolerance = 3
+let timelineResizeObserver: ResizeObserver | null = null
 
 const periodPalette: Record<string, { hue: string; ink: string }> = {
   'hispania-romana': { hue: '35 83% 56%', ink: '#fff2d7' },
@@ -67,11 +72,13 @@ const activeEvents = computed<TimelineEventItem[]>(() =>
 )
 
 const range = computed(() => timelineRange(activePeriods.value))
-const periodLanes = computed(() => assignTimelineLanes(activePeriods.value))
-const laneCount = computed(() => Math.max(1, ...periodLanes.value.map((item) => item.lane + 1)))
 const firstYear = computed(() => formatTimelineYear(range.value.startYear))
 const lastYear = computed(() => formatTimelineYear(range.value.endYear))
-const timelineMinWidth = computed(() => (timelineMode.value === 'modern' ? '920px' : '1120px'))
+const periodLaneStep = 70
+const timelineMinWidthPx = computed(() => (timelineMode.value === 'modern' ? 1680 : 2600))
+const periodMinWidthPx = computed(() => (timelineMode.value === 'modern' ? 164 : 120))
+const timelineMinWidth = computed(() => `${timelineMinWidthPx.value}px`)
+const periodMinWidthPercent = computed(() => ((periodMinWidthPx.value + 10) / timelineMinWidthPx.value) * 100)
 
 const importantTicks = computed(() => {
   if (timelineMode.value === 'modern') {
@@ -108,14 +115,25 @@ const displayTotalWeight = computed(() =>
   displayScaleSegments.value.reduce((total, segment) => total + segment.weight, 0),
 )
 
-const periodSegments = computed(() =>
-  periodLanes.value.map(({ period, lane }) => ({
-    period,
-    lane,
-    left: displayPosition(period.startYear),
-    width: Math.max(1.8, displayWidth(period.startYear, period.endYear)),
-  })),
-)
+const periodSegments = computed(() => {
+  const laneEnds: number[] = []
+
+  return activePeriods.value
+    .map((period) => ({
+      period,
+      left: displayPosition(period.startYear),
+      width: Math.max(1.8, displayWidth(period.startYear, period.endYear)),
+    }))
+    .sort((a, b) => a.period.startYear - b.period.startYear || a.period.endYear - b.period.endYear)
+    .map((segment) => {
+      const visualEnd = segment.left + Math.max(segment.width, periodMinWidthPercent.value)
+      const openLane = laneEnds.findIndex((end) => segment.left >= end)
+      const lane = openLane === -1 ? laneEnds.length : openLane
+      laneEnds[lane] = visualEnd
+      return { ...segment, lane }
+    })
+})
+const laneCount = computed(() => Math.max(1, ...periodSegments.value.map((item) => item.lane + 1)))
 
 const eventMarkers = computed(() =>
   activeEvents.value.map((item) => ({
@@ -182,12 +200,38 @@ const activeColorVars = computed(() => {
   if (activePeriod.value) return periodColorVars(activePeriod.value)
   return eventColorVars(activeEvent.value)
 })
+const canMoveDetailBackward = computed(() =>
+  activeSelection.value.kind === 'period' ? activePeriodIndex.value > 0 : activeEventSequenceIndex.value > 0,
+)
+const canMoveDetailForward = computed(() =>
+  activeSelection.value.kind === 'period'
+    ? activePeriodIndex.value < activePeriods.value.length - 1
+    : activeEventSequenceIndex.value < activeEvents.value.length - 1,
+)
 
 watch(timelineMode, () => {
   const firstPeriod = activePeriods.value[0]
   if (firstPeriod) selectedSelection.value = { kind: 'period', id: firstPeriod.id }
   hoveredSelection.value = null
   void nextTick(() => focusYear(range.value.startYear, 'auto'))
+})
+
+watch([timelineMinWidth, laneCount], () => {
+  void nextTick(() => {
+    observeTimelineSizes()
+    updateTimelineScrollState()
+  })
+})
+
+onMounted(() => {
+  observeTimelineSizes()
+  window.addEventListener('resize', updateTimelineScrollState)
+  void nextTick(updateTimelineScrollState)
+})
+
+onBeforeUnmount(() => {
+  timelineResizeObserver?.disconnect()
+  window.removeEventListener('resize', updateTimelineScrollState)
 })
 
 function displayPosition(year: number) {
@@ -235,7 +279,7 @@ function periodStyle(segment: { period: ChronologyPeriod; lane: number; left: nu
   return {
     left: `${segment.left}%`,
     width: `${segment.width}%`,
-    top: `${segment.lane * 42}px`,
+    top: `${segment.lane * periodLaneStep}px`,
     ...periodColorVars(segment.period),
   }
 }
@@ -284,6 +328,7 @@ function scrollByDirection(direction: 1 | -1) {
   const element = viewport.value
   if (!element) return
   element.scrollBy({ left: direction * Math.max(300, element.clientWidth * 0.7), behavior: 'smooth' })
+  scheduleTimelineScrollStateUpdate()
 }
 
 function focusYear(year: number, behavior: ScrollBehavior = 'smooth') {
@@ -292,7 +337,43 @@ function focusYear(year: number, behavior: ScrollBehavior = 'smooth') {
   if (!element || !content) return
   const target = (displayPosition(year) / 100) * content.scrollWidth - element.clientWidth / 2
   const maxScroll = Math.max(0, content.scrollWidth - element.clientWidth)
-  void nextTick(() => element.scrollTo({ left: Math.min(Math.max(0, target), maxScroll), behavior }))
+  void nextTick(() => {
+    element.scrollTo({ left: Math.min(Math.max(0, target), maxScroll), behavior })
+    scheduleTimelineScrollStateUpdate()
+  })
+}
+
+function updateTimelineScrollState() {
+  const element = viewport.value
+  const content = canvas.value
+  if (!element || !content) {
+    hasTimelineOverflow.value = false
+    canScrollBackward.value = false
+    canScrollForward.value = false
+    return
+  }
+
+  const maxScroll = Math.max(0, content.scrollWidth - element.clientWidth)
+  const scrollLeft = Math.min(Math.max(0, element.scrollLeft), maxScroll)
+  const hasOverflow = maxScroll > scrollEdgeTolerance
+
+  hasTimelineOverflow.value = hasOverflow
+  canScrollBackward.value = hasOverflow && scrollLeft > scrollEdgeTolerance
+  canScrollForward.value = hasOverflow && scrollLeft < maxScroll - scrollEdgeTolerance
+}
+
+function scheduleTimelineScrollStateUpdate() {
+  if (typeof window === 'undefined') return
+  window.requestAnimationFrame(() => updateTimelineScrollState())
+}
+
+function observeTimelineSizes() {
+  timelineResizeObserver?.disconnect()
+  if (typeof ResizeObserver === 'undefined') return
+
+  timelineResizeObserver = new ResizeObserver(updateTimelineScrollState)
+  if (viewport.value) timelineResizeObserver.observe(viewport.value)
+  if (canvas.value) timelineResizeObserver.observe(canvas.value)
 }
 
 function onPointerDown(event: PointerEvent) {
@@ -309,6 +390,7 @@ function onPointerMove(event: PointerEvent) {
   const element = viewport.value
   if (!state || !element) return
   element.scrollLeft = state.scrollLeft - (event.clientX - state.startX)
+  updateTimelineScrollState()
 }
 
 function onPointerUp(event: PointerEvent) {
@@ -338,8 +420,12 @@ function onPointerUp(event: PointerEvent) {
     </header>
 
     <div class="timeline-frame">
-      <div class="timeline-stage">
+      <div
+        class="timeline-stage"
+        :class="{ 'can-scroll-left': canScrollBackward, 'can-scroll-right': canScrollForward }"
+      >
         <button
+          v-if="canScrollBackward"
           type="button"
           class="timeline-side-control timeline-side-control--left"
           aria-label="Mover hacia atrás"
@@ -351,9 +437,10 @@ function onPointerUp(event: PointerEvent) {
         <div
           ref="viewport"
           class="timeline-viewport"
-          :class="{ dragging: dragState }"
+          :class="{ dragging: dragState, 'has-overflow': hasTimelineOverflow }"
           tabindex="0"
           aria-label="Cronología horizontal"
+          @scroll="updateTimelineScrollState"
           @pointerdown="onPointerDown"
           @pointermove="onPointerMove"
           @pointerup="onPointerUp"
@@ -363,6 +450,7 @@ function onPointerUp(event: PointerEvent) {
           <div
             ref="canvas"
             class="timeline-canvas"
+            :class="`timeline-canvas--${timelineMode}`"
             :style="{ '--timeline-min-width': timelineMinWidth, '--period-lanes': laneCount }"
           >
             <div class="timeline-scale" aria-hidden="true">
@@ -423,6 +511,7 @@ function onPointerUp(event: PointerEvent) {
         </div>
 
         <button
+          v-if="canScrollForward"
           type="button"
           class="timeline-side-control timeline-side-control--right"
           aria-label="Mover hacia delante"
@@ -438,27 +527,19 @@ function onPointerUp(event: PointerEvent) {
             <span>{{ activeKindLabel }}</span>
             <strong>{{ activeToneLabel }}</strong>
           </div>
-          <div class="detail-nav" aria-label="Navegar detalle">
+          <div v-if="canMoveDetailBackward || canMoveDetailForward" class="detail-nav" aria-label="Navegar detalle">
             <button
+              v-if="canMoveDetailBackward"
               type="button"
               aria-label="Elemento anterior"
-              :disabled="
-                activeSelection.kind === 'period'
-                  ? activePeriodIndex <= 0
-                  : activeSelection.kind === 'event' && activeEventSequenceIndex <= 0
-              "
               @click="moveActive(-1)"
             >
               ‹
             </button>
             <button
+              v-if="canMoveDetailForward"
               type="button"
               aria-label="Elemento siguiente"
-              :disabled="
-                activeSelection.kind === 'period'
-                  ? activePeriodIndex >= activePeriods.length - 1
-                  : activeSelection.kind === 'event' && activeEventSequenceIndex >= activeEvents.length - 1
-              "
               @click="moveActive(1)"
             >
               ›
@@ -595,7 +676,9 @@ function onPointerUp(event: PointerEvent) {
   bottom: 0;
   width: 54px;
   pointer-events: none;
+  opacity: 0;
   content: '';
+  transition: opacity 0.14s ease;
 }
 
 .timeline-stage::before {
@@ -606,6 +689,11 @@ function onPointerUp(event: PointerEvent) {
 .timeline-stage::after {
   right: 0;
   background: linear-gradient(270deg, rgba(5, 14, 26, 0.96), transparent);
+}
+
+.timeline-stage.can-scroll-left::before,
+.timeline-stage.can-scroll-right::after {
+  opacity: 1;
 }
 
 .timeline-side-control {
@@ -644,12 +732,16 @@ function onPointerUp(event: PointerEvent) {
 .timeline-viewport {
   overflow-x: auto;
   overflow-y: hidden;
-  cursor: grab;
+  cursor: default;
   scrollbar-width: thin;
   scrollbar-color: rgba(155, 214, 255, 0.38) transparent;
 }
 
-.timeline-viewport.dragging {
+.timeline-viewport.has-overflow {
+  cursor: grab;
+}
+
+.timeline-viewport.has-overflow.dragging {
   cursor: grabbing;
 }
 
@@ -657,8 +749,8 @@ function onPointerUp(event: PointerEvent) {
   position: relative;
   width: max(100%, var(--timeline-min-width));
   min-width: 100%;
-  height: calc(132px + var(--period-lanes) * 42px);
-  min-height: 212px;
+  height: calc(142px + var(--period-lanes) * 70px);
+  min-height: 230px;
   user-select: none;
 }
 
@@ -703,7 +795,7 @@ function onPointerUp(event: PointerEvent) {
   top: 50px;
   right: 0;
   left: 0;
-  height: calc(var(--period-lanes) * 42px);
+  height: calc(var(--period-lanes) * 70px);
 }
 
 .period-segment {
@@ -711,20 +803,25 @@ function onPointerUp(event: PointerEvent) {
   --timeline-ink: #e6f4ff;
   position: absolute;
   display: grid;
-  min-width: 12px;
-  height: 32px;
-  align-content: center;
-  gap: 0.02rem;
-  overflow: hidden;
+  min-width: 7.5rem;
+  height: 58px;
+  align-content: start;
+  gap: 0.1rem;
+  overflow: visible;
   border: 1px solid hsl(var(--timeline-hue) / 0.34);
   border-radius: 0;
-  padding: 0.26rem 0.48rem;
+  padding: 0.3rem 0.42rem;
   color: var(--timeline-ink);
   background:
     linear-gradient(180deg, hsl(var(--timeline-hue) / 0.28), hsl(var(--timeline-hue) / 0.1) 66%),
     rgba(3, 10, 18, 0.3);
+  font-family: 'Arial Narrow', 'Roboto Condensed', 'Segoe UI', Inter, ui-sans-serif, sans-serif;
   text-align: left;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.timeline-canvas--modern .period-segment {
+  min-width: 10.25rem;
 }
 
 .period-segment:hover,
@@ -738,26 +835,29 @@ function onPointerUp(event: PointerEvent) {
 .period-segment span,
 .period-segment strong {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .period-segment span {
   color: color-mix(in srgb, var(--timeline-ink) 72%, #8da9c4);
-  font-size: 0.56rem;
-  font-weight: 950;
+  font-size: 0.52rem;
+  font-weight: 850;
+  line-height: 1;
 }
 
 .period-segment strong {
-  font-size: 0.72rem;
-  font-weight: 950;
-  line-height: 1.04;
+  font-size: 0.64rem;
+  font-weight: 850;
+  line-height: 1.08;
 }
 
 .event-layer {
   position: absolute;
-  top: calc(68px + var(--period-lanes) * 42px);
+  top: calc(64px + var(--period-lanes) * 70px);
   right: 0;
   left: 0;
   height: 66px;
