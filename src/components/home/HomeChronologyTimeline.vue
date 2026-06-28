@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { chronologyEvents, chronologyPeriods, type ChronologyEvent, type ChronologyPeriod } from '@/data/iberiaChronology'
 import { assignTimelineLanes, formatTimelineRange, formatTimelineYear, timelineRange } from '@/utils/chronology'
 
+type TimelineMode = 'modern' | 'complete'
 type TimelineSelection = { kind: 'period'; id: string } | { kind: 'event'; index: number }
+type TimelineEventItem = { event: ChronologyEvent; index: number }
 
-const futureStartYear = 2026
-const canvasWidth = 2480
-const trackInsetPercent = 2.8
-const selectedSelection = ref<TimelineSelection>({ kind: 'period', id: chronologyPeriods[0]?.id ?? 'hispania-romana' })
+const modernStartYear = 2026
+const trackInsetPercent = 3.2
+const modernDefaultPeriod = chronologyPeriods.find((period) => period.startYear >= modernStartYear) ?? chronologyPeriods[0]
+
+const timelineMode = ref<TimelineMode>('modern')
+const selectedSelection = ref<TimelineSelection>({ kind: 'period', id: modernDefaultPeriod?.id ?? 'decada-meme-institucional' })
 const hoveredSelection = ref<TimelineSelection | null>(null)
 const viewport = ref<HTMLElement | null>(null)
 const canvas = ref<HTMLElement | null>(null)
@@ -50,83 +54,125 @@ const tonePalette: Record<ChronologyEvent['tone'], { hue: string; ink: string; l
   game: { hue: '204 92% 67%', ink: '#e3f5ff', label: 'Iberia 2084' },
 }
 
-const range = timelineRange(chronologyPeriods)
-const periodLanes = assignTimelineLanes(chronologyPeriods)
-const laneCount = Math.max(...periodLanes.map((item) => item.lane)) + 1
-const activeSelection = computed(() => hoveredSelection.value ?? selectedSelection.value)
-const firstYear = computed(() => formatTimelineYear(range.startYear))
-const lastYear = computed(() => formatTimelineYear(range.endYear))
+const activePeriods = computed(() =>
+  timelineMode.value === 'modern'
+    ? chronologyPeriods.filter((period) => period.startYear >= modernStartYear)
+    : chronologyPeriods,
+)
 
-const displayYears = [
-  ...new Set([
-    ...chronologyPeriods.flatMap((period) => [period.startYear, period.endYear]),
-    ...chronologyEvents.map((event) => event.year),
-    range.startYear,
-    476,
-    711,
-    1492,
-    1808,
-    1936,
-    1975,
-    futureStartYear,
-    range.endYear,
-  ]),
-].sort((a, b) => a - b)
+const activeEvents = computed<TimelineEventItem[]>(() =>
+  chronologyEvents
+    .map((event, index) => ({ event, index }))
+    .filter((item) => timelineMode.value === 'complete' || item.event.year >= modernStartYear),
+)
 
-const displayScaleSegments = displayYears.slice(0, -1).map((startYear, index) => {
-  const endYear = displayYears[index + 1] ?? startYear
-  const span = Math.max(1, endYear - startYear)
-  return {
-    startYear,
-    endYear,
-    weight: Math.max(4.8, Math.pow(span, 0.56)),
+const range = computed(() => timelineRange(activePeriods.value))
+const periodLanes = computed(() => assignTimelineLanes(activePeriods.value))
+const laneCount = computed(() => Math.max(1, ...periodLanes.value.map((item) => item.lane + 1)))
+const firstYear = computed(() => formatTimelineYear(range.value.startYear))
+const lastYear = computed(() => formatTimelineYear(range.value.endYear))
+const timelineMinWidth = computed(() => (timelineMode.value === 'modern' ? '920px' : '1120px'))
+
+const importantTicks = computed(() => {
+  if (timelineMode.value === 'modern') {
+    return [2026, 2031, 2037, 2042, 2048, 2053, 2059, 2066, 2072, 2078, 2084]
   }
+
+  return [range.value.startYear, 476, 711, 1492, 1808, 1936, 1975, modernStartYear, range.value.endYear]
 })
-const displayTotalWeight = displayScaleSegments.reduce((total, segment) => total + segment.weight, 0)
+
+const displayYears = computed(() =>
+  [
+    ...new Set([
+      ...activePeriods.value.flatMap((period) => [period.startYear, period.endYear]),
+      ...activeEvents.value.map((item) => item.event.year),
+      ...importantTicks.value,
+      range.value.startYear,
+      range.value.endYear,
+    ]),
+  ].sort((a, b) => a - b),
+)
+
+const displayScaleSegments = computed(() =>
+  displayYears.value.slice(0, -1).map((startYear, index) => {
+    const endYear = displayYears.value[index + 1] ?? startYear
+    const span = Math.max(1, endYear - startYear)
+    return {
+      startYear,
+      endYear,
+      weight: timelineMode.value === 'modern' ? span : Math.max(4.8, Math.pow(span, 0.56)),
+    }
+  }),
+)
+const displayTotalWeight = computed(() =>
+  displayScaleSegments.value.reduce((total, segment) => total + segment.weight, 0),
+)
 
 const periodSegments = computed(() =>
-  periodLanes.map(({ period, lane }) => ({
+  periodLanes.value.map(({ period, lane }) => ({
     period,
     lane,
     left: displayPosition(period.startYear),
-    width: Math.max(0.55, displayWidth(period.startYear, period.endYear)),
+    width: Math.max(1.8, displayWidth(period.startYear, period.endYear)),
   })),
 )
 
 const eventMarkers = computed(() =>
-  chronologyEvents.map((event, index) => ({
-    event,
-    index,
-    left: displayPosition(event.year),
-    isFuture: event.year >= futureStartYear,
-    isGame: event.tone === 'game',
+  activeEvents.value.map((item) => ({
+    event: item.event,
+    index: item.index,
+    left: displayPosition(item.event.year),
+    isFuture: item.event.year >= modernStartYear,
+    isGame: item.event.tone === 'game',
   })),
 )
 
 const scaleTicks = computed(() =>
-  [range.startYear, 476, 711, 1492, 1808, 1936, 1975, futureStartYear, range.endYear].map((year) => ({
-    year,
-    left: displayPosition(year),
-  })),
+  importantTicks.value
+    .filter((year) => year >= range.value.startYear && year <= range.value.endYear)
+    .map((year) => ({
+      year,
+      left: displayPosition(year),
+    })),
 )
+
+const activeSelection = computed<TimelineSelection>(() => {
+  const selection = hoveredSelection.value ?? selectedSelection.value
+
+  if (selection.kind === 'period' && activePeriods.value.some((period) => period.id === selection.id)) {
+    return selection
+  }
+
+  if (selection.kind === 'event' && activeEvents.value.some((item) => item.index === selection.index)) {
+    return selection
+  }
+
+  return { kind: 'period', id: activePeriods.value[0]?.id ?? chronologyPeriods[0]?.id ?? '' }
+})
 
 const activePeriod = computed(() => {
   const selection = activeSelection.value
   if (selection.kind !== 'period') return null
-  return chronologyPeriods.find((period) => period.id === selection.id) ?? chronologyPeriods[0]
+  return activePeriods.value.find((period) => period.id === selection.id) ?? activePeriods.value[0]
 })
+
 const activeEvent = computed(() => {
   const selection = activeSelection.value
   if (selection.kind !== 'event') return null
-  return chronologyEvents[selection.index] ?? chronologyEvents[0]
+  return chronologyEvents[selection.index] ?? activeEvents.value[0]?.event ?? null
 })
+
 const activeKindLabel = computed(() => (activeSelection.value.kind === 'period' ? 'Periodo' : 'Evento'))
 const activeTitle = computed(() => activePeriod.value?.title ?? activeEvent.value?.title ?? '')
 const activePeriodIndex = computed(() => {
   if (!activePeriod.value) return -1
-  return chronologyPeriods.findIndex((period) => period.id === activePeriod.value?.id)
+  return activePeriods.value.findIndex((period) => period.id === activePeriod.value?.id)
 })
-const activeEventIndex = computed(() => (activeSelection.value.kind === 'event' ? activeSelection.value.index : -1))
+const activeEventSequenceIndex = computed(() => {
+  const selection = activeSelection.value
+  if (selection.kind !== 'event') return -1
+  return activeEvents.value.findIndex((item) => item.index === selection.index)
+})
 const activeToneLabel = computed(() => {
   if (activePeriod.value) return activePeriod.value.tone === 'game' ? 'Iberia 2084' : 'Periodo histórico'
   if (activeEvent.value) return tonePalette[activeEvent.value.tone]?.label ?? 'Evento'
@@ -137,12 +183,19 @@ const activeColorVars = computed(() => {
   return eventColorVars(activeEvent.value)
 })
 
+watch(timelineMode, () => {
+  const firstPeriod = activePeriods.value[0]
+  if (firstPeriod) selectedSelection.value = { kind: 'period', id: firstPeriod.id }
+  hoveredSelection.value = null
+  void nextTick(() => focusYear(range.value.startYear, 'auto'))
+})
+
 function displayPosition(year: number) {
-  if (year <= range.startYear) return trackInsetPercent
-  if (year >= range.endYear) return 100 - trackInsetPercent
+  if (year <= range.value.startYear) return trackInsetPercent
+  if (year >= range.value.endYear) return 100 - trackInsetPercent
 
   let accumulatedWeight = 0
-  for (const segment of displayScaleSegments) {
+  for (const segment of displayScaleSegments.value) {
     if (year >= segment.endYear) {
       accumulatedWeight += segment.weight
       continue
@@ -154,7 +207,7 @@ function displayPosition(year: number) {
     }
   }
 
-  const rawPosition = displayTotalWeight > 0 ? (accumulatedWeight / displayTotalWeight) * 100 : 0
+  const rawPosition = displayTotalWeight.value > 0 ? (accumulatedWeight / displayTotalWeight.value) * 100 : 0
   return trackInsetPercent + rawPosition * ((100 - trackInsetPercent * 2) / 100)
 }
 
@@ -182,7 +235,7 @@ function periodStyle(segment: { period: ChronologyPeriod; lane: number; left: nu
   return {
     left: `${segment.left}%`,
     width: `${segment.width}%`,
-    top: `${segment.lane * 46}px`,
+    top: `${segment.lane * 42}px`,
     ...periodColorVars(segment.period),
   }
 }
@@ -214,22 +267,23 @@ function clearPreview() {
 function moveActive(offset: 1 | -1) {
   const active = activeSelection.value
   hoveredSelection.value = null
+
   if (active.kind === 'period') {
-    const currentIndex = Math.max(0, chronologyPeriods.findIndex((period) => period.id === active.id))
-    const nextPeriod = chronologyPeriods[Math.min(Math.max(0, currentIndex + offset), chronologyPeriods.length - 1)]
+    const currentIndex = Math.max(0, activePeriods.value.findIndex((period) => period.id === active.id))
+    const nextPeriod = activePeriods.value[Math.min(Math.max(0, currentIndex + offset), activePeriods.value.length - 1)]
     if (nextPeriod) selectPeriod(nextPeriod, true)
     return
   }
 
-  const nextIndex = Math.min(Math.max(0, active.index + offset), chronologyEvents.length - 1)
-  const nextEvent = chronologyEvents[nextIndex]
-  if (nextEvent) selectEvent(nextEvent, nextIndex, true)
+  const nextSequenceIndex = Math.min(Math.max(0, activeEventSequenceIndex.value + offset), activeEvents.value.length - 1)
+  const nextEvent = activeEvents.value[nextSequenceIndex]
+  if (nextEvent) selectEvent(nextEvent.event, nextEvent.index, true)
 }
 
 function scrollByDirection(direction: 1 | -1) {
   const element = viewport.value
   if (!element) return
-  element.scrollBy({ left: direction * Math.max(340, element.clientWidth * 0.72), behavior: 'smooth' })
+  element.scrollBy({ left: direction * Math.max(300, element.clientWidth * 0.7), behavior: 'smooth' })
 }
 
 function focusYear(year: number, behavior: ScrollBehavior = 'smooth') {
@@ -243,7 +297,7 @@ function focusYear(year: number, behavior: ScrollBehavior = 'smooth') {
 
 function onPointerDown(event: PointerEvent) {
   if (event.button !== 0) return
-  if (event.target instanceof Element && event.target.closest('button')) return
+  if (event.target instanceof Element && event.target.closest('button, select')) return
   const element = viewport.value
   if (!element) return
   dragState.value = { pointerId: event.pointerId, startX: event.clientX, scrollLeft: element.scrollLeft }
@@ -267,21 +321,23 @@ function onPointerUp(event: PointerEvent) {
 </script>
 
 <template>
-  <section class="chronology-shell" aria-labelledby="chronology-title">
-    <section class="panel chronology-board">
-      <header class="chronology-heading">
-        <div class="chronology-title-block">
-          <p class="chronology-kicker">Cronología</p>
-          <h1 id="chronology-title">Historia de España e Iberia 2084</h1>
-        </div>
+  <section class="panel chronology-board" aria-labelledby="chronology-title">
+    <header class="chronology-heading">
+      <div class="chronology-title-block">
+        <p class="chronology-kicker">Cronología</p>
+        <h1 id="chronology-title">Historia de España e Iberia 2084</h1>
+      </div>
 
-        <div class="timeline-controls" aria-label="Navegación del eje cronológico">
-          <button type="button" class="timeline-chip" @click="focusYear(range.startYear)">{{ firstYear }}</button>
-          <button type="button" class="timeline-chip" @click="focusYear(futureStartYear)">2026</button>
-          <button type="button" class="timeline-chip is-strong" @click="focusYear(range.endYear)">2084</button>
-        </div>
-      </header>
+      <label class="timeline-mode">
+        <span>Vista</span>
+        <select v-model="timelineMode" aria-label="Elegir alcance de la cronología">
+          <option value="modern">Historia moderna</option>
+          <option value="complete">Historia completa</option>
+        </select>
+      </label>
+    </header>
 
+    <div class="timeline-frame">
       <div class="timeline-stage">
         <button
           type="button"
@@ -304,7 +360,11 @@ function onPointerUp(event: PointerEvent) {
           @pointercancel="onPointerUp"
           @mouseleave="clearPreview"
         >
-          <div ref="canvas" class="timeline-canvas" :style="{ width: `${canvasWidth}px`, '--period-lanes': laneCount }">
+          <div
+            ref="canvas"
+            class="timeline-canvas"
+            :style="{ '--timeline-min-width': timelineMinWidth, '--period-lanes': laneCount }"
+          >
             <div class="timeline-scale" aria-hidden="true">
               <span
                 v-for="tick in scaleTicks"
@@ -344,7 +404,7 @@ function onPointerUp(event: PointerEvent) {
                 :class="[
                   `tone-${marker.event.tone}`,
                   {
-                    active: activeSelection.kind === 'event' && activeEventIndex === marker.index,
+                    active: activeSelection.kind === 'event' && activeSelection.index === marker.index,
                     'future-event': marker.isFuture,
                     'game-event': marker.isGame,
                   },
@@ -371,88 +431,79 @@ function onPointerUp(event: PointerEvent) {
           ›
         </button>
       </div>
-    </section>
 
-    <section class="panel chronology-detail" :style="activeColorVars" aria-live="polite">
-      <header class="detail-heading">
-        <div class="detail-kicker">
-          <span>{{ activeKindLabel }}</span>
-          <strong>{{ activeToneLabel }}</strong>
-        </div>
-        <div class="detail-nav" aria-label="Navegar detalle">
-          <button
-            type="button"
-            aria-label="Elemento anterior"
-            :disabled="
-              activeSelection.kind === 'period'
-                ? activePeriodIndex <= 0
-                : activeSelection.kind === 'event' && activeEventIndex <= 0
-            "
-            @click="moveActive(-1)"
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            aria-label="Elemento siguiente"
-            :disabled="
-              activeSelection.kind === 'period'
-                ? activePeriodIndex >= chronologyPeriods.length - 1
-                : activeSelection.kind === 'event' && activeEventIndex >= chronologyEvents.length - 1
-            "
-            @click="moveActive(1)"
-          >
-            ›
-          </button>
-        </div>
-      </header>
+      <section class="chronology-detail" :style="activeColorVars" aria-live="polite">
+        <header class="detail-heading">
+          <div class="detail-kicker">
+            <span>{{ activeKindLabel }}</span>
+            <strong>{{ activeToneLabel }}</strong>
+          </div>
+          <div class="detail-nav" aria-label="Navegar detalle">
+            <button
+              type="button"
+              aria-label="Elemento anterior"
+              :disabled="
+                activeSelection.kind === 'period'
+                  ? activePeriodIndex <= 0
+                  : activeSelection.kind === 'event' && activeEventSequenceIndex <= 0
+              "
+              @click="moveActive(-1)"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              aria-label="Elemento siguiente"
+              :disabled="
+                activeSelection.kind === 'period'
+                  ? activePeriodIndex >= activePeriods.length - 1
+                  : activeSelection.kind === 'event' && activeEventSequenceIndex >= activeEvents.length - 1
+              "
+              @click="moveActive(1)"
+            >
+              ›
+            </button>
+          </div>
+        </header>
 
-      <h2>{{ activeTitle }}</h2>
+        <h2>{{ activeTitle }}</h2>
 
-      <dl v-if="activePeriod" class="detail-facts">
-        <div>
-          <dt>Inicio</dt>
-          <dd>{{ formatTimelineYear(activePeriod.startYear) }}</dd>
-        </div>
-        <div>
-          <dt>Final</dt>
-          <dd>{{ formatTimelineYear(activePeriod.endYear) }}</dd>
-        </div>
-        <div>
-          <dt>Duración</dt>
-          <dd>{{ activePeriod.endYear - activePeriod.startYear }} años</dd>
-        </div>
-      </dl>
+        <dl v-if="activePeriod" class="detail-facts">
+          <div>
+            <dt>Inicio</dt>
+            <dd>{{ formatTimelineYear(activePeriod.startYear) }}</dd>
+          </div>
+          <div>
+            <dt>Final</dt>
+            <dd>{{ formatTimelineYear(activePeriod.endYear) }}</dd>
+          </div>
+          <div>
+            <dt>Duración</dt>
+            <dd>{{ activePeriod.endYear - activePeriod.startYear }} años</dd>
+          </div>
+        </dl>
 
-      <dl v-else-if="activeEvent" class="detail-facts detail-facts--event">
-        <div>
-          <dt>Año</dt>
-          <dd>{{ formatTimelineYear(activeEvent.year) }}</dd>
-        </div>
-        <div>
-          <dt>Tipo</dt>
-          <dd>{{ activeToneLabel }}</dd>
-        </div>
-      </dl>
-    </section>
+        <dl v-else-if="activeEvent" class="detail-facts detail-facts--event">
+          <div>
+            <dt>Año</dt>
+            <dd>{{ formatTimelineYear(activeEvent.year) }}</dd>
+          </div>
+          <div>
+            <dt>Tipo</dt>
+            <dd>{{ activeToneLabel }}</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
   </section>
 </template>
 
 <style scoped>
-.chronology-shell {
-  display: grid;
-  gap: 0.72rem;
-}
-
-.chronology-board,
-.chronology-detail {
-  overflow: hidden;
-  padding: clamp(0.78rem, 1.4vw, 1rem);
-}
-
 .chronology-board {
   display: grid;
-  gap: 0.7rem;
+  gap: 0.84rem;
+  overflow: hidden;
+  padding: clamp(0.78rem, 1.4vw, 1rem);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.026), transparent 86px),
     rgba(11, 23, 38, 0.98);
@@ -461,7 +512,7 @@ function onPointerUp(event: PointerEvent) {
 .chronology-heading {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.75rem;
+  gap: 0.9rem;
   align-items: end;
 }
 
@@ -471,7 +522,8 @@ function onPointerUp(event: PointerEvent) {
   gap: 0.16rem;
 }
 
-.chronology-kicker {
+.chronology-kicker,
+.timeline-mode span {
   margin: 0;
   color: var(--color-accent);
   font-size: 0.68rem;
@@ -484,39 +536,50 @@ function onPointerUp(event: PointerEvent) {
 .chronology-title-block h1 {
   margin: 0;
   color: var(--color-text);
-  font-size: clamp(1.22rem, 2vw, 1.72rem);
+  font-size: clamp(1.2rem, 2vw, 1.72rem);
   font-weight: 950;
   letter-spacing: 0;
   line-height: 1.05;
 }
 
-.timeline-controls {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.32rem;
+.timeline-mode {
+  display: grid;
+  gap: 0.28rem;
+  justify-self: end;
+  width: 220px;
+  max-width: 100%;
 }
 
-.timeline-chip {
-  display: inline-grid;
-  min-height: 32px;
-  place-items: center;
-  border: 1px solid rgba(125, 190, 255, 0.16);
-  border-radius: 4px;
-  padding: 0 0.62rem;
-  color: #dceeff;
-  background: rgba(4, 13, 24, 0.58);
-  font-size: 0.78rem;
-  font-weight: 950;
-  line-height: 1;
+.timeline-mode select {
+  min-height: 34px;
+  border: 1px solid rgba(125, 190, 255, 0.22);
+  border-radius: 3px;
+  padding: 0 0.7rem;
+  color: #e8f4ff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 58%),
+    rgba(4, 13, 24, 0.72);
   box-shadow: var(--strategy-inset);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 900;
 }
 
-.timeline-chip:hover,
-.timeline-chip.is-strong {
-  border-color: rgba(155, 214, 255, 0.38);
-  color: #ffffff;
-  background: rgba(90, 167, 232, 0.12);
+.timeline-mode select:focus-visible {
+  outline: 2px solid rgba(155, 214, 255, 0.48);
+  outline-offset: 2px;
+}
+
+.timeline-frame {
+  overflow: hidden;
+  border: 1px solid rgba(125, 190, 255, 0.18);
+  border-radius: 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 46%),
+    rgba(3, 10, 18, 0.36);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -18px 36px rgba(0, 0, 0, 0.12);
 }
 
 .timeline-stage {
@@ -528,21 +591,21 @@ function onPointerUp(event: PointerEvent) {
 .timeline-stage::after {
   position: absolute;
   z-index: 2;
-  top: 1px;
-  bottom: 1px;
-  width: 60px;
+  top: 0;
+  bottom: 0;
+  width: 54px;
   pointer-events: none;
   content: '';
 }
 
 .timeline-stage::before {
-  left: 1px;
-  background: linear-gradient(90deg, rgba(5, 14, 26, 0.95), transparent);
+  left: 0;
+  background: linear-gradient(90deg, rgba(5, 14, 26, 0.96), transparent);
 }
 
 .timeline-stage::after {
-  right: 1px;
-  background: linear-gradient(270deg, rgba(5, 14, 26, 0.95), transparent);
+  right: 0;
+  background: linear-gradient(270deg, rgba(5, 14, 26, 0.96), transparent);
 }
 
 .timeline-side-control {
@@ -550,17 +613,17 @@ function onPointerUp(event: PointerEvent) {
   z-index: 3;
   top: 50%;
   display: grid;
-  width: 36px;
-  height: 70px;
+  width: 34px;
+  height: 64px;
   place-items: center;
   border: 1px solid rgba(155, 214, 255, 0.2);
-  border-radius: 4px;
+  border-radius: 3px;
   color: #e6f4ff;
   background: rgba(4, 13, 24, 0.82);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 12px 22px rgba(0, 0, 0, 0.24);
-  font-size: 1.6rem;
+  font-size: 1.44rem;
   font-weight: 950;
   transform: translateY(-50%);
 }
@@ -571,25 +634,17 @@ function onPointerUp(event: PointerEvent) {
 }
 
 .timeline-side-control--left {
-  left: 0.38rem;
+  left: 0.36rem;
 }
 
 .timeline-side-control--right {
-  right: 0.38rem;
+  right: 0.36rem;
 }
 
 .timeline-viewport {
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid rgba(125, 190, 255, 0.18);
-  border-radius: 6px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.028), transparent 44%),
-    rgba(3, 10, 18, 0.36);
   cursor: grab;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 -18px 36px rgba(0, 0, 0, 0.14);
   scrollbar-width: thin;
   scrollbar-color: rgba(155, 214, 255, 0.38) transparent;
 }
@@ -600,9 +655,10 @@ function onPointerUp(event: PointerEvent) {
 
 .timeline-canvas {
   position: relative;
+  width: max(100%, var(--timeline-min-width));
   min-width: 100%;
-  height: calc(168px + var(--period-lanes) * 46px);
-  min-height: 302px;
+  height: calc(132px + var(--period-lanes) * 42px);
+  min-height: 212px;
   user-select: none;
 }
 
@@ -625,13 +681,13 @@ function onPointerUp(event: PointerEvent) {
   height: 100%;
   align-items: center;
   border-left: 1px solid rgba(125, 190, 255, 0.1);
-  padding-left: 0.45rem;
+  padding-left: 0.42rem;
   transform: translateX(-1px);
   white-space: nowrap;
 }
 
 .timeline-scale span.last {
-  padding-right: 0.45rem;
+  padding-right: 0.42rem;
   padding-left: 0;
   transform: translateX(-100%);
   border-right: 1px solid rgba(125, 190, 255, 0.1);
@@ -644,10 +700,10 @@ function onPointerUp(event: PointerEvent) {
 
 .period-layer {
   position: absolute;
-  top: 48px;
+  top: 50px;
   right: 0;
   left: 0;
-  height: calc(var(--period-lanes) * 46px);
+  height: calc(var(--period-lanes) * 42px);
 }
 
 .period-segment {
@@ -655,31 +711,20 @@ function onPointerUp(event: PointerEvent) {
   --timeline-ink: #e6f4ff;
   position: absolute;
   display: grid;
-  min-width: 8px;
-  height: 36px;
+  min-width: 12px;
+  height: 32px;
   align-content: center;
-  gap: 0.04rem;
+  gap: 0.02rem;
   overflow: hidden;
-  border: 1px solid hsl(var(--timeline-hue) / 0.32);
-  border-radius: 4px;
-  padding: 0.27rem 0.44rem;
+  border: 1px solid hsl(var(--timeline-hue) / 0.34);
+  border-radius: 0;
+  padding: 0.26rem 0.48rem;
   color: var(--timeline-ink);
   background:
-    linear-gradient(180deg, hsl(var(--timeline-hue) / 0.3), hsl(var(--timeline-hue) / 0.1) 68%),
-    rgba(3, 10, 18, 0.28);
+    linear-gradient(180deg, hsl(var(--timeline-hue) / 0.28), hsl(var(--timeline-hue) / 0.1) 66%),
+    rgba(3, 10, 18, 0.3);
   text-align: left;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.075);
-}
-
-.period-segment::before {
-  position: absolute;
-  top: 5px;
-  bottom: 5px;
-  left: 5px;
-  width: 3px;
-  border-radius: 999px;
-  background: hsl(var(--timeline-hue) / 0.85);
-  content: '';
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .period-segment:hover,
@@ -694,7 +739,6 @@ function onPointerUp(event: PointerEvent) {
 .period-segment strong {
   min-width: 0;
   overflow: hidden;
-  padding-left: 0.34rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -713,26 +757,26 @@ function onPointerUp(event: PointerEvent) {
 
 .event-layer {
   position: absolute;
-  top: calc(68px + var(--period-lanes) * 46px);
+  top: calc(68px + var(--period-lanes) * 42px);
   right: 0;
   left: 0;
-  height: 86px;
+  height: 66px;
   border-top: 1px solid rgba(125, 190, 255, 0.12);
 }
 
 .event-line {
   position: absolute;
-  top: 32px;
+  top: 31px;
   right: 0;
   left: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(155, 214, 255, 0.3), rgba(216, 174, 103, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(155, 214, 255, 0.28), rgba(216, 174, 103, 0.18), transparent);
 }
 
 .event-marker {
   --timeline-hue: 204 72% 58%;
   position: absolute;
-  top: 17px;
+  top: 16px;
   display: grid;
   width: 34px;
   height: 36px;
@@ -756,14 +800,14 @@ function onPointerUp(event: PointerEvent) {
 }
 
 .event-marker.future-event .event-pin {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
 }
 
 .event-marker.game-event .event-pin {
   box-shadow:
     0 0 0 4px hsl(var(--timeline-hue) / 0.12),
-    0 0 20px hsl(var(--timeline-hue) / 0.22);
+    0 0 18px hsl(var(--timeline-hue) / 0.22);
 }
 
 .event-marker:hover .event-pin,
@@ -780,7 +824,7 @@ function onPointerUp(event: PointerEvent) {
   max-width: 76px;
   overflow: hidden;
   border: 1px solid rgba(125, 190, 255, 0.14);
-  border-radius: 3px;
+  border-radius: 2px;
   padding: 0.08rem 0.3rem;
   background: rgba(3, 10, 18, 0.84);
   color: var(--timeline-ink, #e6f4ff);
@@ -803,11 +847,12 @@ function onPointerUp(event: PointerEvent) {
   --timeline-hue: 204 72% 58%;
   --timeline-ink: #e6f4ff;
   display: grid;
-  gap: 0.62rem;
-  border-color: hsl(var(--timeline-hue) / 0.24);
+  gap: 0.56rem;
+  border-top: 1px solid rgba(125, 190, 255, 0.16);
+  padding: 0.74rem 0.9rem 0.82rem;
   background:
-    linear-gradient(135deg, hsl(var(--timeline-hue) / 0.12), transparent 62%),
-    rgba(11, 23, 38, 0.98);
+    linear-gradient(135deg, hsl(var(--timeline-hue) / 0.1), transparent 62%),
+    rgba(4, 13, 24, 0.28);
 }
 
 .detail-heading {
@@ -826,7 +871,7 @@ function onPointerUp(event: PointerEvent) {
 
 .detail-kicker span {
   color: hsl(var(--timeline-hue) / 0.95);
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 950;
   letter-spacing: 0.06em;
   line-height: 1;
@@ -851,7 +896,7 @@ function onPointerUp(event: PointerEvent) {
   height: 28px;
   place-items: center;
   border: 1px solid rgba(125, 190, 255, 0.14);
-  border-radius: 4px;
+  border-radius: 3px;
   color: #dceeff;
   background: rgba(4, 13, 24, 0.46);
   font-size: 1rem;
@@ -873,7 +918,7 @@ function onPointerUp(event: PointerEvent) {
   max-width: 70rem;
   margin: 0;
   color: var(--timeline-ink);
-  font-size: clamp(1rem, 1.35vw, 1.28rem);
+  font-size: clamp(1rem, 1.25vw, 1.22rem);
   font-weight: 950;
   line-height: 1.16;
 }
@@ -881,7 +926,7 @@ function onPointerUp(event: PointerEvent) {
 .detail-facts {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.46rem;
+  gap: 0.5rem;
   margin: 0;
 }
 
@@ -893,12 +938,12 @@ function onPointerUp(event: PointerEvent) {
   display: grid;
   gap: 0.12rem;
   border-top: 1px solid hsl(var(--timeline-hue) / 0.18);
-  padding-top: 0.42rem;
+  padding-top: 0.4rem;
 }
 
 .detail-facts dt {
   color: #8da9c4;
-  font-size: 0.66rem;
+  font-size: 0.64rem;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -914,26 +959,33 @@ function onPointerUp(event: PointerEvent) {
     grid-template-columns: 1fr;
   }
 
-  .timeline-controls {
-    justify-content: flex-start;
+  .timeline-mode {
+    width: min(100%, 260px);
   }
 }
 
 @media (max-width: 760px) {
-  .chronology-board,
-  .chronology-detail {
+  .chronology-board {
     padding: 0.7rem;
+  }
+
+  .chronology-title-block h1 {
+    font-size: clamp(1.1rem, 8vw, 1.55rem);
+  }
+
+  .timeline-frame {
+    border-radius: 4px;
   }
 
   .timeline-stage::before,
   .timeline-stage::after {
-    width: 38px;
+    width: 36px;
   }
 
   .timeline-side-control {
     width: 32px;
     height: 58px;
-    font-size: 1.45rem;
+    font-size: 1.34rem;
   }
 
   .timeline-side-control--left {
@@ -945,7 +997,11 @@ function onPointerUp(event: PointerEvent) {
   }
 
   .timeline-canvas {
-    min-height: 330px;
+    min-height: 226px;
+  }
+
+  .chronology-detail {
+    padding: 0.68rem 0.7rem 0.76rem;
   }
 
   .detail-heading {
