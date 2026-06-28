@@ -124,12 +124,12 @@ async function logout() {
 
 .home-section-nav {
   display: grid;
-  grid-template-columns: repeat(3, minmax(110px, 1fr));
+  grid-template-columns: repeat(3, minmax(88px, 1fr));
   gap: 0;
   justify-content: center;
   justify-self: center;
   align-self: stretch;
-  width: min(760px, 100%);
+  width: min(520px, 100%);
   min-width: 0;
   height: 100%;
   border: 0;
@@ -154,12 +154,12 @@ async function logout() {
   border: 0;
   border-right: 1px solid rgba(125, 190, 255, 0.16);
   border-radius: 0;
-  padding: 0 0.76rem;
+  padding: 0 0.46rem;
   color: color-mix(in srgb, var(--color-muted) 82%, #c9e8ff);
   background: transparent;
   box-shadow: none;
-  font-size: 0.86rem;
-  font-weight: 950;
+  font-size: 0.72rem;
+  font-weight: 850;
   letter-spacing: 0;
   text-decoration: none;
   text-transform: uppercase;
@@ -258,13 +258,15 @@ async function logout() {
     grid-row: 2;
     align-self: stretch;
     height: 32px;
+    width: min(360px, 100%);
   }
 
   .home-section-link {
     flex: 0 0 auto;
     min-height: 0;
-    min-width: 86px;
-    padding: 0 0.4rem;
+    min-width: 0;
+    padding: 0 0.28rem;
+    font-size: 0.66rem;
     text-align: center;
   }
 }
