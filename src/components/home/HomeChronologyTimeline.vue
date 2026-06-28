@@ -70,15 +70,16 @@ const activeEvents = computed<TimelineEventItem[]>(() =>
     .map((event, index) => ({ event, index }))
     .filter((item) => timelineMode.value === 'complete' || item.event.year >= modernStartYear),
 )
+const orderedPeriods = computed(() =>
+  [...activePeriods.value].sort((a, b) => a.startYear - b.startYear || a.endYear - b.endYear),
+)
 
 const range = computed(() => timelineRange(activePeriods.value))
 const firstYear = computed(() => formatTimelineYear(range.value.startYear))
 const lastYear = computed(() => formatTimelineYear(range.value.endYear))
-const periodLaneStep = 70
-const timelineMinWidthPx = computed(() => (timelineMode.value === 'modern' ? 1680 : 2600))
-const periodMinWidthPx = computed(() => (timelineMode.value === 'modern' ? 164 : 120))
+const periodMinWidthPx = computed(() => (timelineMode.value === 'modern' ? 176 : 150))
+const timelineMinWidthPx = computed(() => Math.max(activePeriods.value.length * periodMinWidthPx.value, 960))
 const timelineMinWidth = computed(() => `${timelineMinWidthPx.value}px`)
-const periodMinWidthPercent = computed(() => ((periodMinWidthPx.value + 10) / timelineMinWidthPx.value) * 100)
 
 const importantTicks = computed(() => {
   if (timelineMode.value === 'modern') {
@@ -88,52 +89,14 @@ const importantTicks = computed(() => {
   return [range.value.startYear, 476, 711, 1492, 1808, 1936, 1975, modernStartYear, range.value.endYear]
 })
 
-const displayYears = computed(() =>
-  [
-    ...new Set([
-      ...activePeriods.value.flatMap((period) => [period.startYear, period.endYear]),
-      ...activeEvents.value.map((item) => item.event.year),
-      ...importantTicks.value,
-      range.value.startYear,
-      range.value.endYear,
-    ]),
-  ].sort((a, b) => a - b),
-)
-
-const displayScaleSegments = computed(() =>
-  displayYears.value.slice(0, -1).map((startYear, index) => {
-    const endYear = displayYears.value[index + 1] ?? startYear
-    const span = Math.max(1, endYear - startYear)
-    return {
-      startYear,
-      endYear,
-      weight: timelineMode.value === 'modern' ? span : Math.max(4.8, Math.pow(span, 0.56)),
-    }
-  }),
-)
-const displayTotalWeight = computed(() =>
-  displayScaleSegments.value.reduce((total, segment) => total + segment.weight, 0),
-)
-
-const periodSegments = computed(() => {
-  const laneEnds: number[] = []
-
-  return activePeriods.value
+const periodSegments = computed(() =>
+  orderedPeriods.value
     .map((period) => ({
       period,
-      left: displayPosition(period.startYear),
-      width: Math.max(1.8, displayWidth(period.startYear, period.endYear)),
+      flex: 1,
     }))
-    .sort((a, b) => a.period.startYear - b.period.startYear || a.period.endYear - b.period.endYear)
-    .map((segment) => {
-      const visualEnd = segment.left + Math.max(segment.width, periodMinWidthPercent.value)
-      const openLane = laneEnds.findIndex((end) => segment.left >= end)
-      const lane = openLane === -1 ? laneEnds.length : openLane
-      laneEnds[lane] = visualEnd
-      return { ...segment, lane }
-    })
-})
-const laneCount = computed(() => Math.max(1, ...periodSegments.value.map((item) => item.lane + 1)))
+)
+const laneCount = computed(() => 1)
 
 const eventMarkers = computed(() =>
   activeEvents.value.map((item) => ({
@@ -235,28 +198,31 @@ onBeforeUnmount(() => {
 })
 
 function displayPosition(year: number) {
-  if (year <= range.value.startYear) return trackInsetPercent
-  if (year >= range.value.endYear) return 100 - trackInsetPercent
+  const periods = orderedPeriods.value
+  if (!periods.length) return trackInsetPercent
 
-  let accumulatedWeight = 0
-  for (const segment of displayScaleSegments.value) {
-    if (year >= segment.endYear) {
-      accumulatedWeight += segment.weight
-      continue
-    }
-    if (year >= segment.startYear) {
-      const span = Math.max(1, segment.endYear - segment.startYear)
-      accumulatedWeight += segment.weight * ((year - segment.startYear) / span)
-      break
-    }
+  const firstPeriod = periods[0]
+  const lastPeriod = periods[periods.length - 1]
+  if (!firstPeriod || !lastPeriod || year <= firstPeriod.startYear) return trackInsetPercent
+  if (year >= lastPeriod.endYear) return 100 - trackInsetPercent
+
+  const periodIndex = periods.findIndex((period) => year >= period.startYear && year <= period.endYear)
+  if (periodIndex !== -1) {
+    const period = periods[periodIndex]
+    if (!period) return trackInsetPercent
+    const span = Math.max(1, period.endYear - period.startYear)
+    const progress = Math.min(Math.max((year - period.startYear) / span, 0), 1)
+    return positionFromPeriodSlot(periodIndex + progress, periods.length)
   }
 
-  const rawPosition = displayTotalWeight.value > 0 ? (accumulatedWeight / displayTotalWeight.value) * 100 : 0
-  return trackInsetPercent + rawPosition * ((100 - trackInsetPercent * 2) / 100)
+  const nextPeriodIndex = periods.findIndex((period) => year < period.startYear)
+  return positionFromPeriodSlot(nextPeriodIndex === -1 ? periods.length : nextPeriodIndex, periods.length)
 }
 
-function displayWidth(startYear: number, endYear: number) {
-  return Math.max(0, displayPosition(endYear) - displayPosition(startYear))
+function positionFromPeriodSlot(slot: number, totalSlots: number) {
+  const boundedSlot = Math.min(Math.max(slot, 0), totalSlots)
+  const usableWidth = 100 - trackInsetPercent * 2
+  return trackInsetPercent + (boundedSlot / totalSlots) * usableWidth
 }
 
 function periodColorVars(period?: ChronologyPeriod | null) {
@@ -275,11 +241,10 @@ function eventColorVars(event?: ChronologyEvent | null) {
   }
 }
 
-function periodStyle(segment: { period: ChronologyPeriod; lane: number; left: number; width: number }) {
+function periodStyle(segment: { period: ChronologyPeriod; flex: number }) {
   return {
-    left: `${segment.left}%`,
-    width: `${segment.width}%`,
-    top: `${segment.lane * periodLaneStep}px`,
+    '--period-flex': `${segment.flex}`,
+    '--period-basis': `${periodMinWidthPx.value}px`,
     ...periodColorVars(segment.period),
   }
 }
@@ -407,7 +372,7 @@ function onPointerUp(event: PointerEvent) {
     <header class="chronology-heading">
       <div class="chronology-title-block">
         <p class="chronology-kicker">Cronología</p>
-        <h1 id="chronology-title">Historia de España e Iberia 2084</h1>
+        <h1 id="chronology-title">Historia de Iberia 2084</h1>
       </div>
 
       <label class="timeline-mode">
@@ -749,8 +714,8 @@ function onPointerUp(event: PointerEvent) {
   position: relative;
   width: max(100%, var(--timeline-min-width));
   min-width: 100%;
-  height: calc(142px + var(--period-lanes) * 70px);
-  min-height: 230px;
+  height: 236px;
+  min-height: 236px;
   user-select: none;
 }
 
@@ -792,25 +757,30 @@ function onPointerUp(event: PointerEvent) {
 
 .period-layer {
   position: absolute;
-  top: 50px;
+  top: 48px;
   right: 0;
   left: 0;
-  height: calc(var(--period-lanes) * 70px);
+  display: flex;
+  height: 84px;
 }
 
 .period-segment {
   --timeline-hue: 204 72% 58%;
   --timeline-ink: #e6f4ff;
-  position: absolute;
+  --period-flex: 1;
+  --period-basis: 150px;
+  position: relative;
   display: grid;
-  min-width: 7.5rem;
-  height: 58px;
+  flex: var(--period-flex) 0 var(--period-basis);
+  min-width: var(--period-basis);
+  height: 76px;
   align-content: start;
-  gap: 0.1rem;
-  overflow: visible;
+  gap: 0.16rem;
+  overflow: hidden;
   border: 1px solid hsl(var(--timeline-hue) / 0.34);
+  border-right-width: 0;
   border-radius: 0;
-  padding: 0.3rem 0.42rem;
+  padding: 0.36rem 0.46rem;
   color: var(--timeline-ink);
   background:
     linear-gradient(180deg, hsl(var(--timeline-hue) / 0.28), hsl(var(--timeline-hue) / 0.1) 66%),
@@ -820,8 +790,12 @@ function onPointerUp(event: PointerEvent) {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
+.period-segment:last-child {
+  border-right-width: 1px;
+}
+
 .timeline-canvas--modern .period-segment {
-  min-width: 10.25rem;
+  min-width: 11rem;
 }
 
 .period-segment:hover,
@@ -835,7 +809,7 @@ function onPointerUp(event: PointerEvent) {
 .period-segment span,
 .period-segment strong {
   min-width: 0;
-  overflow: visible;
+  overflow: hidden;
   text-overflow: clip;
   white-space: normal;
   overflow-wrap: normal;
@@ -844,20 +818,20 @@ function onPointerUp(event: PointerEvent) {
 
 .period-segment span {
   color: color-mix(in srgb, var(--timeline-ink) 72%, #8da9c4);
-  font-size: 0.52rem;
+  font-size: 0.54rem;
   font-weight: 850;
   line-height: 1;
 }
 
 .period-segment strong {
-  font-size: 0.64rem;
+  font-size: 0.66rem;
   font-weight: 850;
   line-height: 1.08;
 }
 
 .event-layer {
   position: absolute;
-  top: calc(64px + var(--period-lanes) * 70px);
+  top: 148px;
   right: 0;
   left: 0;
   height: 66px;
